@@ -29,7 +29,7 @@ import inspect
 import functools
 from dataclasses import dataclass
 from types import MappingProxyType
-from tasks import Classification
+from .tasks import Classification
 
 load_dataset = lazy_func(datasets.load_dataset)
 
