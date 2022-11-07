@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: tasknet
+Version: 0.1.dev2+gf4a120f.d20221107
+Summary: Seamless integration of tasks with huggingface models
+Home-page: https://github.com/sileod/tasknet/
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Intended Audience :: Developers
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# tasknet
+Seamless integration of tasks with huggingface models
