@@ -45,9 +45,9 @@ https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sh
 ```py
 tasks = [rte, reco]
 models = tn.Model(tasks, args) # models with shared encoders
-trainer = tn.Trainer(models[0:1], tasks[0:1], args) # train first task (STILT)
+trainer = tn.Trainer(models, tasks[0:1], args) # train first task (STILT)
 trainer.train()
-trainer = tn.Trainer(models[1:2], tasks[1:2], args) # train second with encoder initialized by first task
+trainer = tn.Trainer(models, tasks[1:2], args) # train second with encoder initialized by first task
 trainer.train()
 ```
 
