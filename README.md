@@ -36,6 +36,9 @@ As you can see, tasknet is multitask by design.
 ## Installation
 `pip install tasknet`
 
-
 ## Additional examples:
 https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sharing
+
+## tasknet vs Jiant
+[Jiant](https://github.com/nyu-mll/jiant/tree/master/jiant) is another library comparable to tasknet.
+`tasknet` is leaner and easier to extend. Jiant is config-based while `tasknet` is designed for interative use and scripting. `tasknet` is a minimal extension of `Trainer` centered on task templates.
