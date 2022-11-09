@@ -49,3 +49,13 @@ https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sh
 
 ## Contact
 You can request features on github or reach me at `damien.sileo@inria.fr`
+```bib
+@misc{sileod21-tasknet,
+  author = {Sileo, Damien},
+  doi = {10.5281/zenodo.561225781},
+  month = {11},
+  title = {{tasknet, multitask interface between Trainer and datasets}},
+  url = {https://github.com/sileod/tasknet},
+  version = {1.5.0},
+  year = {2022}}
+```
