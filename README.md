@@ -13,7 +13,7 @@ Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks
 
 ## Instanciating a task
 
-Each task is associated with specific fields. Classification has two text fields `s1`,`s2`, and a label `y`. pass a dataset to a template, and fill-in the mapping between the dataset fields and the template fields. 
+Each task template is associated with specific fields. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the dataset fields and the template fields to instanciate a task. 
 ```py
 import tasknet as tn
 from datasets import load_dataset
