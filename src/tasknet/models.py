@@ -3,14 +3,11 @@ import torch
 import torch.nn as nn
 import transformers
 import datasets
-from datasets import load_dataset
 from torch.utils.data.dataloader import DataLoader
 from transformers.data.data_collator import InputDataClass
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler
 from typing import List, Union, Dict
-from transformers import DefaultDataCollator
-from transformers import DataCollatorForTokenClassification
 from transformers import (
     AutoModelForSeq2SeqLM,
     DataCollatorForSeq2Seq,
@@ -19,31 +16,17 @@ from transformers import (
     AutoModelForTokenClassification,
 )
 from transformers import EncoderDecoderModel
-from evaluate import load as load_metric
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
 import funcy as fc
-import evaluate
 import copy
 import inspect
 import functools
-from dataclasses import dataclass
 from types import MappingProxyType
 from .tasks import Classification
+from transformers import AutoTokenizer
 
 load_dataset = lazy_func(datasets.load_dataset)
-
-
-def load_Seq2Seq(model_name, tokenizer):
-    model = EncoderDecoderModel.from_encoder_decoder_pretrained(
-        model_name, model_name, tie_encoder_decoder=True
-    )
-
-    model.config.decoder_start_token_id = tokenizer.cls_token_id
-    model.config.eos_token_id = tokenizer.sep_token_id
-    model.config.pad_token_id = tokenizer.pad_token_id
-    model.config.vocab_size = model.config.encoder.vocab_size
-    return model
 
 
 class CLSEmbedding(nn.Module):
@@ -76,7 +59,6 @@ class Model(transformers.PreTrainedModel):
                 # shared_encoder = getattr(model, cls.get_encoder_attr_name(model))
                 shared_encoder = fc.first(model.children())
             else:
-                # setattr(model, self.get_encoder_attr_name(model), copy.copy(shared_encoder))
                 self.shallow_copy(
                     shared_encoder, getattr(model, self.get_encoder_attr_name(model))
                 )
@@ -104,7 +86,7 @@ class Model(transformers.PreTrainedModel):
 
             return functools.reduce(_getattr, [obj] + attr.split("."))
 
-        for (na, pa), (nb, pb) in zip(A.named_parameters(), B.named_parameters()):
+        for (na, _), (nb, _) in zip(A.named_parameters(), B.named_parameters()):
             rsetattr(B, nb, rgetattr(A, na))
         return A, B
 
@@ -188,9 +170,9 @@ class MultitaskDataloader:
             task_name = self.task_name_list[task_choice]
             yield next(dataloader_iter_dict[task_name])
 
-
+    
 class Trainer(transformers.Trainer):
-    def __init__(self, model, tokenizer, tasks, hparams, *args, **kwargs):
+    def __init__(self, model, tasks, hparams,tokenizer=None, *args, **kwargs):
         class default:
             output_dir = "./models/multitask_model"
             evaluation_strategy = "epoch"
@@ -211,20 +193,21 @@ class Trainer(transformers.Trainer):
         trainer_args = transformers.TrainingArguments(
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
         )
-
+        if not tokenizer:
+            tokenizer=AutoTokenizer.from_pretrained(hparams['model_name'])
         super().__init__(
             model,
             trainer_args,
+            tokenizer=tokenizer,
             compute_metrics=Classification.compute_metrics,
             *args,
             **kwargs,
         )
-        tasks=[x(tokenizer=tokenizer) if inspect.isclass(x) else x for x in tasks]
+
+
+
         self.data_collator = NLPDataCollator(tasks)
         self.tasks = tasks
-        for t in tasks:
-            if not hasattr(t, "name") or not t.name:
-                t.name = t.__class__.__name__
         self.tokenizer = tokenizer
         self.processed_tasks = preprocess_tasks(tasks, self.tokenizer)
         self.train_dataset = {
@@ -238,6 +221,16 @@ class Trainer(transformers.Trainer):
         # transformerS.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
+        self.cleanup_outputs()
+
+    @staticmethod
+    def cleanup_outputs():
+        try:
+            from IPython.display import clear_output
+            clear_output()
+        except:
+            pass
+
 
     @staticmethod
     def write_line(other, values):
@@ -316,6 +309,10 @@ class Trainer(transformers.Trainer):
 
 
 def preprocess_tasks(tasks, tokenizer):
+
+    for t in tasks:
+        t.set_tokenizer(tokenizer)
+
     def add_task(x, i=None):
         x["task"] = i
         return x

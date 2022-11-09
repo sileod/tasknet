@@ -1,64 +1,71 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import transformers
 import datasets
-from datasets import load_dataset
-from torch.utils.data.dataloader import DataLoader
-from transformers.data.data_collator import InputDataClass
-from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler
-from typing import List, Union, Dict
+from datasets import load_dataset, Dataset
 from transformers import DefaultDataCollator
 from transformers import DataCollatorForTokenClassification
-from transformers import (
-    AutoModelForSeq2SeqLM,
-    DataCollatorForSeq2Seq,
-    AutoModelForSequenceClassification,
-    AutoModelForMultipleChoice,
-    AutoModelForTokenClassification,
-)
-from transformers import EncoderDecoderModel
 from evaluate import load as load_metric
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
 import funcy as fc
 import evaluate
-import copy
-import inspect
-import functools
-from dataclasses import dataclass
-from types import MappingProxyType
+from dataclasses import dataclass, field
+import re
 
 load_dataset = lazy_func(datasets.load_dataset)
 
+_=None
 
+def get_name(dataset):
+    try:
+        s=str(dataset.cache_files.values())
+        return re.search(r'/datasets/(.*?)/default/', s).group(1).split('___')[-1]
+    except:
+        return ''
+
+@dataclass
 class Task:
+    dataset:Dataset=None
+    name:str=''
+    tokenizer:_=None
+
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
 
-    def __init__(self):
-        self.name = ""
+    def __post_init__(self):
+
         self.__class__.__hash__ = Task.__hash__
         if type(self.dataset) == str:
+            name=self.dataset
             self.dataset = load_dataset(self.dataset)
-        if type(self.dataset) == tuple:
+        elif type(self.dataset) == tuple:
+            name="/".join(self.dataset)
             self.dataset = load_dataset(*self.dataset)
+        else:
+            name=get_name(self.dataset)
+        
+        if not self.name:
+            self.name=name
 
 
+    def set_tokenizer(self,tokenizer):
+        self.tokenizer=tokenizer
+
+@dataclass
 class Classification(Task):
     task_type = "SequenceClassification"
     data_collator = DefaultDataCollator()
-    tokenizer_kwargs = edict(truncation=True, padding="max_length", max_length=256)
-    fields = s1, s2, y = "sentence1", "sentence2", "labels"
+    tokenizer_kwargs :_= field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
+    s1:str='sentence1'
+    s2:str='sentence2'
+    y:str='labels'
     num_labels = None
 
-    def __init__(self, tokenizer):
-        super().__init__()
+    def __post_init__(self):
+        super().__post_init__()
         target = self.dataset["train"].features[self.y]
         if not self.num_labels:
             self.num_labels = 1 if "float" in target.dtype else target.num_classes
-        self.tokenizer = tokenizer
 
     def preprocess_function(self, examples):
         inputs = (
@@ -102,7 +109,7 @@ class DataCollatorForMultipleChoice:
 
         # Un-flatten
         batch = {k: v.view(batch_size, num_choices, -1) for k, v in batch.items()}
-        # Add back labels
+        # Add back labels and tasks
         batch["labels"] = torch.tensor(labels, dtype=torch.int64)
         batch["task"] = torch.tensor(tasks, dtype=torch.int64)
         return batch
@@ -111,11 +118,14 @@ class DataCollatorForMultipleChoice:
 @dataclass
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
-    tokenizer_kwargs = edict(padding="max_length", max_length=256)
+    tokenizer_kwargs :_= field(default_factory=lambda:edict(padding="max_length", max_length=256))
+
     num_labels = 2
 
-    def __init__(self, tokenizer):
-        super().__init__(tokenizer)
+    choices:_=field(default_factory=list)
+    s1:str='inputs'
+
+    def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
         self.data_collator = DataCollatorForMultipleChoice(
             tokenizer=self.tokenizer, tokenizer_kwargs=self.tokenizer_kwargs
@@ -145,11 +155,14 @@ class MultipleChoice(Classification):
         }
         return outputs
 
-
+@dataclass
 class TokenClassification(Task):
-    tokenizer_kwargs = edict(truncation=True, padding="max_length", max_length=256)
     task_type = "TokenClassification"
     metric = evaluate.load("seqeval")
+    tokenizer_kwargs:_=field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
+    tokens:str=None
+    y:str=None
+
 
     @staticmethod
     def align_labels_with_tokens(labels, word_ids):
@@ -173,14 +186,16 @@ class TokenClassification(Task):
                 new_labels.append(label)
         return new_labels
 
-    def __init__(self, tokenizer):
-        super().__init__()
-        self.tokenizer = tokenizer
-        self.tokenizer.add_prefix_space = True
-        self.data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+    def __post_init__(self):
+        super().__post_init__()
         target = self.dataset["train"].features[self.y]
         self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
         self.label_names = [f"{i}" for i in range(self.num_labels)]
+
+    def set_tokenizer(self,tokenizer):
+        self.tokenizer=tokenizer
+        self.tokenizer.add_prefix_space=True
+        self.data_collator = DataCollatorForTokenClassification(tokenizer=self.tokenizer)
 
     def preprocess_function(self, examples):
         tokenized_inputs = self.tokenizer(
@@ -193,7 +208,6 @@ class TokenClassification(Task):
             new_labels.append(self.align_labels_with_tokens(labels, word_ids))
         tokenized_inputs["labels"] = new_labels
         outputs = tokenized_inputs
-        outputs["task"] = [self.index] * len(examples[fc.first(examples)])
         return outputs
 
     def compute_metrics(self, eval_pred):
