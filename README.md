@@ -19,7 +19,8 @@ import tasknet as tn
 from datasets import load_dataset
 
 rte = tn.Classification(
-    dataset=load_dataset("glue", "rte"), s1="sentence1", s2="sentence2", y="label"
+    dataset=load_dataset("glue", "rte"),
+    s1="sentence1", s2="sentence2", y="label"
 )
 
 class args:
