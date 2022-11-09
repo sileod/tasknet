@@ -13,7 +13,6 @@ from dataclasses import dataclass, field
 import re
 
 load_dataset = lazy_func(datasets.load_dataset)
-
 _=None
 
 def get_name(dataset):
@@ -54,6 +53,7 @@ class Task:
 @dataclass
 class Classification(Task):
     task_type = "SequenceClassification"
+    dataset:Dataset=None
     data_collator = DefaultDataCollator()
     tokenizer_kwargs :_= field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
     s1:str='sentence1'
@@ -118,6 +118,7 @@ class DataCollatorForMultipleChoice:
 @dataclass
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
+    dataset:Dataset=None
     tokenizer_kwargs :_= field(default_factory=lambda:edict(padding="max_length", max_length=256))
 
     num_labels = 2
@@ -158,6 +159,7 @@ class MultipleChoice(Classification):
 @dataclass
 class TokenClassification(Task):
     task_type = "TokenClassification"
+    dataset:Dataset=None
     metric = evaluate.load("seqeval")
     tokenizer_kwargs:_=field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
     tokens:str=None
