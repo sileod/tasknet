@@ -227,9 +227,11 @@ class TokenClassification(Task):
         all_metrics = self.metric.compute(
             predictions=true_predictions, references=true_labels
         )
+        meta = {"name": self.name, "size": len(predictions), "index": self.index}
+
         return {
             "precision": all_metrics["overall_precision"],
             "recall": all_metrics["overall_recall"],
             "f1": all_metrics["overall_f1"],
-            "accuracy": all_metrics["overall_accuracy"],
+            "accuracy": all_metrics["overall_accuracy"], **meta
         }
