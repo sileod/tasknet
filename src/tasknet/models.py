@@ -42,7 +42,7 @@ class CLSEmbedding(nn.Module):
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args):
         super().__init__(transformers.PretrainedConfig())
-        tasks=[x(tokenizer=edict()) if inspect.isclass(x) else x for x in tasks]
+        tasks = [x(tokenizer=edict()) if inspect.isclass(x) else x for x in tasks]
         self.Z = nn.parameter.Parameter(torch.zeros(len(tasks), 768, device="cuda"))
         shared_encoder = None
         task_models_list = []
@@ -170,9 +170,9 @@ class MultitaskDataloader:
             task_name = self.task_name_list[task_choice]
             yield next(dataloader_iter_dict[task_name])
 
-    
+
 class Trainer(transformers.Trainer):
-    def __init__(self, model, tasks, hparams,tokenizer=None, *args, **kwargs):
+    def __init__(self, model, tasks, hparams, tokenizer=None, *args, **kwargs):
         class default:
             output_dir = "./models/multitask_model"
             evaluation_strategy = "epoch"
@@ -194,7 +194,7 @@ class Trainer(transformers.Trainer):
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
         )
         if not tokenizer:
-            tokenizer=AutoTokenizer.from_pretrained(hparams['model_name'])
+            tokenizer = AutoTokenizer.from_pretrained(hparams["model_name"])
         super().__init__(
             model,
             trainer_args,
@@ -203,8 +203,6 @@ class Trainer(transformers.Trainer):
             *args,
             **kwargs,
         )
-
-
 
         self.data_collator = NLPDataCollator(tasks)
         self.tasks = tasks
@@ -227,10 +225,10 @@ class Trainer(transformers.Trainer):
     def cleanup_outputs():
         try:
             from IPython.display import clear_output
+
             clear_output()
         except:
             pass
-
 
     @staticmethod
     def write_line(other, values):

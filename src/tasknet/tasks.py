@@ -13,20 +13,22 @@ from dataclasses import dataclass, field
 import re
 
 load_dataset = lazy_func(datasets.load_dataset)
-_=None
+_ = None
+
 
 def get_name(dataset):
     try:
-        s=str(dataset.cache_files.values())
-        return re.search(r'/datasets/(.*?)/default/', s).group(1).split('___')[-1]
+        s = str(dataset.cache_files.values())
+        return re.search(r"/datasets/(.*?)/default/", s).group(1).split("___")[-1]
     except:
-        return ''
+        return ""
+
 
 @dataclass
 class Task:
-    dataset:Dataset=None
-    name:str=''
-    tokenizer:_=None
+    dataset: Dataset = None
+    name: str = ""
+    tokenizer: _ = None
 
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
@@ -35,30 +37,34 @@ class Task:
 
         self.__class__.__hash__ = Task.__hash__
         if type(self.dataset) == str:
-            name=self.dataset
+            name = self.dataset
             self.dataset = load_dataset(self.dataset)
         elif type(self.dataset) == tuple:
-            name="/".join(self.dataset)
+            name = "/".join(self.dataset)
             self.dataset = load_dataset(*self.dataset)
         else:
-            name=get_name(self.dataset)
-        
+            name = get_name(self.dataset)
+
         if not self.name:
-            self.name=name
+            self.name = name
 
+    def set_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
 
-    def set_tokenizer(self,tokenizer):
-        self.tokenizer=tokenizer
 
 @dataclass
 class Classification(Task):
     task_type = "SequenceClassification"
-    dataset:Dataset=None
+    dataset: Dataset = None
     data_collator = DefaultDataCollator()
-    tokenizer_kwargs :_= field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
-    s1:str='sentence1'
-    s2:str='sentence2'
-    y:str='labels'
+    tokenizer_kwargs: _ = field(
+        default_factory=lambda: edict(
+            truncation=True, padding="max_length", max_length=256
+        )
+    )
+    s1: str = "sentence1"
+    s2: str = "sentence2"
+    y: str = "labels"
     num_labels = None
 
     def __post_init__(self):
@@ -118,13 +124,15 @@ class DataCollatorForMultipleChoice:
 @dataclass
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
-    dataset:Dataset=None
-    tokenizer_kwargs :_= field(default_factory=lambda:edict(padding="max_length", max_length=256))
+    dataset: Dataset = None
+    tokenizer_kwargs: _ = field(
+        default_factory=lambda: edict(padding="max_length", max_length=256)
+    )
 
     num_labels = 2
 
-    choices:_=field(default_factory=list)
-    s1:str='inputs'
+    choices: _ = field(default_factory=list)
+    s1: str = "inputs"
 
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
@@ -156,15 +164,19 @@ class MultipleChoice(Classification):
         }
         return outputs
 
+
 @dataclass
 class TokenClassification(Task):
     task_type = "TokenClassification"
-    dataset:Dataset=None
+    dataset: Dataset = None
     metric = evaluate.load("seqeval")
-    tokenizer_kwargs:_=field(default_factory=lambda:edict(truncation=True, padding="max_length", max_length=256))
-    tokens:str=None
-    y:str=None
-
+    tokenizer_kwargs: _ = field(
+        default_factory=lambda: edict(
+            truncation=True, padding="max_length", max_length=256
+        )
+    )
+    tokens: str = None
+    y: str = None
 
     @staticmethod
     def align_labels_with_tokens(labels, word_ids):
@@ -194,10 +206,12 @@ class TokenClassification(Task):
         self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
         self.label_names = [f"{i}" for i in range(self.num_labels)]
 
-    def set_tokenizer(self,tokenizer):
-        self.tokenizer=tokenizer
-        self.tokenizer.add_prefix_space=True
-        self.data_collator = DataCollatorForTokenClassification(tokenizer=self.tokenizer)
+    def set_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.tokenizer.add_prefix_space = True
+        self.data_collator = DataCollatorForTokenClassification(
+            tokenizer=self.tokenizer
+        )
 
     def preprocess_function(self, examples):
         tokenized_inputs = self.tokenizer(
@@ -233,5 +247,6 @@ class TokenClassification(Task):
             "precision": all_metrics["overall_precision"],
             "recall": all_metrics["overall_recall"],
             "f1": all_metrics["overall_f1"],
-            "accuracy": all_metrics["overall_accuracy"], **meta
+            "accuracy": all_metrics["overall_accuracy"],
+            **meta,
         }
