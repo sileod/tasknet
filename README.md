@@ -41,15 +41,7 @@ As you can see, tasknet is multitask by design. It works with list of tasks and 
 ## Additional examples:
 ### Colab:
 https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sharing
-### Transfer learning
-```py
-tasks = [rte, reco]
-models = tn.Model(tasks, args) # models with shared encoders
-trainer = tn.Trainer(models, tasks[0:1], args) # train first task (STILT)
-trainer.train()
-trainer = tn.Trainer(models, tasks[1:2], args) # train second with encoder initialized by first task
-trainer.train()
-```
+
 
 ## tasknet vs jiant
 [jiant](https://github.com/nyu-mll/jiant/tree/master/jiant) is another library comparable to tasknet.  tasknet is a minimal extension of `Trainer` centered on task templates, while jiant builds a custom analog of `Trainer` from scratch called [`runner`](https://github.com/nyu-mll/jiant/blob/master/jiant/proj/main/runner.py).
