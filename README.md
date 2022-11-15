@@ -47,6 +47,11 @@ https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sh
 [jiant](https://github.com/nyu-mll/jiant/) is another library comparable to tasknet.  tasknet is a minimal extension of `Trainer` centered on task templates, while jiant builds a custom analog of `Trainer` from scratch called [`runner`](https://github.com/nyu-mll/jiant/blob/master/jiant/proj/main/runner.py).
 `tasknet` is leaner and easier to extend. jiant is config-based while tasknet is designed for interative use and scripting.
 
+## Credit
+
+This code uses some part of the examples of the [transformers](https://github.com/huggingface/transformers/tree/main/src/transformers) library and some code from 
+[multitask-learning-transformers](https://github.com/shahrukhx01/multitask-learning-transformers).
+
 ## Contact
 You can request features on github or reach me at `damien.sileo@inria.fr`
 ```bib
