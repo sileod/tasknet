@@ -8,7 +8,7 @@
 - `TokenClassification`
 - `MultipleChoice`
 
-The task templates follow an identical structure. They implement `preprocess_function` and `compute_metrics`.
+The task templates follow the same interface. They implement `preprocess_function` and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
 
 ## Instanciating a task
@@ -33,7 +33,7 @@ model = tn.Model(tasks, args)
 trainer = tn.Trainer(model, tasks, args)
 trainer.train()
 ```
-As you can see, tasknet is multitask by design. It works with list of tasks and model has `task_models_list` attribute.
+As you can see, tasknet is multitask by design. It works with list of tasks and the model creates a `task_models_list` attribute.
 
 ## Installation
 `pip install tasknet`
