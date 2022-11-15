@@ -4,6 +4,7 @@ import datasets
 from datasets import load_dataset, Dataset
 from transformers import DefaultDataCollator
 from transformers import DataCollatorForTokenClassification
+from transformers import PreTrainedTokenizerBase
 from evaluate import load as load_metric
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
@@ -11,9 +12,9 @@ import funcy as fc
 import evaluate
 from dataclasses import dataclass, field
 import re
+from tokenizers.tokenization_utils_base import PreTrainedTokenizerBase
 
 load_dataset = lazy_func(datasets.load_dataset)
-_ = None
 
 
 def get_name(dataset):
@@ -28,7 +29,7 @@ def get_name(dataset):
 class Task:
     dataset: Dataset = None
     name: str = ""
-    tokenizer: _ = None
+    tokenizer: PreTrainedTokenizerBase = None
 
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
@@ -86,7 +87,7 @@ class Classification(Task):
     def compute_metrics(self, eval_pred):
         predictions, labels = eval_pred.predictions, eval_pred.label_ids
         if "int" in str(eval_pred.label_ids.dtype):
-            metric = load_metric("glue", "mnli")
+            metric = load_metric("super_glue", "cb")
             predictions = np.argmax(predictions, axis=1)
         else:
             metric = load_metric("glue", "stsb")

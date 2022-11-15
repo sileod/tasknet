@@ -2,7 +2,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import transformers
-import datasets
 from torch.utils.data.dataloader import DataLoader
 from transformers.data.data_collator import InputDataClass
 from torch.utils.data.distributed import DistributedSampler
@@ -16,7 +15,6 @@ from transformers import (
     AutoModelForTokenClassification,
 )
 from transformers import EncoderDecoderModel
-from lazy_load import lazy_func
 from easydict import EasyDict as edict
 import funcy as fc
 import copy
@@ -25,8 +23,6 @@ import functools
 from types import MappingProxyType
 from .tasks import Classification
 from transformers import AutoTokenizer
-
-load_dataset = lazy_func(datasets.load_dataset)
 
 
 class CLSEmbedding(nn.Module):
@@ -40,11 +36,10 @@ class CLSEmbedding(nn.Module):
 
 
 class Model(transformers.PreTrainedModel):
-    def __init__(self, tasks, args):
+    def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
         tasks = [x(tokenizer=edict()) if inspect.isclass(x) else x for x in tasks]
-        self.Z = nn.parameter.Parameter(torch.zeros(len(tasks), 768, device="cuda"))
-        shared_encoder = None
+        self.shared_encoder = warm_start
         task_models_list = []
         for i, task in enumerate(tasks):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -54,26 +49,33 @@ class Model(transformers.PreTrainedModel):
                 else {}
             )
             model = model_type.from_pretrained(args.model_name, **nl)
+            model.auto = getattr(model, self.get_encoder_attr_name(model))
             model.i = i
-            if shared_encoder is None:
-                # shared_encoder = getattr(model, cls.get_encoder_attr_name(model))
-                shared_encoder = fc.first(model.children())
+            if self.shared_encoder is None:
+                self.shared_encoder = model.auto
             else:
-                self.shallow_copy(
-                    shared_encoder, getattr(model, self.get_encoder_attr_name(model))
-                )
+                self.shallow_copy(self.shared_encoder, model.auto)
+
             task_models_list += [model]
         self.task_models_list = nn.ModuleList(task_models_list)
 
+        self.Z = nn.parameter.Parameter(
+            torch.zeros(len(tasks),
+            self.shared_encoder.config.hidden_size, device="cuda"))
+
         for i, task in enumerate(tasks):
-            self.task_models_list[i].roberta.embeddings.word_embeddings = nn.Sequential(
-                self.task_models_list[i].roberta.embeddings.word_embeddings,
+            self.task_models_list[i].auto.embeddings.word_embeddings = nn.Sequential(
+                self.task_models_list[i].auto.embeddings.word_embeddings,
                 CLSEmbedding(self.Z[i]),
             )
+    def set_encoder(self,encoder):
+        for model in self.task_models_list:
+            self.shallow_copy(encoder, getattr(model, self.get_encoder_attr_name(model)))
+
 
     @staticmethod
     def shallow_copy(A, B):
-        """A into B
+        """Shallow copy (=parameter sharing) A into B
         https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects/31174427?noredirect=1#comment86638618_31174427"""
 
         def rsetattr(obj, attr, val):
@@ -95,7 +97,7 @@ class Model(transformers.PreTrainedModel):
         if hasattr(model, "encoder"):
             return "encoder"
         else:
-            return model.config.model_type
+            return model.config.model_type.split('-')[0]
 
     def forward(self, task, **kwargs):
         task_index = task[0].item()
