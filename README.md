@@ -29,11 +29,11 @@ class args:
 
  
 tasks = [rte]
-models = tn.Model(tasks, args)
-trainer = tn.Trainer(models, tasks, args)
+model = tn.Model(tasks, args)
+trainer = tn.Trainer(model, tasks, args)
 trainer.train()
 ```
-As you can see, tasknet is multitask by design. It works with list of tasks and list of models.
+As you can see, tasknet is multitask by design. It works with list of tasks and model has `task_models_list` attribute.
 
 ## Installation
 `pip install tasknet`
