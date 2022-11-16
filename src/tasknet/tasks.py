@@ -15,7 +15,6 @@ import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 load_dataset = lazy_func(datasets.load_dataset)
-_ = None
 
 def get_name(dataset):
     try:
@@ -58,7 +57,7 @@ class Classification(Task):
     task_type = "SequenceClassification"
     dataset: Dataset = None
     data_collator = DefaultDataCollator()
-    tokenizer_kwargs: _ = field(
+    tokenizer_kwargs: ... = field(
         default_factory=lambda: edict(
             truncation=True, padding="max_length", max_length=256
         )
@@ -97,8 +96,8 @@ class Classification(Task):
 
 @dataclass
 class DataCollatorForMultipleChoice:
-    tokenizer: None
-    tokenizer_kwargs: None
+    tokenizer: ... =None
+    tokenizer_kwargs: ... =None
 
     def __call__(self, features):
         label_name = "label" if "label" in features[0].keys() else "labels"
@@ -126,13 +125,13 @@ class DataCollatorForMultipleChoice:
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
     dataset: Dataset = None
-    tokenizer_kwargs: _ = field(
+    tokenizer_kwargs: ... = field(
         default_factory=lambda: edict(padding="max_length", max_length=256)
     )
 
     num_labels = 2
-    data_collator: _ = field(default_factory=lambda: DataCollatorForMultipleChoice())
-    choices: _ = field(default_factory=list)
+    data_collator:...= field(default_factory=lambda: DataCollatorForMultipleChoice())
+    choices: ... = field(default_factory=list)
     s1: str = "inputs"
         
     def __post_init__(self):
@@ -172,7 +171,7 @@ class TokenClassification(Task):
     task_type = "TokenClassification"
     dataset: Dataset = None
     metric = evaluate.load("seqeval")
-    tokenizer_kwargs: _ = field(
+    tokenizer_kwargs: ... = field(
         default_factory=lambda: edict(
             truncation=True, padding="max_length", max_length=256
         )
