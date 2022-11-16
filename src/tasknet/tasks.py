@@ -12,7 +12,7 @@ import funcy as fc
 import evaluate
 from dataclasses import dataclass, field
 import re
-from tokenizers.tokenization_utils_base import PreTrainedTokenizerBase
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 load_dataset = lazy_func(datasets.load_dataset)
 
