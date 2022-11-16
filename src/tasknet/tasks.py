@@ -131,15 +131,16 @@ class MultipleChoice(Classification):
     )
 
     num_labels = 2
-
+    data_collator: _ = DataCollatorForMultipleChoice()
     choices: _ = field(default_factory=list)
     s1: str = "inputs"
+        
+    def __post_init__(self):
+        super().__post_init__()
+        self.data_collator.tokenizer_kwargs = self.tokenizer_kwargs
 
     def set_tokenizer(self, tokenizer):
-        self.tokenizer = tokenizer
-        self.data_collator = DataCollatorForMultipleChoice(
-            tokenizer=self.tokenizer, tokenizer_kwargs=self.tokenizer_kwargs
-        )
+        self.tokenizer = self.data_collator.tokenizer= tokenizer
 
     def preprocess_function(self, examples):
         num_choices = len(self.choices)
