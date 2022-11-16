@@ -131,7 +131,7 @@ class MultipleChoice(Classification):
     )
 
     num_labels = 2
-    data_collator: _ = DataCollatorForMultipleChoice()
+    data_collator: _ = field(default_factory=lambda: DataCollatorForMultipleChoice())
     choices: _ = field(default_factory=list)
     s1: str = "inputs"
         
