@@ -15,7 +15,7 @@ import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 
 load_dataset = lazy_func(datasets.load_dataset)
-_= = None
+_ = None
 
 def get_name(dataset):
     try:
