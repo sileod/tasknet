@@ -69,8 +69,8 @@ class Classification(Task):
 
     def __post_init__(self):
         super().__post_init__()
-        target = self.dataset["train"].features[self.y]
         if not self.num_labels:
+            target = self.dataset["train"].features[self.y]
             self.num_labels = 1 if "float" in target.dtype else target.num_classes
 
     def preprocess_function(self, examples):
