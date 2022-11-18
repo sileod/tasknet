@@ -8,7 +8,7 @@
 - `TokenClassification`
 - `MultipleChoice`
 
-The task templates follow the same interface. They implement `preprocess_function` and `compute_metrics`.
+The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
 
 ## Instanciating a task
