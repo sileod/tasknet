@@ -65,7 +65,7 @@ class Classification(Task):
     s1: str = "sentence1"
     s2: str = "sentence2"
     y: str = "labels"
-    num_labels = None
+    num_labels: int = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -178,6 +178,7 @@ class TokenClassification(Task):
     )
     tokens: str = None
     y: str = None
+    num_labels: int = None
 
     @staticmethod
     def align_labels_with_tokens(labels, word_ids):
@@ -204,7 +205,8 @@ class TokenClassification(Task):
     def __post_init__(self):
         super().__post_init__()
         target = self.dataset["train"].features[self.y]
-        self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
+        if not self.num_labels:
+            self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
         self.label_names = [f"{i}" for i in range(self.num_labels)]
 
     def set_tokenizer(self, tokenizer):
