@@ -178,6 +178,7 @@ class Trainer(transformers.Trainer):
         class default:
             output_dir = "./models/multitask_model"
             evaluation_strategy = "epoch"
+            logging_trategy = "epoch"
             overwrite_output_dir = True
             do_train = True
             per_device_train_batch_size = 8
