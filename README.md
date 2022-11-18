@@ -3,7 +3,7 @@
 
 
 ## Task templates
-`tasknet` relies on task templates to avoid boilerplate codes. The task templates are correspond to Transformers AutoClasses:
+`tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
 - `SequenceClassification` 
 - `TokenClassification`
 - `MultipleChoice`
