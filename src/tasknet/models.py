@@ -223,7 +223,9 @@ class Trainer(transformers.Trainer):
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
         self.cleanup_outputs()
-
+        self.callback_handler.callbacks[-1].training_tracker.write_line = fc.partial(
+            self.write_line, self.callback_handler.callbacks[-1].training_tracker
+        )
     @staticmethod
     def cleanup_outputs():
         try:
@@ -246,9 +248,6 @@ class Trainer(transformers.Trainer):
             other.inner_table.append([values.get(c, np.nan) for c in columns])
 
     def evaluate(self, **kwargs):
-        self.callback_handler.callbacks[-1].training_tracker.write_line = fc.partial(
-            self.write_line, self.callback_handler.callbacks[-1].training_tracker
-        )
         outputs = []
         for i, task in enumerate(self.tasks):
             self.compute_metrics = task.compute_metrics
