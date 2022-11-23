@@ -8,11 +8,13 @@ from transformers import PreTrainedTokenizerBase
 from evaluate import load as load_metric
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
+from frozendict import frozendict as fdict
 import funcy as fc
 import evaluate
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from frozendict import frozendict
 
 load_dataset = lazy_func(datasets.load_dataset)
 
@@ -57,11 +59,9 @@ class Classification(Task):
     task_type = "SequenceClassification"
     dataset: Dataset = None
     data_collator = DefaultDataCollator()
-    tokenizer_kwargs: ... = field(
-        default_factory=lambda: edict(
+    tokenizer_kwargs: ... = fdict(
             truncation=True, padding="max_length", max_length=256
         )
-    )
     s1: str = "sentence1"
     s2: str = "sentence2"
     y: str = "labels"
@@ -124,14 +124,11 @@ class DataCollatorForMultipleChoice:
 @dataclass
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
-    dataset: Dataset = None
-    tokenizer_kwargs: ... = field(
-        default_factory=lambda: edict(padding="max_length", max_length=256)
-    )
+    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256)
 
-    num_labels = 2
-    data_collator:...= field(default_factory=lambda: DataCollatorForMultipleChoice())
-    choices: ... = field(default_factory=list)
+    num_labels:int = 2
+    data_collator:...= DataCollatorForMultipleChoice()
+    choices: ... = tuple()
     s1: str = "inputs"
         
     def __post_init__(self):
@@ -171,11 +168,10 @@ class TokenClassification(Task):
     task_type = "TokenClassification"
     dataset: Dataset = None
     metric = evaluate.load("seqeval")
-    tokenizer_kwargs: ... = field(
-        default_factory=lambda: edict(
+    tokenizer_kwargs: ... = fdict(
             truncation=True, padding="max_length", max_length=256
         )
-    )
+
     tokens: str = None
     y: str = None
     num_labels: int = None

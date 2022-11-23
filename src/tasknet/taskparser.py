@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 split_mapping={
 'train':['train_split','training'],
 'validation':['validation','dev','eval_split']

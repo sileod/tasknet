@@ -18,6 +18,7 @@ from transformers import EncoderDecoderModel
 from easydict import EasyDict as edict
 import funcy as fc
 import copy
+import logging
 import inspect
 import functools
 from types import MappingProxyType
@@ -38,7 +39,6 @@ class CLSEmbedding(nn.Module):
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
-        tasks = [x(tokenizer=edict()) if inspect.isclass(x) else x for x in tasks]
         self.shared_encoder = warm_start
         task_models_list = []
         for i, task in enumerate(tasks):
@@ -212,10 +212,15 @@ class Trainer(transformers.Trainer):
         self.tokenizer = tokenizer
         self.processed_tasks = preprocess_tasks(tasks, self.tokenizer)
         self.train_dataset = {
-            task: dataset["train"] for task, dataset in self.processed_tasks.items()
+            task: dataset["train"]
+            for task, dataset in self.processed_tasks.items()
         }
         self.eval_dataset = {
             task: dataset["validation"]
+            for task, dataset in self.processed_tasks.items()
+        }
+        self.test_dataset = {
+            task: dataset["test"]
             for task, dataset in self.processed_tasks.items()
         }
         # We revents trainer from automatically evaluating on each dataset:
@@ -223,9 +228,7 @@ class Trainer(transformers.Trainer):
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
         self.cleanup_outputs()
-        self.callback_handler.callbacks[-1].training_tracker.write_line = fc.partial(
-            self.write_line, self.callback_handler.callbacks[-1].training_tracker
-        )
+
     @staticmethod
     def cleanup_outputs():
         try:
@@ -248,6 +251,12 @@ class Trainer(transformers.Trainer):
             other.inner_table.append([values.get(c, np.nan) for c in columns])
 
     def evaluate(self, **kwargs):
+        try:
+            self.callback_handler.callbacks[-1].training_tracker.write_line = fc.partial(
+                self.write_line, self.callback_handler.callbacks[-1].training_tracker
+            )
+        except:
+            logging.info('No training_tracker')
         outputs = []
         for i, task in enumerate(self.tasks):
             self.compute_metrics = task.compute_metrics
@@ -307,6 +316,15 @@ class Trainer(transformers.Trainer):
             }
         )
 
+    def get_test_dataloader(self, test_dataset=None):
+        return MultitaskDataloader(
+            {
+                task_name: self.get_single_train_dataloader(task_name, task_dataset)
+                for task_name, task_dataset in (
+                    test_dataset if test_dataset else self.test_dataset
+                ).items()
+            }
+        )
 
 def preprocess_tasks(tasks, tokenizer):
 
