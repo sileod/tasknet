@@ -4,6 +4,7 @@ import datasets
 from datasets import load_dataset, Dataset
 from transformers import DefaultDataCollator
 from transformers import DataCollatorForTokenClassification
+from transformers import DataCollatorForSeq2Seq
 from transformers import PreTrainedTokenizerBase
 from evaluate import load as load_metric
 from lazy_load import lazy_func
@@ -31,6 +32,7 @@ class Task:
     dataset: Dataset = None
     name: str = ""
     tokenizer: PreTrainedTokenizerBase = None
+    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256)
 
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
@@ -59,9 +61,6 @@ class Classification(Task):
     task_type = "SequenceClassification"
     dataset: Dataset = None
     data_collator = DefaultDataCollator()
-    tokenizer_kwargs: ... = fdict(
-            truncation=True, padding="max_length", max_length=256
-        )
     s1: str = "sentence1"
     s2: str = "sentence2"
     y: str = "labels"
@@ -124,8 +123,6 @@ class DataCollatorForMultipleChoice:
 @dataclass
 class MultipleChoice(Classification):
     task_type = "MultipleChoice"
-    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256)
-
     num_labels:int = 2
     data_collator:...= DataCollatorForMultipleChoice()
     choices: ... = tuple()
@@ -156,7 +153,7 @@ class MultipleChoice(Classification):
         )
 
         # Un-flatten
-        outputs = {
+        outputs = { 
             k: [v[i : i + num_choices] for i in range(0, len(v), num_choices)]
             for k, v in tokenized_examples.items()
         }
@@ -167,17 +164,14 @@ class MultipleChoice(Classification):
 class TokenClassification(Task):
     task_type = "TokenClassification"
     dataset: Dataset = None
-    metric = evaluate.load("seqeval")
-    tokenizer_kwargs: ... = fdict(
-            truncation=True, padding="max_length", max_length=256
-        )
+    metric:... = evaluate.load("seqeval")
 
     tokens: str = None
     y: str = None
     num_labels: int = None
 
     @staticmethod
-    def align_labels_with_tokens(labels, word_ids):
+    def _align_labels_with_tokens(labels, word_ids):
         new_labels = []
         current_word = None
         for word_id in word_ids:
@@ -220,7 +214,7 @@ class TokenClassification(Task):
         new_labels = []
         for i, labels in enumerate(all_labels):
             word_ids = tokenized_inputs.word_ids(i)
-            new_labels.append(self.align_labels_with_tokens(labels, word_ids))
+            new_labels.append(self._align_labels_with_tokens(labels, word_ids))
         tokenized_inputs["labels"] = new_labels
         outputs = tokenized_inputs
         return outputs
@@ -249,3 +243,60 @@ class TokenClassification(Task):
             "accuracy": all_metrics["overall_accuracy"],
             **meta,
         }
+
+
+@dataclass
+class Seq2SeqLM(Task):
+    task_type='Seq2SeqLM'
+    data_collator:...=DataCollatorForSeq2Seq(None)
+    s1:str=''
+    s2:str=''
+    metric:...=datasets.load_metric("bleu")
+    def set_tokenizer(self,tokenizer):
+        self.tokenizer=self.data_collator.tokenizer=tokenizer
+        self.tokenizer_kwargs=self.data_collator.tokenizer_kwargs=edict(self.tokenizer_kwargs)
+
+    def preprocess_function(self, batch):
+        source, target = batch[self.s1], batch[self.s2]
+        source_tokenized = self.tokenizer(
+            source, padding="max_length", truncation=True, max_length=self.tokenizer_kwargs.max_length
+        )
+        target_tokenized = self.tokenizer(
+            target, padding="max_length", truncation=True, max_length=self.tokenizer_kwargs.max_length
+        )
+
+        batch = {k: v for k, v in source_tokenized.items()}
+        # Ignore padding in the loss
+        batch["labels"] = [
+            [-100 if token == self.tokenizer.pad_token_id else token for token in l]
+            for l in target_tokenized["input_ids"]
+        ]
+        batch['task']=[self.index]*len(batch[fc.first(batch)])
+
+        return batch
+
+    @classmethod
+    def _explode(result,prefix=''):
+        return {f'{prefix}{k}_{a}_{b}'.replace("_mid","").replace("_fmeasure",""):round(getattr(getattr(v,b),a)*100,3)\
+                for (k,v) in result.items() for a in ['precision','recall','fmeasure'] for b in ['low','mid','high']}
+                
+    def compute_metrics(self, eval_preds):
+        if isinstance(preds, tuple):
+            preds = preds[0]
+        decoded_preds = self.tokenizer.batch_decode(preds, skip_special_tokens=True)
+        # Replace -100 in the labels as we can't decode them.
+        labels = np.where(labels != -100, labels, self.tokenizer.pad_token_id)
+        decoded_labels = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+        # Some simple post-processing
+        decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+        g = decoded_preds, decoded_labels
+        result = self.metric.compute(
+            predictions=decoded_preds, references=decoded_labels, use_stemmer=True
+        )
+        # Extract a few results from ROUGE
+        #result = {key: value.mid.fmeasure * 100 for key, value in result.items()}
+        result=self._explode(result)
+        meta = {"name": self.name, "size": len(decoded_preds), "index": self.index}
+
+        return {**result,**meta}

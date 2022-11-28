@@ -19,12 +19,11 @@ from easydict import EasyDict as edict
 import funcy as fc
 import copy
 import logging
-import inspect
 import functools
 from types import MappingProxyType
 from .tasks import Classification
 from transformers import AutoTokenizer
-
+import magicattr
 
 class CLSEmbedding(nn.Module):
     def __init__(self, Zi):
@@ -64,10 +63,14 @@ class Model(transformers.PreTrainedModel):
             self.shared_encoder.config.hidden_size, device="cuda"))
 
         for i, task in enumerate(tasks):
-            self.task_models_list[i].auto.embeddings.word_embeddings = nn.Sequential(
-                self.task_models_list[i].auto.embeddings.word_embeddings,
-                CLSEmbedding(self.Z[i]),
+
+            m_i = self.task_models_list[i]
+            emb_name, emb_module = [(name,module) for name,module in m_i.named_modules() if isinstance(module,torch.nn.Embedding)][0]
+
+            magicattr.set(m_i, emb_name,
+                nn.Sequential(emb_module, CLSEmbedding(self.Z[i]))
             )
+
     def set_encoder(self,encoder):
         for model in self.task_models_list:
             self.shallow_copy(encoder, getattr(model, self.get_encoder_attr_name(model)))
@@ -94,6 +97,8 @@ class Model(transformers.PreTrainedModel):
 
     @classmethod
     def get_encoder_attr_name(cls, model):
+        if hasattr(model,'model'):
+            return 'model'
         if hasattr(model, "encoder"):
             return "encoder"
         else:
@@ -206,6 +211,10 @@ class Trainer(transformers.Trainer):
             *args,
             **kwargs,
         )
+
+        if 'max_length' in kwargs:
+            for t in tasks:
+                t.tokenizer_kwargs['max_length']=kwargs['max_length']
 
         self.data_collator = NLPDataCollator(tasks)
         self.tasks = tasks
