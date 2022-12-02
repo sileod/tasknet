@@ -1,4 +1,8 @@
 from dataclasses import dataclass
+import numpy as np
+import funcy as fc
+from datasets import Dataset, DatasetDict
+import pandas as pd
 
 split_mapping={
 'train':['train_split','training'],
@@ -43,19 +47,37 @@ def fix_splits(dataset):
     return dataset
 
 fields_mapping={
-    'sentence1':['premise','sentence','sentence1','text','head','question1','question'],
-    'sentence2':['hypothesis','sentence2','tail','question2'],
+    'sentence1':['premise','sentence','sentence1','text','head','question1','question','sentence_A'],
+    'sentence2':['hypothesis','sentence2','tail','question2','sentence_B'],
     'labels':['label','labels','relation','gold_label']
-    
 }
 
-def align_fields(x):
+def align_fields(dataset):
     for k,v in fields_mapping.items():
-        bad_fields = [field for field in v if field in x and field!=k]
+        bad_fields = [field for field in v if field in dataset['train'].features and field!=k]
         if bad_fields:
-            x[k]=x[bad_fields[0]]
-            del x[bad_fields[0]]
-    return x
+            dataset=dataset.rename_column(bad_fields[0], k)
+    return dataset
+
+def align_fields_MultipleChoice(dataset):
+    fields_mapping={'inputs':['sentence1','question']}
+    for k,v in fields_mapping.items():
+        bad_fields = [field for field in v if field in dataset['train'].features and field!=k]
+        if bad_fields:
+            dataset=dataset.rename_column(bad_fields[0], k)
+    return dataset
+
+def process_labels(dataset):
+    if  dataset['train'].features['labels'].dtype!='string':
+        return dataset
+
+    labels=pd.Series(dataset['train']['labels']).value_counts().reset_index()
+    label_to_index=fc.flip(labels['index'].to_dict())
+    def tokenize_labels(x):
+        x['labels']=label_to_index.get(x['labels'],max(label_to_index.values())+1)
+        return x
+    dataset=dataset.map(tokenize_labels)
+    return dataset
 
 def get_name(dataset):
     return str(dataset.cache_files).split('/.cache/huggingface/datasets/')[-1].split('/')[0]
@@ -72,15 +94,18 @@ def task_type(x):
         return 'MultipleChoice'
     if x.dataset_name in {'bigbench','blimp','hendrycks_test'}:
         return 'MultipleChoice'
-    if x.dataset_name in {'glue','anli','tweet_eval','pragmeval','relbert/lexical_relation_classification','metaeval/linguisticprobing'}:
+    if x.dataset_name in {'glue','anli','tweet_eval','pragmeval',
+    'relbert/lexical_relation_classification','metaeval/linguisticprobing',
+    'paws','lex_glue','sick','snips_built_in_intents','discovery','ethos','imppres'}:
         return 'Classification'
     if x.dataset_name in {'conll2003'}:
         return 'TokenClassification'
 
 @dataclass
 class TaskParser:
-    #todo sick
-    def normalize_anli(dataset):
+    max_choices:int=None
+    #todo: sick
+    def normalize_anli(self, dataset):
         l=[]
         for i in '123':
             split=[f'train_r{i}',f'dev_r{i}',f'test_r{i}']
@@ -90,7 +115,7 @@ class TaskParser:
             l+=[align_splits(ds)]
         return l
     
-    def normalize_conll2003(dataset):
+    def normalize_conll2003(self, dataset):
         l=[]
         for y in ['pos_tags', 'chunk_tags', 'ner_tags']:
             ds=dataset.rename_column('pos_tags','labels')
@@ -98,17 +123,17 @@ class TaskParser:
             l+=[ds]
         return l
     
-    def normalize_blimp(dataset):
+    def normalize_blimp(self, dataset):
         def add_label(x):
             x['label']=0
-            x['s1']=''
+            x['inputs']=''
             return x
         dataset=dataset.map(add_label).\
         rename_column('sentence_good','choice0').\
         rename_column('sentence_bad','choice1')
         return dataset
     
-    def normalize_hendrycks_test(dataset):
+    def normalize_hendrycks_test(self, dataset):
         def reformat(x):
             for i in range(4):
                 x[f'choice{i}']=x['choices'][i]
@@ -116,7 +141,7 @@ class TaskParser:
             return x  
         return dataset.map(reformat).rename_column('answer','labels')
         
-    def normalize_bigbench(dataset):
+    def normalize_bigbench(self, dataset):
 
         try:
             minimum_answer_counts=min(
@@ -124,7 +149,7 @@ class TaskParser:
                  for ds in dataset.values()
                 ]
             )
-            assert minimum_answer_counts
+            assert minimum_answer_counts<9
             print('minimum_answer_counts:',minimum_answer_counts)
         except:
             raise ValueError('Unsupported bigbench format')
@@ -140,7 +165,8 @@ class TaskParser:
             return x
         
         def reformat(x):
-            x=cap_options(x,minimum_answer_counts-1)
+            n_options= self.max_choices if self.max_choices else (0,minimum_answer_counts-1) 
+            x=cap_options(x,n_options)
             x['labels']=np.argmax(x['multiple_choice_scores'])
             for i,o in enumerate(x['multiple_choice_targets']):
                 x[f'choice{i}']=o
@@ -148,15 +174,22 @@ class TaskParser:
         dataset= dataset.map(reformat)
         dataset=dataset_deduplicate(dataset,subset=['inputs','choice0'])
         return dataset
-    def parse(dataset,dataset_name=None):
+
+    def parse(self, dataset,dataset_name=None, task_type=None):
         if not dataset_name:
             dataset_name=get_name(dataset)
             print('name:',dataset_name)
-        if hasattr(TaskParser, f'normalize_{dataset_name}'):
-            dataset=getattr(TaskParser, f'normalize_{dataset_name}')(dataset)
-        if type(dataset)==list:
-            dataset=dataset[0]
-        dataset=align_splits(dataset)
-        dataset=fix_splits(dataset)
-        dataset=dataset.map(align_fields)
-        return dataset
+        if hasattr(self, f'normalize_{dataset_name}'):
+            dataset=getattr(self, f'normalize_{dataset_name}')(dataset)
+        if type(dataset)!=list:
+            datasets=[dataset]
+        l=[]
+        for dataset in datasets:
+            dataset=align_splits(dataset)
+            dataset=fix_splits(dataset)
+            dataset=align_fields(dataset)
+            dataset=process_labels(dataset)
+            if task_type=='MultipleChoice':
+                dataset=align_fields_MultipleChoice(dataset)
+            l+=[dataset]
+        return l

@@ -5,7 +5,7 @@ import transformers
 from torch.utils.data.dataloader import DataLoader
 from transformers.data.data_collator import InputDataClass
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler
+from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler
 from typing import List, Union, Dict
 from transformers import (
     AutoModelForSeq2SeqLM,
@@ -22,6 +22,7 @@ import logging
 import functools
 from types import MappingProxyType
 from .tasks import Classification
+from .utils import to_dict
 from transformers import AutoTokenizer
 import magicattr
 
@@ -142,15 +143,18 @@ class MultitaskDataloader:
     data loaders.
     """
 
-    def __init__(self, dataloader_dict):
+    def __init__(self, dataloader_dict, p=1):
         self.dataloader_dict = dataloader_dict
+        N=max([len(x)**(1-p) for x in dataloader_dict.values()])
+        f_p = lambda x: int(N*x**p)
+
         self.num_batches_dict = {
-            task_name: len(dataloader)
+            task_name: f_p(len(dataloader))
             for task_name, dataloader in self.dataloader_dict.items()
         }
         self.task_name_list = list(self.dataloader_dict)
         self.dataset = [None] * sum(
-            len(dataloader.dataset) for dataloader in self.dataloader_dict.values()
+            f_p(len(dataloader.dataset)) for dataloader in self.dataloader_dict.values()
         )
 
     def __len__(self):
@@ -160,9 +164,6 @@ class MultitaskDataloader:
         """
         For each batch, sample a task, and yield a batch from the respective
         task Dataloader.
-
-        We use size-proportional sampling, but you could easily modify this
-        to sample from some-other distribution.
         """
         task_choice_list = []
         for i, task_name in enumerate(self.task_name_list):
@@ -190,13 +191,9 @@ class Trainer(transformers.Trainer):
             save_steps = 1000000
             label_names = ["labels"]
             include_inputs_for_metrics = True
-
-        default = {
-            k: v for (k, v) in default.__dict__.items() if not k.startswith("__")
-        }
-        hparams = {
-            k: v for (k, v) in hparams.__dict__.items() if not k.startswith("__")
-        }
+            
+        default, hparams = to_dict(default), to_dict(hparams)
+        self.p = hparams.get('p', 1)
 
         trainer_args = transformers.TrainingArguments(
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
@@ -278,6 +275,12 @@ class Trainer(transformers.Trainer):
             outputs += [output]
         return fc.join(outputs)
 
+    def task_batch_size(self,task_name):
+        if task_name.task_type=='MultipleChoice':
+            return min(1, self.args.train_batch_size//4)
+        else:
+            return self.args.train_batch_size
+
     def get_single_train_dataloader(self, task_name, train_dataset):
         """
         Create a single-task data loader that also yields task names
@@ -294,7 +297,7 @@ class Trainer(transformers.Trainer):
             task_name=task_name,
             data_loader=DataLoader(
                 train_dataset,
-                batch_size=self.args.train_batch_size,
+                batch_size=self.task_batch_size(task_name),
                 sampler=train_sampler,
                 collate_fn=self.data_collator.__call__,
             ),
@@ -312,7 +315,7 @@ class Trainer(transformers.Trainer):
             {
                 task_name: self.get_single_train_dataloader(task_name, task_dataset)
                 for task_name, task_dataset in self.train_dataset.items()
-            }
+            }, p=self.p,
         )
 
     def get_eval_dataloader(self, eval_dataset=None):

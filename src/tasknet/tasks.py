@@ -15,24 +15,31 @@ import evaluate
 from dataclasses import dataclass
 import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
-from frozendict import frozendict
-
+import inspect
 load_dataset = lazy_func(datasets.load_dataset)
 
-def get_name(dataset):
+def get_dataset_name(dataset):
     try:
-        s = str(dataset.cache_files.values())
-        return re.search(r"/datasets/(.*?)/default/", s).group(1).split("___")[-1]
+        s="/".join(dataset.cache_files['train'][0]['filename'].split('/huggingface/datasets/')[-1].split('/')[:-3])
+        return s
     except:
         return ""
 
+def sample_dataset(dataset,n=10000, n_eval=1000):
+    for k in dataset:
+        n_k=(n if k=='train' else n_eval)
+        if n_k and len(dataset[k])>n_k:
+            dataset[k]=dataset[k].select(range(n_k))
+    return dataset
 
 @dataclass
 class Task:
     dataset: Dataset = None
     name: str = ""
     tokenizer: PreTrainedTokenizerBase = None
-    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256)
+    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256,truncation=True)
+    max_rows:int=None
+    max_rows_eval:int=None
 
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
@@ -47,10 +54,12 @@ class Task:
             name = "/".join(self.dataset)
             self.dataset = load_dataset(*self.dataset)
         else:
-            name = get_name(self.dataset)
+            name = get_dataset_name(self.dataset)
 
         if not self.name:
             self.name = name
+        self.dataset=sample_dataset(self.dataset,self.max_rows,self.max_rows_eval)
+
 
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
@@ -70,7 +79,12 @@ class Classification(Task):
         super().__post_init__()
         if not self.num_labels:
             target = self.dataset["train"].features[self.y]
-            self.num_labels = 1 if "float" in target.dtype else target.num_classes
+            if "float" in target.dtype:
+                self.num_labels = 1
+            elif hasattr(target,'num_classes'):
+                self.num_labels=target.num_classes
+            else:
+                self.num_labels=len(set(self.dataset['train'][self.y]))
 
     def preprocess_function(self, examples):
         inputs = (
@@ -110,7 +124,8 @@ class DataCollatorForMultipleChoice:
         ]
         flattened_features = sum(flattened_features, [])
 
-        batch = self.tokenizer.pad(flattened_features, **self.tokenizer_kwargs)
+        pad_args=inspect.signature(self.tokenizer.pad).parameters.keys()
+        batch = self.tokenizer.pad(flattened_features, **fc.project(self.tokenizer_kwargs,pad_args))
 
         # Un-flatten
         batch = {k: v.view(batch_size, num_choices, -1) for k, v in batch.items()}
@@ -131,7 +146,9 @@ class MultipleChoice(Classification):
     def __post_init__(self):
         super().__post_init__()
         self.data_collator.tokenizer_kwargs = self.tokenizer_kwargs
-
+        choices = [x for x in self.dataset['train'].features if re.match('choice\d+',x)]
+        if choices and not self.choices:
+            self.choices=choices
     def set_tokenizer(self, tokenizer):
         self.tokenizer = self.data_collator.tokenizer= tokenizer
 
@@ -149,7 +166,7 @@ class MultipleChoice(Classification):
 
         # Tokenize
         tokenized_examples = self.tokenizer(
-            first_sentences, second_sentences, truncation=True
+            first_sentences, second_sentences, **self.tokenizer_kwargs
         )
 
         # Un-flatten
@@ -279,8 +296,21 @@ class Seq2SeqLM(Task):
     def _explode(result,prefix=''):
         return {f'{prefix}{k}_{a}_{b}'.replace("_mid","").replace("_fmeasure",""):round(getattr(getattr(v,b),a)*100,3)\
                 for (k,v) in result.items() for a in ['precision','recall','fmeasure'] for b in ['low','mid','high']}
-                
+
+    @classmethod
+    def _postprocess_text(preds, labels):
+        import nltk
+        preds = [pred.strip() for pred in preds]
+        labels = [label.strip() for label in labels]
+
+        # rougeLSum expects newline after each sentence
+        preds = ["\n".join(nltk.sent_tokenize(pred)) for pred in preds]
+        labels = ["\n".join(nltk.sent_tokenize(label)) for label in labels]
+
+        return preds, labels
+        
     def compute_metrics(self, eval_preds):
+        preds, labels = eval_preds
         if isinstance(preds, tuple):
             preds = preds[0]
         decoded_preds = self.tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -289,7 +319,7 @@ class Seq2SeqLM(Task):
         decoded_labels = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
         # Some simple post-processing
-        decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
+        decoded_preds, decoded_labels = self._postprocess_text(decoded_preds, decoded_labels)
         g = decoded_preds, decoded_labels
         result = self.metric.compute(
             predictions=decoded_preds, references=decoded_labels, use_stemmer=True
