@@ -26,7 +26,8 @@ rte = tn.Classification(
 
 class args:
   model_name='roberta-base'
-  learning_rate = 3e-5 # see https://huggingface.co/docs/transformers/v4.24.0/en/main_classes/trainer#transformers.TrainingArguments
+  learning_rate = 3e-5 
+  # see https://huggingface.co/docs/transformers/v4.24.0/en/main_classes/trainer#transformers.TrainingArguments
 
  
 tasks = [rte]
