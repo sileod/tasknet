@@ -1,4 +1,4 @@
-# tasknet
+## tasknet : simple huggingface dataset fine-tuning with transformers Trainer 
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
 
@@ -7,7 +7,7 @@
 - `SequenceClassification` 
 - `TokenClassification`
 - `MultipleChoice`
-- `Seq2SeqLM` (experimental)
+- `Seq2SeqLM` (experimental support)
 
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
@@ -26,7 +26,8 @@ rte = tn.Classification(
 
 class args:
   model_name='roberta-base'
-  learning_rate = 3e-5 # see https://huggingface.co/docs/transformers/v4.24.0/en/main_classes/trainer#transformers.TrainingArguments
+  learning_rate = 3e-5 
+  # see https://huggingface.co/docs/transformers/v4.24.0/en/main_classes/trainer#transformers.TrainingArguments
 
  
 tasks = [rte]
