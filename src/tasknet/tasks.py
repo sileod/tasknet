@@ -29,7 +29,7 @@ def sample_dataset(dataset,n=10000, n_eval=1000):
     for k in dataset:
         n_k=(n if k=='train' else n_eval)
         if n_k and len(dataset[k])>n_k:
-            dataset[k]=dataset[k].select(range(n_k))
+            dataset[k]=dataset[k].train_test_split(train_size=n_k)['train']
     return dataset
 
 @dataclass
@@ -60,6 +60,8 @@ class Task:
             self.name = name
         self.dataset=sample_dataset(self.dataset,self.max_rows,self.max_rows_eval)
 
+    def check():
+        return True
 
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
@@ -84,7 +86,11 @@ class Classification(Task):
             elif hasattr(target,'num_classes'):
                 self.num_labels=target.num_classes
             else:
-                self.num_labels=len(set(self.dataset['train'][self.y]))
+                self.num_labels=len(set(fc.flatten(self.dataset['train'][self.y])))
+
+    def check(self):
+        features = self.dataset['train'].features
+        return self.s1 in features and self.y in features and type(self.dataset['train'][self.y][0]!=list)
 
     def preprocess_function(self, examples):
         inputs = (
@@ -149,8 +155,13 @@ class MultipleChoice(Classification):
         choices = [x for x in self.dataset['train'].features if re.match('choice\d+',x)]
         if choices and not self.choices:
             self.choices=choices
+        self.num_choices = len(self.choices)
     def set_tokenizer(self, tokenizer):
         self.tokenizer = self.data_collator.tokenizer= tokenizer
+
+    def check(self):
+        features = self.dataset['train'].features
+        return self.s1 in features and self.y in features and self.choices and all([c in features for c in self.choices])
 
     def preprocess_function(self, examples):
         num_choices = len(self.choices)
@@ -183,8 +194,8 @@ class TokenClassification(Task):
     dataset: Dataset = None
     metric:... = evaluate.load("seqeval")
 
-    tokens: str = None
-    y: str = None
+    tokens: str = 'tokens'
+    y: str = 'labels'
     num_labels: int = None
 
     @staticmethod
@@ -261,6 +272,9 @@ class TokenClassification(Task):
             **meta,
         }
 
+    def check(self):
+        features = self.dataset['train'].features
+        return self.tokens in features and self.y in features
 
 @dataclass
 class Seq2SeqLM(Task):

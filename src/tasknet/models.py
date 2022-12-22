@@ -40,28 +40,39 @@ class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
         self.shared_encoder = warm_start
+        mc_model = None
         task_models_list = []
         for i, task in enumerate(tasks):
             model_type = eval(f"AutoModelFor{task.task_type}")
-            nl = (
-                {"num_labels": getattr(task, "num_labels")}
-                if hasattr(task, "num_labels")
-                else {}
-            )
+            nl = {a: getattr(task, a) for a in ('num_labels','problem_type')
+                if hasattr(task, a)
+            }
+
             model = model_type.from_pretrained(args.model_name, **nl)
+
+            if task.task_type=='MultipleChoice': 
+                if not mc_model:
+                    mc_model=model  
+                else:
+                    self.shallow_copy(mc_model.classifier, model.classifier)
+
             model.auto = getattr(model, self.get_encoder_attr_name(model))
-            model.i = i
+
             if self.shared_encoder is None:
                 self.shared_encoder = model.auto
             else:
                 self.shallow_copy(self.shared_encoder, model.auto)
-
+            
             task_models_list += [model]
+            model.i = i
+
         self.task_models_list = nn.ModuleList(task_models_list)
 
         self.Z = nn.parameter.Parameter(
             torch.zeros(len(tasks),
-            self.shared_encoder.config.hidden_size, device="cuda"))
+            self.shared_encoder.config.hidden_size, device="cuda"),
+            requires_grad=len(tasks)>1
+            )
 
         for i, task in enumerate(tasks):
 
@@ -194,7 +205,7 @@ class Trainer(transformers.Trainer):
             
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
-
+        self.num_proc = hparams.get('num_proc',None)
         trainer_args = transformers.TrainingArguments(
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
         )
@@ -216,7 +227,7 @@ class Trainer(transformers.Trainer):
         self.data_collator = NLPDataCollator(tasks)
         self.tasks = tasks
         self.tokenizer = tokenizer
-        self.processed_tasks = preprocess_tasks(tasks, self.tokenizer)
+        self.processed_tasks = self.preprocess_tasks(tasks, self.tokenizer)
         self.train_dataset = {
             task: dataset["train"]
             for task, dataset in self.processed_tasks.items()
@@ -276,8 +287,8 @@ class Trainer(transformers.Trainer):
         return fc.join(outputs)
 
     def task_batch_size(self,task_name):
-        if task_name.task_type=='MultipleChoice':
-            return min(1, self.args.train_batch_size//4)
+        if hasattr(task_name, 'num_choices'):
+            return max(1, self.args.train_batch_size//task_name.num_choices)
         else:
             return self.args.train_batch_size
 
@@ -338,34 +349,32 @@ class Trainer(transformers.Trainer):
             }
         )
 
-def preprocess_tasks(tasks, tokenizer):
+    def preprocess_tasks(self, tasks, tokenizer):
+        
+        features_dict = {}
+        for i, task in enumerate(tasks):
+            if hasattr(task, 'processed_features') and tokenizer==task.tokenizer:
+                features_dict[task]=task.processed_features #added
+                continue # added
+            task.set_tokenizer(tokenizer)
+            for split in task.dataset:
+                tdp=task.dataset[split]
+                if 'task' in tdp.features:
+                    tdp=tdp.remove_columns('task')
+                task.dataset[split] = tdp.add_column('task',[i]*len(tdp))
+                task.index = task.dataset[split].index = i
 
-    for t in tasks:
-        t.set_tokenizer(tokenizer)
-
-    def add_task(x, i=None):
-        x["task"] = i
-        return x
-
-    for i, task in enumerate(tasks):
-        task.index = i
-        for split in task.dataset:
-            task.dataset[split] = task.dataset[split].map(add_task, fn_kwargs={"i": i})
-            task.index = task.dataset[split].index = i
-    tasks = copy.deepcopy(tasks)
-    features_dict = {}
-    for i, task in enumerate(tasks):
-
-        task.tokenizer = tokenizer
-        if hasattr(task, "y") and task.y != "labels":
-            task.dataset = task.dataset.rename_column(task.y, "labels")
-        features_dict[task] = {}
-        for phase, phase_dataset in task.dataset.items():
-            phase_dataset.index = i
-            features_dict[task][phase] = phase_dataset.map(
-                task.preprocess_function, batched=True, load_from_cache_file=False
-            )
-            features_dict[task][phase].set_format(
-                type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
-            )
-    return features_dict
+            if hasattr(task, "y") and task.y != "labels":
+                task.dataset = task.dataset.rename_column(task.y, "labels")
+            features_dict[task] = {}
+            for phase, phase_dataset in task.dataset.items():
+                phase_dataset.index = i
+                features_dict[task][phase] = phase_dataset.map(
+                    task.preprocess_function, batched=True, load_from_cache_file=True,
+                    num_proc=self.num_proc
+                )
+                features_dict[task][phase].set_format(
+                    type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
+                )
+            task.processed_features=features_dict[task] #added
+        return features_dict
