@@ -57,7 +57,7 @@ This code uses some part of the examples of the [transformers](https://github.co
 ## Contact
 You can request features on github or reach me at `damien.sileo@inria.fr`
 ```bib
-@misc{sileod21-tasknet,
+@misc{sileod22-tasknet,
   author = {Sileo, Damien},
   doi = {10.5281/zenodo.561225781},
   month = {11},
