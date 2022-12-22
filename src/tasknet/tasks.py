@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import datasets
+import datasets as ds
 from datasets import load_dataset, Dataset
 from transformers import DefaultDataCollator
 from transformers import DataCollatorForTokenClassification
@@ -17,6 +18,7 @@ import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
 import inspect
 load_dataset = lazy_func(datasets.load_dataset)
+from scipy.special import expit
 
 def get_dataset_name(dataset):
     try:
@@ -88,9 +90,18 @@ class Classification(Task):
             else:
                 self.num_labels=len(set(fc.flatten(self.dataset['train'][self.y])))
 
+        if type(self.dataset['train'][self.y][0])==list:
+            self.problem_type="multi_label_classification"
+            if set(fc.flatten(self.dataset['train'][self.y]))!={0,1}:
+                def one_hot(x):
+                    x['labels'] = [float(i in x[self.y]) for i in range(self.num_labels)]
+                    return x
+                self.dataset=self.dataset.map(one_hot)
+            self.dataset=self.dataset.cast_column(self.y, ds.Sequence(feature=ds.Value(dtype='float64')))
+
     def check(self):
         features = self.dataset['train'].features
-        return self.s1 in features and self.y in features and type(self.dataset['train'][self.y][0]!=list)
+        return self.s1 in features and self.y in features
 
     def preprocess_function(self, examples):
         inputs = (
@@ -103,14 +114,21 @@ class Classification(Task):
         return outputs
 
     def compute_metrics(self, eval_pred):
+        avg={}
         predictions, labels = eval_pred.predictions, eval_pred.label_ids
         if "int" in str(eval_pred.label_ids.dtype):
             metric = load_metric("super_glue", "cb")
             predictions = np.argmax(predictions, axis=1)
+            
+        elif self.problem_type=='multi_label_classification':
+            metric=evaluate.load('f1','multilabel', average='macro')
+            labels=labels.astype(int)
+            predictions = (expit(predictions)>0.5).astype(int)
+            avg={"average":"macro"}
         else:
             metric = load_metric("glue", "stsb")
         meta = {"name": self.name, "size": len(predictions), "index": self.index}
-        return {**metric.compute(predictions=predictions, references=labels), **meta}
+        return {**metric.compute(predictions=predictions, references=labels,**avg), **meta}
 
 
 @dataclass
