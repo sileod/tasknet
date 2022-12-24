@@ -35,12 +35,12 @@ class CLSEmbedding(nn.Module):
         x[:, 0, :] = x[:, 0, :] + self.cls
         return x
 
-
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
         self.shared_encoder = warm_start
         mc_model = None
+        self.models={}
         task_models_list = []
         for i, task in enumerate(tasks):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -50,11 +50,16 @@ class Model(transformers.PreTrainedModel):
 
             model = model_type.from_pretrained(args.model_name, **nl)
 
-            if task.task_type=='MultipleChoice': 
-                if not mc_model:
-                    mc_model=model  
-                else:
-                    self.shallow_copy(mc_model.classifier, model.classifier)
+            if task.task_type=='MultipleChoice':
+                key="mc"
+            else:
+                labels = getattr(task.dataset['train'].features[task.y],"names",None)
+                key=(tuple(labels) if labels else None)
+
+            if key and key not in self.models:
+                self.models[key] = model 
+            if key and key in self.models:
+                self.shallow_copy(self.models[key].classifier, model.classifier)
 
             model.auto = getattr(model, self.get_encoder_attr_name(model))
 
@@ -378,3 +383,9 @@ class Trainer(transformers.Trainer):
                 )
             task.processed_features=features_dict[task] #added
         return features_dict
+
+
+def Model_Trainer(tasks, args):
+    model = Model(tasks, args)
+    trainer = Trainer(model, tasks, args)
+    return model, trainer

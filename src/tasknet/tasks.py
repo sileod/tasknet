@@ -88,15 +88,17 @@ class Classification(Task):
             elif hasattr(target,'num_classes'):
                 self.num_labels=target.num_classes
             else:
-                self.num_labels=len(set(fc.flatten(self.dataset['train'][self.y])))
+                self.num_labels=max(fc.flatten(self.dataset['train'][self.y]))+1
 
         if type(self.dataset['train'][self.y][0])==list:
             self.problem_type="multi_label_classification"
             if set(fc.flatten(self.dataset['train'][self.y]))!={0,1}:
                 def one_hot(x):
-                    x['labels'] = [float(i in x[self.y]) for i in range(self.num_labels)]
+                    x[self.y] = [float(i in x[self.y]) for i in range(self.num_labels)]
                     return x
                 self.dataset=self.dataset.map(one_hot)
+            
+            self.num_labels=len(self.dataset['train'][self.y][0])
             self.dataset=self.dataset.cast_column(self.y, ds.Sequence(feature=ds.Value(dtype='float64')))
 
     def check(self):
@@ -120,7 +122,7 @@ class Classification(Task):
             metric = load_metric("super_glue", "cb")
             predictions = np.argmax(predictions, axis=1)
             
-        elif self.problem_type=='multi_label_classification':
+        elif getattr(self,"problem_type", None)=='multi_label_classification':
             metric=evaluate.load('f1','multilabel', average='macro')
             labels=labels.astype(int)
             predictions = (expit(predictions)>0.5).astype(int)
