@@ -27,12 +27,22 @@ def get_dataset_name(dataset):
     except:
         return ""
 
-def sample_dataset(dataset,n=10000, n_eval=1000):
+def oversample(dataset, n=2):
+    dataset['train']= datasets.concatenate_datasets(
+        [dataset['train'].shuffle(_) for _ in range(n)]
+    )
+    return dataset
+
+def sample_dataset(dataset,n=10000, n_eval=1000, oversampling=None):
+    if oversampling and len(dataset['train'])<n:
+        dataset=oversample(dataset, oversampling)
+
     for k in dataset:
         n_k=(n if k=='train' else n_eval)
         if n_k and len(dataset[k])>n_k:
             dataset[k]=dataset[k].train_test_split(train_size=n_k)['train']
     return dataset
+
 
 @dataclass
 class Task:
@@ -42,6 +52,7 @@ class Task:
     tokenizer_kwargs: ... = fdict(padding="max_length", max_length=256,truncation=True)
     max_rows:int=None
     max_rows_eval:int=None
+    oversampling:int=None
 
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
@@ -60,7 +71,8 @@ class Task:
 
         if not self.name:
             self.name = name
-        self.dataset=sample_dataset(self.dataset,self.max_rows,self.max_rows_eval)
+        self.results=[]
+        self.dataset=sample_dataset(self.dataset,self.max_rows,self.max_rows_eval, self.oversampling)
 
     def check():
         return True
@@ -130,7 +142,9 @@ class Classification(Task):
         else:
             metric = load_metric("glue", "stsb")
         meta = {"name": self.name, "size": len(predictions), "index": self.index}
-        return {**metric.compute(predictions=predictions, references=labels,**avg), **meta}
+        metrics = metric.compute(predictions=predictions, references=labels,**avg)
+        self.results+=[metrics]
+        return {**metrics, **meta}
 
 
 @dataclass
@@ -283,14 +297,9 @@ class TokenClassification(Task):
             predictions=true_predictions, references=true_labels
         )
         meta = {"name": self.name, "size": len(predictions), "index": self.index}
-
-        return {
-            "precision": all_metrics["overall_precision"],
-            "recall": all_metrics["overall_recall"],
-            "f1": all_metrics["overall_f1"],
-            "accuracy": all_metrics["overall_accuracy"],
-            **meta,
-        }
+        metrics = {k.replace("overall_",""):v for k,v in all_metrics.items() if "overall" in k}
+        self.results+=[metrics]
+        return {**metrics, **meta}
 
     def check(self):
         features = self.dataset['train'].features

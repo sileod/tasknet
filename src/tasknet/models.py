@@ -8,65 +8,88 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler
 from typing import List, Union, Dict
 from transformers import (
-    AutoModelForSeq2SeqLM,
+    EncoderDecoderModel,
     DataCollatorForSeq2Seq,
+    AutoModelForSeq2SeqLM,
     AutoModelForSequenceClassification,
     AutoModelForMultipleChoice,
     AutoModelForTokenClassification,
 )
-from transformers import EncoderDecoderModel
 from easydict import EasyDict as edict
 import funcy as fc
 import copy
 import logging
-import functools
 from types import MappingProxyType
 from .tasks import Classification
-from .utils import to_dict
+from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label
 from transformers import AutoTokenizer
 import magicattr
+import gc
+import random
+
+def progress(l):
+    try:
+        from tqdm.auto import tqdm
+        assert len(l)>8
+        return tqdm(l)
+    except:
+        return l
+
 
 class CLSEmbedding(nn.Module):
-    def __init__(self, Zi):
+    def __init__(self, Zi, drop_probability=0.0):
         super().__init__()
         self.cls = Zi
-
+        self.drop_probability=drop_probability
     def forward(self, x):
-        x[:, 0, :] = x[:, 0, :] + self.cls
+        if random.random()>self.drop_probability:
+            x[:, 0, :] = x[:, 0, :] + self.cls
         return x
+
+class WandbTaskCallback(transformers.integrations.WandbCallback):
+
+    def on_log(self, args, state, control, model=None, logs=None, **kwargs):
+        import wandb
+        if not self._initialized:
+            self.setup(args, state, model, reinit=False)
+        if state.is_world_process_zero:
+            if 'eval_name' in logs:
+                logs={f"{logs['eval_name']}/{k}" :v for (k,v) in logs.items() if k!="eval_name"}
+            wandb.log(logs, step=state.global_step)
 
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
+        args=to_dict(args)
         self.shared_encoder = warm_start
-        mc_model = None
         self.models={}
         task_models_list = []
-        for i, task in enumerate(tasks):
+        for i, task in progress(enumerate(tasks)):
             model_type = eval(f"AutoModelFor{task.task_type}")
             nl = {a: getattr(task, a) for a in ('num_labels','problem_type')
                 if hasattr(task, a)
             }
 
-            model = model_type.from_pretrained(args.model_name, **nl)
+            model = deep_copy_cache(model_type.from_pretrained)(args.model_name, **nl)
 
             if task.task_type=='MultipleChoice':
-                key="mc"
+                key=task.task_type
             else:
                 labels = getattr(task.dataset['train'].features[task.y],"names",None)
-                key=(tuple(labels) if labels else None)
+                key= tuple([normalize_label(x) for x in labels]) if labels else None
+                key = key if task.num_labels!=2  or key else "binary"
 
             if key and key not in self.models:
                 self.models[key] = model 
             if key and key in self.models:
-                self.shallow_copy(self.models[key].classifier, model.classifier)
+                model.classifier.weight = self.models[key].classifier.weight
 
             model.auto = getattr(model, self.get_encoder_attr_name(model))
 
             if self.shared_encoder is None:
                 self.shared_encoder = model.auto
             else:
-                self.shallow_copy(self.shared_encoder, model.auto)
+                shallow_copy_A_to_B(self.shared_encoder, model.auto)
             
             task_models_list += [model]
             model.i = i
@@ -85,32 +108,18 @@ class Model(transformers.PreTrainedModel):
             emb_name, emb_module = [(name,module) for name,module in m_i.named_modules() if isinstance(module,torch.nn.Embedding)][0]
 
             magicattr.set(m_i, emb_name,
-                nn.Sequential(emb_module, CLSEmbedding(self.Z[i]))
+                nn.Sequential(emb_module, 
+                              CLSEmbedding(
+                                self.Z[i],
+                                drop_probability=args.get('cls_emb_drop_probability',0.0))
+                )
             )
+        torch.cuda.empty_cache()
+        gc.collect()
 
     def set_encoder(self,encoder):
         for model in self.task_models_list:
-            self.shallow_copy(encoder, getattr(model, self.get_encoder_attr_name(model)))
-
-
-    @staticmethod
-    def shallow_copy(A, B):
-        """Shallow copy (=parameter sharing) A into B
-        https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-objects/31174427?noredirect=1#comment86638618_31174427"""
-
-        def rsetattr(obj, attr, val):
-            pre, _, post = attr.rpartition(".")
-            return setattr(rgetattr(obj, pre) if pre else obj, post, val)
-
-        def rgetattr(obj, attr, *args):
-            def _getattr(obj, attr):
-                return getattr(obj, attr, *args)
-
-            return functools.reduce(_getattr, [obj] + attr.split("."))
-
-        for (na, _), (nb, _) in zip(A.named_parameters(), B.named_parameters()):
-            rsetattr(B, nb, rgetattr(A, na))
-        return A, B
+            shallow_copy_A_to_B(encoder, getattr(model, self.get_encoder_attr_name(model)))
 
     @classmethod
     def get_encoder_attr_name(cls, model):
@@ -249,7 +258,17 @@ class Trainer(transformers.Trainer):
         # transformerS.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
+        self.fix_callback()
         self.cleanup_outputs()
+
+    def fix_callback(self):
+        try:
+            import wandb
+        except:
+            return
+        i=[i for (i,c) in enumerate(self.callback_handler.callbacks) if 'Wandb' in str(c)]
+        if i:
+            self.callback_handler.callbacks[i[0]] = WandbTaskCallback()
 
     @staticmethod
     def cleanup_outputs():
@@ -274,8 +293,9 @@ class Trainer(transformers.Trainer):
 
     def evaluate(self, **kwargs):
         try:
-            self.callback_handler.callbacks[-1].training_tracker.write_line = fc.partial(
-                self.write_line, self.callback_handler.callbacks[-1].training_tracker
+            i=[i for (i,c) in enumerate(self.callback_handler.callbacks) if 'NotebookProgress' in str(c)][0]
+            self.callback_handler.callbacks[i].training_tracker.write_line = fc.partial(
+                self.write_line, self.callback_handler.callbacks[i].training_tracker
             )
         except:
             logging.info('No training_tracker')
