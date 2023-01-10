@@ -62,6 +62,8 @@ class Model(transformers.PreTrainedModel):
         args=to_dict(args)
         self.shared_encoder = warm_start
         self.models={}
+        self.task_names = [t.name for t in tasks]
+
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -141,7 +143,7 @@ class Model(transformers.PreTrainedModel):
         m_i.config = m_i.config.from_dict(
             {**m_i.config.to_dict(),
             'classifiers_size': [tuple(c.weight.shape) for c in m_i.classifiers],
-            'tasks':tasks
+            'tasks': (tasks if tasks else self.task_names)
             })
         return m_i
 
