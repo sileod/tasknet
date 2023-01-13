@@ -7,7 +7,7 @@ from transformers import DefaultDataCollator
 from transformers import DataCollatorForTokenClassification
 from transformers import DataCollatorForSeq2Seq
 from transformers import PreTrainedTokenizerBase
-from evaluate import load as load_metric
+import evaluate
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
 from frozendict import frozendict as fdict
@@ -131,7 +131,7 @@ class Classification(Task):
         avg={}
         predictions, labels = eval_pred.predictions, eval_pred.label_ids
         if "int" in str(eval_pred.label_ids.dtype):
-            metric = load_metric("super_glue", "cb")
+            metric = evaluate.load("super_glue", "cb")
             predictions = np.argmax(predictions, axis=1)
             
         elif getattr(self,"problem_type", None)=='multi_label_classification':
@@ -140,7 +140,7 @@ class Classification(Task):
             predictions = (expit(predictions)>0.5).astype(int)
             avg={"average":"macro"}
         else:
-            metric = load_metric("glue", "stsb")
+            metric = evaluate.load("glue", "stsb")
         meta = {"name": self.name, "size": len(predictions), "index": self.index}
         metrics = metric.compute(predictions=predictions, references=labels,**avg)
         self.results+=[metrics]
@@ -311,7 +311,7 @@ class Seq2SeqLM(Task):
     data_collator:...=DataCollatorForSeq2Seq(None)
     s1:str=''
     s2:str=''
-    metric:...=datasets.load_metric("bleu")
+    metric:...=evaluate.load("bleu")
     def set_tokenizer(self,tokenizer):
         self.tokenizer=self.data_collator.tokenizer=tokenizer
         self.tokenizer_kwargs=self.data_collator.tokenizer_kwargs=edict(self.tokenizer_kwargs)

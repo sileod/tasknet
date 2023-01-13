@@ -71,7 +71,8 @@ class Model(transformers.PreTrainedModel):
                 if hasattr(task, a)
             }
 
-            model = deep_copy_cache(model_type.from_pretrained)(args.model_name, **nl)
+            model = deep_copy_cache(model_type.from_pretrained)(args.model_name,
+                ignore_mismatched_sizes=True, **nl)
 
             if task.task_type=='MultipleChoice':
                 key=task.task_type
