@@ -102,7 +102,7 @@ class Classification(Task):
             else:
                 self.num_labels=max(fc.flatten(self.dataset['train'][self.y]))+1
 
-        if type(self.dataset['train'][self.y][0])==list:
+        if type(self.dataset['train'][self.y][0])==list and self.task_type=="SequenceClassification":
             self.problem_type="multi_label_classification"
             if set(fc.flatten(self.dataset['train'][self.y]))!={0,1}:
                 def one_hot(x):

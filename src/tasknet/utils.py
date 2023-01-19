@@ -2,6 +2,14 @@ from datasets import DatasetDict, Dataset, load_dataset
 from easydict import EasyDict as edict
 import copy
 import functools
+from tqdm.auto import tqdm
+
+class Shutup_tqdm:
+    def __enter__(self):
+        tqdm.__init__ = functools.partialmethod(tqdm.__init__, disable=True)    
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        tqdm.__init__ = functools.partialmethod(tqdm.__init__, disable=False)
+
 
 
 def train_validation_test_split(dataset, train_ratio=0.8, val_test_ratio=0.5, seed=0):
