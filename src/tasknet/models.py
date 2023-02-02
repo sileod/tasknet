@@ -45,6 +45,14 @@ class CLSEmbedding(nn.Module):
             x[:, 0, :] = x[:, 0, :] + self.cls.to(x.device)
         return x
 
+def add_cls(m_i, Z_i, args=dict()):
+    emb_name, emb_module = [(name,module) for name,module in m_i.named_modules() if isinstance(module,torch.nn.Embedding)][0]
+    magicattr.set(m_i, emb_name,
+        nn.Sequential(emb_module, 
+        CLSEmbedding(Z_i,
+        drop_probability=args.get('cls_emb_drop_probability',0.0)))
+    )
+
 class WandbTaskCallback(transformers.integrations.WandbCallback):
 
     def on_log(self, args, state, control, model=None, logs=None, **kwargs):
@@ -55,6 +63,10 @@ class WandbTaskCallback(transformers.integrations.WandbCallback):
             if 'eval_name' in logs:
                 logs={f"{logs['eval_name']}/{k}" :v for (k,v) in logs.items() if k!="eval_name"}
             wandb.log(logs, step=state.global_step)
+
+def last_linear(classifier):
+    last_linear = list([m for m in classifier.modules() if type(m)==torch.nn.Linear])[-1]
+    return last_linear
 
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
@@ -76,14 +88,14 @@ class Model(transformers.PreTrainedModel):
             if task.task_type=='MultipleChoice':
                 key=task.task_type
             else:
-                labels = getattr(task.dataset['train'].features[task.y],"names",None)
+                labels = getattr(task.dataset["train"].features[task.y],"names",None)
                 key= tuple([normalize_label(x) for x in labels]) if labels else None
                 key = key if task.num_labels!=2  or key else "binary"
 
             if key and key not in self.models:
                 self.models[key] = model 
             if key and key in self.models:
-                model.classifier.weight = self.models[key].classifier.weight
+                last_linear(model.classifier).weight = last_linear(self.models[key].classifier).weight
 
             model.auto = getattr(model, self.get_encoder_attr_name(model))
 
@@ -107,15 +119,8 @@ class Model(transformers.PreTrainedModel):
         for i, task in enumerate(tasks):
 
             m_i = self.task_models_list[i]
-            emb_name, emb_module = [(name,module) for name,module in m_i.named_modules() if isinstance(module,torch.nn.Embedding)][0]
+            add_cls(m_i,self.Z[i],args)
 
-            magicattr.set(m_i, emb_name,
-                nn.Sequential(emb_module, 
-                              CLSEmbedding(
-                                self.Z[i],
-                                drop_probability=args.get('cls_emb_drop_probability',0.0))
-                )
-            )
         torch.cuda.empty_cache()
         gc.collect()
 

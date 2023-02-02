@@ -53,7 +53,7 @@ class Task:
     max_rows:int=None
     max_rows_eval:int=None
     oversampling:int=None
-
+    main_split:str="train"
     def __hash__(self):
         return hash(str(self.dataset.__dict__))
 
@@ -73,7 +73,6 @@ class Task:
             self.name = name
         self.results=[]
         self.dataset=sample_dataset(self.dataset,self.max_rows,self.max_rows_eval, self.oversampling)
-
     def check():
         return True
 
@@ -94,27 +93,27 @@ class Classification(Task):
     def __post_init__(self):
         super().__post_init__()
         if not self.num_labels:
-            target = self.dataset["train"].features[self.y]
+            target = self.dataset[self.main_split].features[self.y]
             if "float" in target.dtype:
                 self.num_labels = 1
             elif hasattr(target,'num_classes'):
                 self.num_labels=target.num_classes
             else:
-                self.num_labels=max(fc.flatten(self.dataset['train'][self.y]))+1
+                self.num_labels=max(fc.flatten(self.dataset[self.main_split][self.y]))+1
 
-        if type(self.dataset['train'][self.y][0])==list and self.task_type=="SequenceClassification":
+        if type(self.dataset[self.main_split][self.y][0])==list and self.task_type=="SequenceClassification":
             self.problem_type="multi_label_classification"
-            if set(fc.flatten(self.dataset['train'][self.y]))!={0,1}:
+            if set(fc.flatten(self.dataset[self.main_split][self.y]))!={0,1}:
                 def one_hot(x):
                     x[self.y] = [float(i in x[self.y]) for i in range(self.num_labels)]
                     return x
                 self.dataset=self.dataset.map(one_hot)
             
-            self.num_labels=len(self.dataset['train'][self.y][0])
+            self.num_labels=len(self.dataset[self.main_split][self.y][0])
             self.dataset=self.dataset.cast_column(self.y, ds.Sequence(feature=ds.Value(dtype='float64')))
 
     def check(self):
-        features = self.dataset['train'].features
+        features = self.dataset[self.main_split].features
         return self.s1 in features and self.y in features
 
     def preprocess_function(self, examples):
@@ -186,7 +185,7 @@ class MultipleChoice(Classification):
     def __post_init__(self):
         super().__post_init__()
         self.data_collator.tokenizer_kwargs = self.tokenizer_kwargs
-        choices = [x for x in self.dataset['train'].features if re.match('choice\d+',x)]
+        choices = [x for x in self.dataset[self.main_split].features if re.match('choice\d+',x)]
         if choices and not self.choices:
             self.choices=choices
         self.num_choices = len(self.choices)
@@ -256,7 +255,7 @@ class TokenClassification(Task):
 
     def __post_init__(self):
         super().__post_init__()
-        target = self.dataset["train"].features[self.y]
+        target = self.dataset[self.main_split].features[self.y]
         if not self.num_labels:
             self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
         self.label_names = [f"{i}" for i in range(self.num_labels)]
