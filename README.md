@@ -1,4 +1,4 @@
-## tasknet : simple multi-task fine-tuning with transformers Trainer and HuggingFace datasets. 
+## tasknet : simple multi-task transformers fine-tuning with Trainer and HuggingFace datasets. 
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
 
@@ -14,7 +14,7 @@ Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks
 
 ## Task instances
 
-Each task template is associated with specific fields. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the dataset fields and the template fields to instanciate a task. 
+Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the tempalte fields and the dataset columns to instanciate a task. 
 ```py
 import tasknet as tn
 from datasets import load_dataset
@@ -35,7 +35,7 @@ model = tn.Model(tasks, args)
 trainer = tn.Trainer(model, tasks, args)
 trainer.train()
 ```
-As you can see, tasknet is multitask by design. It works with list of tasks and the model creates a `task_models_list` attribute.
+Tasknet is multitask by design. It works with list of tasks and the model creates a `task_models_list` attribute.
 
 ## Installation
 `pip install tasknet`
