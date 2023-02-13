@@ -3,14 +3,14 @@ from easydict import EasyDict as edict
 import copy
 import functools
 from tqdm.auto import tqdm
+from datasets import concatenate_datasets
+import funcy as fc
 
-class Shutup_tqdm:
+class NoTqdm:
     def __enter__(self):
         tqdm.__init__ = functools.partialmethod(tqdm.__init__, disable=True)    
     def __exit__(self, exc_type, exc_value, exc_traceback):
         tqdm.__init__ = functools.partialmethod(tqdm.__init__, disable=False)
-
-
 
 def train_validation_test_split(dataset, train_ratio=0.8, val_test_ratio=0.5, seed=0):
     train_testvalid = dataset.train_test_split(test_size=1 - train_ratio, seed=seed)
@@ -21,6 +21,7 @@ def train_validation_test_split(dataset, train_ratio=0.8, val_test_ratio=0.5, se
         test=test_valid["train"],
     )
     return dataset
+
 
 
 def load_dataset_sample(*args,n=1000):
@@ -74,3 +75,16 @@ def normalize_label(label):
     label=label.replace('neg','negative')
     label=label.replace('pos','positive')
     return label
+
+def merge_tasks(tasks,names):
+    prev, done=dict(), dict()
+    for i,t in tqdm(enumerate(tasks)):
+        for x in names:
+            if x in t.name:
+                if x in prev:
+                    t.dataset=DatasetDict(fc.merge_with(concatenate_datasets, prev[x], t.dataset))
+                prev[x]=t.dataset
+                done[x]=t
+                del tasks[i]
+    tasks+=list(done.values())
+    return tasks

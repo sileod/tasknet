@@ -21,7 +21,7 @@ import copy
 import logging
 from types import MappingProxyType
 from .tasks import Classification
-from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label
+from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label, NoTqdm
 from transformers import AutoTokenizer
 import magicattr
 import gc
@@ -45,9 +45,10 @@ class CLSEmbedding(nn.Module):
             x[:, 0, :] = x[:, 0, :] + self.cls.to(x.device)
         return x
 
-def add_cls(m_i, Z_i, args=dict()):
-    emb_name, emb_module = [(name,module) for name,module in m_i.named_modules() if isinstance(module,torch.nn.Embedding)][0]
-    magicattr.set(m_i, emb_name,
+def add_cls(model, Z_i, args=dict()):
+    """model is a standard HF Transformer"""
+    emb_name, emb_module = [(name,module) for name,module in model.named_modules() if isinstance(module,torch.nn.Embedding)][0]
+    magicattr.set(model, emb_name,
         nn.Sequential(emb_module, 
         CLSEmbedding(Z_i,
         drop_probability=args.get('cls_emb_drop_probability',0.0)))
@@ -65,8 +66,8 @@ class WandbTaskCallback(transformers.integrations.WandbCallback):
             wandb.log(logs, step=state.global_step)
 
 def last_linear(classifier):
-    last_linear = list([m for m in classifier.modules() if type(m)==torch.nn.Linear])[-1]
-    return last_linear
+    L = list([m for m in classifier.modules() if type(m)==torch.nn.Linear])[-1]
+    return L
 
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
@@ -90,7 +91,7 @@ class Model(transformers.PreTrainedModel):
             else:
                 labels = getattr(task.dataset["train"].features[task.y],"names",None)
                 key= tuple([normalize_label(x) for x in labels]) if labels else None
-                key = key if task.num_labels!=2  or key else "binary"
+                key = key if task.num_labels!=2 or key else "binary"
 
             if key and key not in self.models:
                 self.models[key] = model 
@@ -398,31 +399,32 @@ class Trainer(transformers.Trainer):
     def preprocess_tasks(self, tasks, tokenizer):
         
         features_dict = {}
-        for i, task in enumerate(tasks):
-            if hasattr(task, 'processed_features') and tokenizer==task.tokenizer:
-                features_dict[task]=task.processed_features #added
-                continue # added
-            task.set_tokenizer(tokenizer)
-            for split in task.dataset:
-                tdp=task.dataset[split]
-                if 'task' in tdp.features:
-                    tdp=tdp.remove_columns('task')
-                task.dataset[split] = tdp.add_column('task',[i]*len(tdp))
-                task.index = task.dataset[split].index = i
+        for i, task in progress(list(enumerate(tasks))):
+            with NoTqdm():
+                if hasattr(task, 'processed_features') and tokenizer==task.tokenizer:
+                    features_dict[task]=task.processed_features #added
+                    continue # added
+                task.set_tokenizer(tokenizer)
+                for split in task.dataset:
+                    tdp=task.dataset[split]
+                    if 'task' in tdp.features:
+                        tdp=tdp.remove_columns('task')
+                    task.dataset[split] = tdp.add_column('task',[i]*len(tdp))
+                    task.index = task.dataset[split].index = i
 
-            if hasattr(task, "y") and task.y != "labels":
-                task.dataset = task.dataset.rename_column(task.y, "labels")
-            features_dict[task] = {}
-            for phase, phase_dataset in task.dataset.items():
-                phase_dataset.index = i
-                features_dict[task][phase] = phase_dataset.map(
-                    task.preprocess_function, batched=True, load_from_cache_file=True,
-                    num_proc=self.num_proc
-                )
-                features_dict[task][phase].set_format(
-                    type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
-                )
-            task.processed_features=features_dict[task] #added
+                if hasattr(task, "y") and task.y != "labels":
+                    task.dataset = task.dataset.rename_column(task.y, "labels")
+                features_dict[task] = {}
+                for phase, phase_dataset in task.dataset.items():
+                    phase_dataset.index = i
+                    features_dict[task][phase] = phase_dataset.map(
+                        task.preprocess_function, batched=True, load_from_cache_file=True,
+                        num_proc=self.num_proc
+                    )
+                    features_dict[task][phase].set_format(
+                        type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
+                    )
+                task.processed_features=features_dict[task] #added
         return features_dict
 
 
