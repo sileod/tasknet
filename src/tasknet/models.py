@@ -405,15 +405,15 @@ class Trainer(transformers.Trainer):
                     features_dict[task]=task.processed_features #added
                     continue # added
                 task.set_tokenizer(tokenizer)
+                if hasattr(task, "y") and task.y != "labels":
+                    task.dataset = task.dataset.rename_column(task.y, "labels")
                 for split in task.dataset:
                     tdp=task.dataset[split]
                     if 'task' in tdp.features:
                         tdp=tdp.remove_columns('task')
-                    task.dataset[split] = tdp.add_column('task',[i]*len(tdp))
                     task.index = task.dataset[split].index = i
 
-                if hasattr(task, "y") and task.y != "labels":
-                    task.dataset = task.dataset.rename_column(task.y, "labels")
+
                 features_dict[task] = {}
                 for phase, phase_dataset in task.dataset.items():
                     phase_dataset.index = i

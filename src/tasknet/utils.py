@@ -76,15 +76,18 @@ def normalize_label(label):
     label=label.replace('pos','positive')
     return label
 
+
 def merge_tasks(tasks,names):
-    prev, done=dict(), dict()
+    prev, done, to_delete = dict(), dict(), []
     for i,t in tqdm(enumerate(tasks)):
-        for x in names:
-            if x in t.name:
-                if x in prev:
-                    t.dataset=DatasetDict(fc.merge_with(concatenate_datasets, prev[x], t.dataset))
-                prev[x]=t.dataset
-                done[x]=t
-                del tasks[i]
-    tasks+=list(done.values())
+        x=[x for x in names if x in t.name]
+        if x:
+            x=x[0]
+            if x in prev:
+                t.dataset=DatasetDict(fc.merge_with(concatenate_datasets, prev[x], t.dataset))
+            prev[x]=t.dataset
+            t.name=x
+            done[x]=t
+            to_delete+=[i]
+    tasks = [task for i, task in enumerate(tasks) if i not in to_delete] + list(done.values())
     return tasks

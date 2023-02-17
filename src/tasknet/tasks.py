@@ -218,9 +218,16 @@ class MultipleChoice(Classification):
             k: [v[i : i + num_choices] for i in range(0, len(v), num_choices)]
             for k, v in tokenized_examples.items()
         }
+        outputs['task']=[self.index]*len(outputs[fc.first(outputs)])
         return outputs
 
-
+@dataclass
+class DataCollatorForTokenClassificationWithTask(DataCollatorForTokenClassification):
+    def __call__(self, features):
+        tasks = [feature.pop("task") for feature in features]
+        batch = super().__call__(features)
+        batch["task"] = torch.tensor(tasks, dtype=torch.int64)
+        return batch
 @dataclass
 class TokenClassification(Task):
     task_type = "TokenClassification"
@@ -263,7 +270,7 @@ class TokenClassification(Task):
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
         self.tokenizer.add_prefix_space = True
-        self.data_collator = DataCollatorForTokenClassification(
+        self.data_collator = DataCollatorForTokenClassificationWithTask(
             tokenizer=self.tokenizer
         )
 
@@ -278,6 +285,7 @@ class TokenClassification(Task):
             new_labels.append(self._align_labels_with_tokens(labels, word_ids))
         tokenized_inputs["labels"] = new_labels
         outputs = tokenized_inputs
+        outputs['task']=[self.index]*len(outputs[fc.first(outputs)])
         return outputs
 
     def compute_metrics(self, eval_pred):
