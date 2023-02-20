@@ -76,6 +76,8 @@ class Model(transformers.PreTrainedModel):
         self.shared_encoder = warm_start
         self.models={}
         self.task_names = [t.name for t in tasks]
+        self.batch_truncation = args.get('batch_truncation',True)
+
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -251,7 +253,6 @@ class Trainer(transformers.Trainer):
         self.p = hparams.get('p', 1)
         self.num_proc = hparams.get('num_proc',None)
         self.batched = hparams.get('batched',False)
-        self.batch_truncation = hparams.get('batch_truncation',True)
 
         trainer_args = transformers.TrainingArguments(
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
