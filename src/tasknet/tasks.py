@@ -43,6 +43,14 @@ def sample_dataset(dataset,n=10000, n_eval=1000, oversampling=None):
             dataset[k]=dataset[k].train_test_split(train_size=n_k)['train']
     return dataset
 
+def get_len(outputs):
+    try:
+        return len(outputs[fc.first(outputs)])
+    except:
+        return 1
+
+def wrap_examples(examples):
+    return {k:[v] for k,v in examples.items()}
 
 @dataclass
 class Task:
@@ -123,7 +131,7 @@ class Classification(Task):
             else (examples[self.s1],)
         )
         outputs = self.tokenizer(*inputs, **self.tokenizer_kwargs)
-        outputs["task"] = [self.index] * len(examples[fc.first(examples)])
+        outputs["task"] = [self.index] *get_len(examples)
         return outputs
 
     def compute_metrics(self, eval_pred):
@@ -154,7 +162,6 @@ class DataCollatorForMultipleChoice:
     def __call__(self, features):
         label_name = "label" if "label" in features[0].keys() else "labels"
         labels = [feature.pop(label_name) for feature in features]
-        tasks = [feature.pop("task") for feature in features]
         batch_size = len(features)
         num_choices = len(features[0]["input_ids"])
         flattened_features = [
@@ -170,7 +177,6 @@ class DataCollatorForMultipleChoice:
         batch = {k: v.view(batch_size, num_choices, -1) for k, v in batch.items()}
         # Add back labels and tasks
         batch["labels"] = torch.tensor(labels, dtype=torch.int64)
-        batch["task"] = torch.tensor(tasks, dtype=torch.int64)
         return batch
 
 
@@ -198,6 +204,8 @@ class MultipleChoice(Classification):
 
     def preprocess_function(self, examples):
         num_choices = len(self.choices)
+        if type(examples[self.s1])==str:
+            unsqueeze, examples = True, wrap_examples(examples)
         num_examples = len(examples[self.s1])
         first_sentences = [[context] * num_choices for context in examples[self.s1]]
         second_sentences = [
@@ -218,16 +226,12 @@ class MultipleChoice(Classification):
             k: [v[i : i + num_choices] for i in range(0, len(v), num_choices)]
             for k, v in tokenized_examples.items()
         }
-        outputs['task']=[self.index]*len(outputs[fc.first(outputs)])
+        if 'unsqueeze' in locals() and unsqueeze:
+            outputs={k:v[0] for k,v in outputs.items()}
+        outputs['task']=[self.index]*get_len(outputs)
         return outputs
 
-@dataclass
-class DataCollatorForTokenClassificationWithTask(DataCollatorForTokenClassification):
-    def __call__(self, features):
-        tasks = [feature.pop("task") for feature in features]
-        batch = super().__call__(features)
-        batch["task"] = torch.tensor(tasks, dtype=torch.int64)
-        return batch
+
 @dataclass
 class TokenClassification(Task):
     task_type = "TokenClassification"
@@ -270,11 +274,13 @@ class TokenClassification(Task):
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
         self.tokenizer.add_prefix_space = True
-        self.data_collator = DataCollatorForTokenClassificationWithTask(
+        self.data_collator = DataCollatorForTokenClassification(
             tokenizer=self.tokenizer
         )
 
     def preprocess_function(self, examples):
+        if type(examples[self.tokens][0])==str:
+            unsqueeze, examples= True, wrap_examples(examples)
         tokenized_inputs = self.tokenizer(
             examples[self.tokens], is_split_into_words=True, **self.tokenizer_kwargs
         )
@@ -285,7 +291,9 @@ class TokenClassification(Task):
             new_labels.append(self._align_labels_with_tokens(labels, word_ids))
         tokenized_inputs["labels"] = new_labels
         outputs = tokenized_inputs
-        outputs['task']=[self.index]*len(outputs[fc.first(outputs)])
+        if 'unsqueeze' in locals() and unsqueeze:
+            outputs={k:v[0] for k,v in outputs.items()}
+        outputs['task']=[self.index]*get_len(outputs)
         return outputs
 
     def compute_metrics(self, eval_pred):
@@ -338,7 +346,7 @@ class Seq2SeqLM(Task):
             [-100 if token == self.tokenizer.pad_token_id else token for token in l]
             for l in target_tokenized["input_ids"]
         ]
-        batch['task']=[self.index]*len(batch[fc.first(batch)])
+        batch['task']=[self.index]*get_len(batch)
 
         return batch
 

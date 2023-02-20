@@ -83,6 +83,10 @@ def merge_tasks(tasks,names):
         x=[x for x in names if x in t.name]
         if x:
             x=x[0]
+            columns=t.dataset['train'].features.keys()
+            n_choices = len([c for c in columns if 'choice' in columns])
+            if n_choices:
+                x=f"{x}-{n_choices}"
             if x in prev:
                 t.dataset=DatasetDict(fc.merge_with(concatenate_datasets, prev[x], t.dataset))
             prev[x]=t.dataset

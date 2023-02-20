@@ -161,9 +161,15 @@ class NLPDataCollator:
     def __call__(
         self, features: List[Union[InputDataClass, Dict]]
     ) -> Dict[str, torch.Tensor]:
-        task_index = features[0]["task"]
-        return self.tasks[task_index].data_collator.__call__(features)
+        try: #not batched
+            task_index = features[0]['task'][0].item()
+        except: #batched
+            task_index = features[0]["task"]
 
+        features = [{k:v for k,v in x.items() if k!='task'} for x in features]
+        collated = self.tasks[task_index].data_collator.__call__(features)
+        collated['task']=torch.tensor([task_index])
+        return collated
 
 class DataLoaderWithTaskname:
     def __init__(self, task_name, data_loader):
@@ -238,6 +244,7 @@ class Trainer(transformers.Trainer):
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
         self.num_proc = hparams.get('num_proc',None)
+        self.batched = hparams.get('batched',False)
         trainer_args = transformers.TrainingArguments(
             **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
         )
@@ -418,7 +425,7 @@ class Trainer(transformers.Trainer):
                 for phase, phase_dataset in task.dataset.items():
                     phase_dataset.index = i
                     features_dict[task][phase] = phase_dataset.map(
-                        task.preprocess_function, batched=True, load_from_cache_file=True,
+                        task.preprocess_function, batched=self.batched, load_from_cache_file=True,
                         num_proc=self.num_proc
                     )
                     features_dict[task][phase].set_format(
