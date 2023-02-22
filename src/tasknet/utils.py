@@ -84,7 +84,7 @@ def merge_tasks(tasks,names):
         if x:
             x=x[0]
             columns=t.dataset['train'].features.keys()
-            n_choices = len([c for c in columns if 'choice' in columns])
+            n_choices = len([c for c in columns if 'choice' in c])
             if n_choices:
                 x=f"{x}-{n_choices}"
             if x in prev:

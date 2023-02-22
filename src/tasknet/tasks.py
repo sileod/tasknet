@@ -279,7 +279,7 @@ class TokenClassification(Task):
         )
 
     def preprocess_function(self, examples):
-        if type(examples[self.tokens][0])==str:
+        if examples[self.tokens] and type(examples[self.tokens][0])==str:
             unsqueeze, examples= True, wrap_examples(examples)
         tokenized_inputs = self.tokenizer(
             examples[self.tokens], is_split_into_words=True, **self.tokenizer_kwargs
