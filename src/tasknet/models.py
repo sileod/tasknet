@@ -146,7 +146,8 @@ class Model(transformers.PreTrainedModel):
             batch_max_size=kwargs['attention_mask'].sum(axis=1).max().item()
             kwargs['attention_mask']=kwargs['attention_mask'][:,:batch_max_size].contiguous() 
             kwargs['input_ids']=kwargs['input_ids'][:,:batch_max_size].contiguous() 
-            if len(kwargs['labels'].shape)>1:
+            if len(kwargs['labels'].shape)>1 \
+                and self.task_models_list[task_index].config.problem_type!="multi_label_classification":
                 kwargs['labels']=kwargs['labels'][:,:batch_max_size].contiguous() 
         y = self.task_models_list[task_index](**kwargs)
         return y
