@@ -5,6 +5,8 @@ import functools
 from tqdm.auto import tqdm
 from datasets import concatenate_datasets
 import funcy as fc
+import torch
+import magicattr
 
 class NoTqdm:
     def __enter__(self):
@@ -21,7 +23,6 @@ def train_validation_test_split(dataset, train_ratio=0.8, val_test_ratio=0.5, se
         test=test_valid["train"],
     )
     return dataset
-
 
 
 def load_dataset_sample(*args,n=1000):
@@ -95,3 +96,38 @@ def merge_tasks(tasks,names):
             to_delete+=[i]
     tasks = [task for i, task in enumerate(tasks) if i not in to_delete] + list(done.values())
     return tasks
+
+
+
+def nested_children(m: torch.nn.Module):
+    children = dict(m.named_children())
+    output = {}
+    if children == {}:
+        return m
+    else:
+        for name, child in children.items():
+            if name.isnumeric():
+                name=f'[{name}]'
+            try:
+                output[name] = nested_children(child)
+            except TypeError:
+                output[name] = nested_children(child)
+    return output
+
+def convert(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            yield from (f'{k}.{x}'.replace('.[','[') for x in convert(v))
+        else:
+            yield k
+
+def search_module(m,name, mode='attr', lowercase=True):
+    paths = convert(nested_children(m))
+    module_name = lambda x: magicattr.get(m,x).__class__.__name__ 
+    process = lambda x: x.lower() if lowercase else x
+    if mode=='attr':
+        return [x for x in paths if name in process(x)]
+    if mode=='class':
+        return [x for x in paths if name in process(module_name(x))]
+    else:
+        raise ValueError('mode must be "attr" or "class"')

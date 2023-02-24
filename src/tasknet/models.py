@@ -21,7 +21,7 @@ import copy
 import logging
 from types import MappingProxyType
 from .tasks import Classification
-from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label, NoTqdm
+from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label, NoTqdm, search_module
 from transformers import AutoTokenizer
 import magicattr
 import gc
@@ -35,25 +35,59 @@ def progress(l):
         return l
 
 
-class CLSEmbedding(nn.Module):
-    def __init__(self, Zi, drop_probability=0.0):
+class ConditionalLayerNorm(torch.nn.Module):
+    def __init__(self, LN, Z_i, drop_probability=0.0):
         super().__init__()
-        self.cls = Zi
+        self.LN = LN
+        self.Z_i = Z_i
+        size,task_emb_size =len(LN.bias), len(Z_i)
+        self.L1 = torch.nn.Linear(task_emb_size, size*2)
+        self.L1.apply(lambda x: self.weight_init(x, k=size))
+        self.gates = torch.nn.Parameter(torch.ones(2))
+        self.sigmoid = torch.nn.Sigmoid()
+        self.drop_probability=drop_probability
+
+    @classmethod
+    def weight_init(cls, m,std=1e-3,k=1):
+        std=std/(k**.5)
+        m.weight.data.normal_(0.0, std).clamp_(-2*std,2*std)
+        m.bias.data.zero_()
+        
+    def forward(self, inputs):
+        gates = self.sigmoid(self.gates)
+        if random.random()<self.drop_probability:
+            a,b = self.LN.weight, self.LN.bias
+        else:
+            c,d=self.L1(self.Z_i).chunk(2,dim=-1)
+            a = gates[0]*c + self.LN.weight
+            b = gates[1]*d + self.LN.bias
+        return torch.nn.functional.layer_norm(inputs, self.LN.normalized_shape, a,b, eps=self.LN.eps)
+
+class CLSEmbedding(nn.Module):
+    def __init__(self, Z_i, drop_probability=0.0):
+        super().__init__()
+        self.cls = Z_i
         self.drop_probability=drop_probability
     def forward(self, x):
         if random.random()>self.drop_probability:
             x[:, 0, :] = x[:, 0, :] + self.cls.to(x.device)
         return x
 
-def add_cls(model, Z_i, args=dict()):
+def add_cls(model, Z_i, drop_probability=0.0):
     """model is a standard HF Transformer"""
     emb_name, emb_module = [(name,module) for name,module in model.named_modules() if isinstance(module,torch.nn.Embedding)][0]
     magicattr.set(model, emb_name,
         nn.Sequential(emb_module, 
         CLSEmbedding(Z_i,
-        drop_probability=args.get('cls_emb_drop_probability',0.0)))
-    )
+        drop_probability=drop_probability
+    )))
 
+def add_cln(model,Z_i,drop_probability=0.0):
+    for ln in search_module(model, 'layernorm'):
+        magicattr.set(model,ln, 
+        ConditionalLayerNorm(magicattr.get(model,ln), Z_i, drop_probability=drop_probability)
+        )
+    
 class WandbTaskCallback(transformers.integrations.WandbCallback):
 
     def on_log(self, args, state, control, model=None, logs=None, **kwargs):
@@ -77,6 +111,9 @@ class Model(transformers.PreTrainedModel):
         self.models={}
         self.task_names = [t.name for t in tasks]
         self.batch_truncation = args.get('batch_truncation',True)
+        self.add_cls = args.get('add_cls',True)
+        self.add_cln = args.get('add_cln',False)
+        self.drop_probability=args.get('drop_probability',0.1)
 
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
@@ -93,7 +130,7 @@ class Model(transformers.PreTrainedModel):
             else:
                 labels = getattr(task.dataset["train"].features[task.y],"names",None)
                 key= tuple([normalize_label(x) for x in labels]) if labels else None
-                key = key if task.num_labels!=2 or key else "binary"
+                #key = key if task.num_labels!=2 or key else "binary"
 
             if key and key not in self.models:
                 self.models[key] = model 
@@ -120,10 +157,12 @@ class Model(transformers.PreTrainedModel):
             )
 
         for i, task in enumerate(tasks):
-
             m_i = self.task_models_list[i]
-            add_cls(m_i,self.Z[i],args)
-
+            if self.add_cls:
+                add_cls(m_i,self.Z[i],drop_probability=self.drop_probability)
+            if self.add_cln:
+                add_cln(m_i,self.Z[i][::8],
+                drop_probability=self.drop_probability)
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -140,15 +179,19 @@ class Model(transformers.PreTrainedModel):
         else:
             return model.config.model_type.split('-')[0]
 
+    def batch_truncate(self,kwargs,task_index):
+        batch_max_size=kwargs['attention_mask'].sum(axis=1).max().item()
+        kwargs['attention_mask']=kwargs['attention_mask'][:,:batch_max_size].contiguous() 
+        kwargs['input_ids']=kwargs['input_ids'][:,:batch_max_size].contiguous() 
+        if len(kwargs['labels'].shape)>1 \
+            and self.task_models_list[task_index].config.problem_type!="multi_label_classification":
+            kwargs['labels']=kwargs['labels'][:,:batch_max_size].contiguous() 
+        return kwargs
+
     def forward(self, task, **kwargs):
         task_index = task[0].item()
         if self.batch_truncation:
-            batch_max_size=kwargs['attention_mask'].sum(axis=1).max().item()
-            kwargs['attention_mask']=kwargs['attention_mask'][:,:batch_max_size].contiguous() 
-            kwargs['input_ids']=kwargs['input_ids'][:,:batch_max_size].contiguous() 
-            if len(kwargs['labels'].shape)>1 \
-                and self.task_models_list[task_index].config.problem_type!="multi_label_classification":
-                kwargs['labels']=kwargs['labels'][:,:batch_max_size].contiguous() 
+            kwargs=self.batch_truncate(kwargs, task_index)
         y = self.task_models_list[task_index](**kwargs)
         return y
 
