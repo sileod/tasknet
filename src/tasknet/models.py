@@ -213,11 +213,7 @@ class NLPDataCollator:
     def __call__(
         self, features: List[Union[InputDataClass, Dict]]
     ) -> Dict[str, torch.Tensor]:
-        try: #not batched
-            task_index = features[0]['task'][0].item()
-        except: #batched
-            task_index = features[0]["task"]
-
+        task_index = features[0]["task"].flatten()[0].item()
         features = [{k:v for k,v in x.items() if k!='task'} for x in features]
         collated = self.tasks[task_index].data_collator.__call__(features)
         collated['task']=torch.tensor([task_index])
