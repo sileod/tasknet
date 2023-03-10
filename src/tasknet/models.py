@@ -220,6 +220,8 @@ class Model(transformers.PreTrainedModel):
         m_i = self.task_models_list[base_index]
         m_i.Z = self.Z
         m_i.classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
+        if hasattr(m_i,'auto'):
+            del m_i.auto
 
         id2label=dict(enumerate(labels))
         label2id = {str(v):str(k) for k,v in id2label.items()}
