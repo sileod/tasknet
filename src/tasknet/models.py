@@ -35,6 +35,21 @@ def progress(l):
         return l
 
 
+class Adapter(transformers.PreTrainedModel):
+    config_class = transformers.PretrainedConfig
+    def __init__(self, config, classifiers=None, Z=None):
+        super().__init__(config)    
+        self.Z= torch.nn.Embedding(config.hidden_size, len(config.classifiers_size)) if Z==None else Z
+        self.classifiers=torch.nn.ModuleList(
+            [torch.nn.Linear(config.hidden_size,size) for size in config.classifiers_size]
+        ) if classifiers==None else classifiers
+    
+    def adapt_model_to_task(self, model, task_name):
+        task_index=self.config['tasks'].index(task_name)
+        last_linear(model).weight = last_linear(model.classifiers[task_index]).weight
+        return model
+
+
 class ConditionalLayerNorm(torch.nn.Module):
     def __init__(self, LN, Z_i, drop_probability=0.0):
         super().__init__()
@@ -81,6 +96,12 @@ def add_cls(model, Z_i, drop_probability=0.0):
         CLSEmbedding(Z_i,
         drop_probability=drop_probability
     )))
+
+def remove_cls(model):
+    model=copy.copy(model)
+    emb_name, emb_module = [(name,module) for name,module in model.named_modules() if isinstance(module,torch.nn.Sequential)][0]
+    magicattr.set(model, emb_name, emb_module[0])
+    return model
 
 def add_cln(model,Z_i,drop_probability=0.0):
     for ln in search_module(model, 'layernorm'):
@@ -195,16 +216,23 @@ class Model(transformers.PreTrainedModel):
         y = self.task_models_list[task_index](**kwargs)
         return y
 
-    def factorize(self, base_index=0, tasks=[]):
+    def factorize(self, base_index=0, tasks=[],labels=[]):
         m_i = self.task_models_list[base_index]
         m_i.Z = self.Z
         m_i.classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
+
+        id2label=dict(enumerate(labels))
+        label2id = {str(v):str(k) for k,v in id2label.items()}
+
         m_i.config = m_i.config.from_dict(
             {**m_i.config.to_dict(),
-            'classifiers_size': [tuple(c.weight.shape) for c in m_i.classifiers],
-            'tasks': (tasks if tasks else self.task_names)
+            'classifiers_size': [c.out_features for c in m_i.classifiers],
+            'tasks': (tasks if tasks else self.task_names),
+            'label2id':label2id,'id2label':id2label
             })
-        return m_i
+        adapter=Adapter(m_i.config)
+        return remove_cls(m_i), adapter
+
 
 class NLPDataCollator:
     def __init__(self, tasks):
@@ -455,7 +483,20 @@ class Trainer(transformers.Trainer):
         )
 
     def save_model(self,output_dir,**kwargs):
-        self.model.factorize().save_pretrained(output_dir)
+        model, adapter = self.model.factorize()
+        model.save_pretrained(output_dir)
+        adapter.save_pretrained(f"{output_dir}-adapter")
+    
+    def push_to_hub(self, repo, base_index=0, push_adapter=True):
+        try:
+            labels = self.tasks[base_index].dataset['train'].features['labels'].names
+        except:
+            labels=[]
+        model, adapter = self.model.factorize(labels=labels)
+        model.push_to_hub(repo)
+        self.tokenizer.push_to_hub(repo)
+        if push_adapter:
+            adapter.push_to_hub(f"{repo}-adapter")    
 
     def preprocess_tasks(self, tasks, tokenizer):
         
@@ -487,6 +528,7 @@ class Trainer(transformers.Trainer):
                     )
                 task.processed_features=features_dict[task] #added
         return features_dict
+
 
 
 def Model_Trainer(tasks, args):
