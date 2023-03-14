@@ -39,7 +39,7 @@ class Adapter(transformers.PreTrainedModel):
     config_class = transformers.PretrainedConfig
     def __init__(self, config, classifiers=None, Z=None):
         super().__init__(config)    
-        self.Z= torch.nn.Embedding(config.hidden_size, len(config.classifiers_size)) if Z==None else Z
+        self.Z= torch.nn.Embedding(len(config.classifiers_size),config.hidden_size).weight if Z==None else Z
         self.classifiers=torch.nn.ModuleList(
             [torch.nn.Linear(config.hidden_size,size) for size in config.classifiers_size]
         ) if classifiers==None else classifiers
@@ -48,6 +48,8 @@ class Adapter(transformers.PreTrainedModel):
         task_index=self.config['tasks'].index(task_name)
         last_linear(model).weight = last_linear(model.classifiers[task_index]).weight
         return model
+    def _init_weights(*args):
+        pass 
 
 
 class ConditionalLayerNorm(torch.nn.Module):
@@ -218,21 +220,20 @@ class Model(transformers.PreTrainedModel):
 
     def factorize(self, base_index=0, tasks=[],labels=[]):
         m_i = self.task_models_list[base_index]
-        m_i.Z = self.Z
-        m_i.classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
+        classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
         if hasattr(m_i,'auto'):
             del m_i.auto
 
         id2label=dict(enumerate(labels))
-        label2id = {str(v):str(k) for k,v in id2label.items()}
+        label2id = {str(v):k for k,v in id2label.items()}
 
         m_i.config = m_i.config.from_dict(
             {**m_i.config.to_dict(),
-            'classifiers_size': [c.out_features for c in m_i.classifiers],
+            'classifiers_size': [c.out_features for c in classifiers],
             'tasks': (tasks if tasks else self.task_names),
             'label2id':label2id,'id2label':id2label
             })
-        adapter=Adapter(m_i.config)
+        adapter=Adapter(m_i.config, classifiers, self.Z)
         return remove_cls(m_i), adapter
 
 
