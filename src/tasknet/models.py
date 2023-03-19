@@ -219,7 +219,7 @@ class Model(transformers.PreTrainedModel):
         return y
 
     def factorize(self, base_index=0, tasks=[],labels=[]):
-        m_i = copy.deepcopy(self.task_models_list[base_index])
+        m_i = self.task_models_list[base_index]
         classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
         if hasattr(m_i,'auto'):
             del m_i.auto
