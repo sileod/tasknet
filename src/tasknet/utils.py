@@ -125,6 +125,7 @@ def search_module(m,name, mode='attr', lowercase=True):
     paths = convert(nested_children(m))
     module_name = lambda x: magicattr.get(m,x).__class__.__name__ 
     process = lambda x: x.lower() if lowercase else x
+    name=process(name)
     if mode=='attr':
         return [x for x in paths if name in process(x)]
     if mode=='class':

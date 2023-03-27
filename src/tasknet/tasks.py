@@ -87,6 +87,17 @@ class Task:
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
 
+    def get_labels(self):
+        try:
+            for key in 'label','labels':
+                return self.dataset[self.main_split].features[key].names
+        except:
+            pass
+        try:
+            for key in 'label','labels':
+                return sorted(set(self.dataset[self.main_split]["labels"]))
+        except:
+            return []
 
 @dataclass
 class Classification(Task):

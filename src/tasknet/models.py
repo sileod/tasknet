@@ -27,6 +27,7 @@ import magicattr
 import gc
 import random
 from tqdm.auto import tqdm
+from transformers import pipeline
 
 def progress(l):
     if len(l)>8:
@@ -37,7 +38,7 @@ def progress(l):
 
 class Adapter(transformers.PreTrainedModel):
     config_class = transformers.PretrainedConfig
-    def __init__(self, config, classifiers=None, Z=None):
+    def __init__(self, config, classifiers=None, Z=None, labels_list=[]):
         super().__init__(config)    
         self.Z= torch.nn.Embedding(len(config.classifiers_size),config.hidden_size).weight if Z==None else Z
         self.classifiers=torch.nn.ModuleList(
@@ -45,8 +46,8 @@ class Adapter(transformers.PreTrainedModel):
         ) if classifiers==None else classifiers
     
     def adapt_model_to_task(self, model, task_name):
-        task_index=self.config['tasks'].index(task_name)
-        last_linear(model).weight = last_linear(model.classifiers[task_index]).weight
+        task_index=self.config.tasks.index(task_name)
+        last_linear(model).weight = last_linear(self.classifiers[task_index]).weight
         return model
     def _init_weights(*args):
         pass 
@@ -101,8 +102,11 @@ def add_cls(model, Z_i, drop_probability=0.0):
 
 def remove_cls(model):
     model=copy.copy(model)
-    emb_name, emb_module = [(name,module) for name,module in model.named_modules() if isinstance(module,torch.nn.Sequential)][0]
-    magicattr.set(model, emb_name, emb_module[0])
+    cls_embeddings = [(name,module) for name,module in model.named_modules() if isinstance(module,torch.nn.Sequential)
+        and isinstance(module[-1], CLSEmbedding)]
+    if cls_embeddings:
+        emb_name, emb_module = cls_embeddings[0]
+        magicattr.set(model, emb_name, emb_module[0])
     return model
 
 def add_cln(model,Z_i,drop_probability=0.0):
@@ -133,11 +137,11 @@ class Model(transformers.PreTrainedModel):
         self.shared_encoder = warm_start
         self.models={}
         self.task_names = [t.name for t in tasks]
+        self.task_labels_list = [t.get_labels() for t in tasks]
         self.batch_truncation = args.get('batch_truncation',True)
         self.add_cls = args.get('add_cls',True)
         self.add_cln = args.get('add_cln',False)
         self.drop_probability=args.get('drop_probability',0.1)
-
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -202,7 +206,8 @@ class Model(transformers.PreTrainedModel):
         else:
             return model.config.model_type.split('-')[0]
 
-    def batch_truncate(self,kwargs,task_index):
+    def batch_unpad(self,kwargs,task_index):
+        """Remove excess padding (improves speed)"""
         batch_max_size=kwargs['attention_mask'].sum(axis=1).max().item()
         kwargs['attention_mask']=kwargs['attention_mask'][:,:batch_max_size].contiguous() 
         kwargs['input_ids']=kwargs['input_ids'][:,:batch_max_size].contiguous() 
@@ -214,17 +219,16 @@ class Model(transformers.PreTrainedModel):
     def forward(self, task, **kwargs):
         task_index = task[0].item()
         if self.batch_truncation:
-            kwargs=self.batch_truncate(kwargs, task_index)
+            kwargs=self.batch_unpad(kwargs, task_index)
         y = self.task_models_list[task_index](**kwargs)
         return y
 
-    def factorize(self, base_index=0, tasks=[],labels=[]):
-        m_i = self.task_models_list[base_index]
-        classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
-        if hasattr(m_i,'auto'):
-            del m_i.auto
 
-        id2label=dict(enumerate(labels))
+    def factorize(self, task_index=0, tasks=[]):
+        m_i = self.task_models_list[task_index]
+
+        classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
+        id2label=dict(enumerate(self.task_labels_list[task_index]))
         label2id = {str(v):k for k,v in id2label.items()}
 
         m_i.config = m_i.config.from_dict(
@@ -233,8 +237,15 @@ class Model(transformers.PreTrainedModel):
             'tasks': (tasks if tasks else self.task_names),
             'label2id':label2id,'id2label':id2label
             })
-        adapter=Adapter(m_i.config, classifiers, self.Z)
-        return remove_cls(m_i), adapter
+        adapter=Adapter(m_i.config, classifiers, self.Z, self.task_labels_list)
+
+        if not hasattr(m_i,"factorized"):
+            if hasattr(m_i,'auto'):
+                del m_i.auto    
+            m_i=remove_cls(m_i)
+            m_i.factorized=True
+
+        return m_i, adapter
 
 
 class NLPDataCollator:
@@ -485,17 +496,18 @@ class Trainer(transformers.Trainer):
             }
         )
 
-    def save_model(self,output_dir,**kwargs):
-        model, adapter = self.model.factorize()
+    def pipeline(self,task_index=0):
+        m,_ = self.model.factorize(task_index=task_index)
+        return pipeline("text-classification",model=m,tokenizer=self.tokenizer,
+                device=m.device,padding=True)
+
+    def save_model(self,output_dir,task_index=0,**kwargs):
+        model, adapter = self.model.factorize(task_index=task_index)
         model.save_pretrained(output_dir)
         adapter.save_pretrained(f"{output_dir}-adapter")
     
-    def push_to_hub(self, repo, base_index=0, push_adapter=True):
-        try:
-            labels = self.tasks[base_index].dataset['train'].features['labels'].names
-        except:
-            labels=[]
-        model, adapter = self.model.factorize(labels=labels)
+    def push_to_hub(self, repo, task_index=0, push_adapter=True):
+        model, adapter = self.model.factorize(task_index=task_index)
         model.push_to_hub(repo)
         self.tokenizer.push_to_hub(repo)
         if push_adapter:
