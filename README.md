@@ -21,23 +21,22 @@ from datasets import load_dataset
 
 rte = tn.Classification(
     dataset=load_dataset("glue", "rte"),
-    s1="sentence1", s2="sentence2", y="label"
-)
+    s1="sentence1", s2="sentence2", y="label")
 
-class args:
+class hparams:
   model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
   learning_rate = 3e-5 
   # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 tasks = [rte]
-model = tn.Model(tasks, args)
-trainer = tn.Trainer(model, tasks, args)
+model = tn.Model(tasks, hparams)
+trainer = tn.Trainer(model, tasks, hparams)
 trainer.train()
 trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
 ```
-Tasknet is multitask by design. It works with list of tasks and the model creates a `task_models_list` attribute.
+Tasknet is multitask by design. `model.task_models_list` contains one model per task, with shared encoder.
 
 ## Installation
 `pip install tasknet`
