@@ -34,6 +34,8 @@ tasks = [rte]
 model = tn.Model(tasks, args)
 trainer = tn.Trainer(model, tasks, args)
 trainer.train()
+p = trainer.pipeline()
+p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
 ```
 Tasknet is multitask by design. It works with list of tasks and the model creates a `task_models_list` attribute.
 
