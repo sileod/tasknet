@@ -12,7 +12,7 @@
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
 
-## Task instances
+## Task instances and example
 
 Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the tempalte fields and the dataset columns to instanciate a task. 
 ```py
