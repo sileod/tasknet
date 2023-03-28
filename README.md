@@ -25,15 +25,15 @@ rte = tn.Classification(
 )
 
 class args:
-  model_name='roberta-base'
+  model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
   learning_rate = 3e-5 
-  # see https://huggingface.co/docs/transformers/v4.24.0/en/main_classes/trainer#transformers.TrainingArguments
-
+  # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 tasks = [rte]
 model = tn.Model(tasks, args)
 trainer = tn.Trainer(model, tasks, args)
 trainer.train()
+trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
 ```
