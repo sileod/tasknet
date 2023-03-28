@@ -16,8 +16,7 @@ Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks
 
 Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the tempalte fields and the dataset columns to instanciate a task. 
 ```py
-import tasknet as tn
-from datasets import load_dataset
+import tasknet as tn; from datasets import load_dataset
 
 rte = tn.Classification(
     dataset=load_dataset("glue", "rte"),
@@ -25,8 +24,7 @@ rte = tn.Classification(
 
 class hparams:
   model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
-  learning_rate = 3e-5 
-  # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
+  learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 tasks = [rte]
 model = tn.Model(tasks, hparams)
