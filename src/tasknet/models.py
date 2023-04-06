@@ -44,10 +44,13 @@ class Adapter(transformers.PreTrainedModel):
         self.classifiers=torch.nn.ModuleList(
             [torch.nn.Linear(config.hidden_size,size) for size in config.classifiers_size]
         ) if classifiers==None else classifiers
-    
+        self.config=self.config.from_dict(
+            {**self.config.to_dict(),
+            'labels_list':labels_list}
+        )
     def adapt_model_to_task(self, model, task_name):
         task_index=self.config.tasks.index(task_name)
-        last_linear(model).weight = last_linear(self.classifiers[task_index]).weight
+        setattr(model,search_module(model,'linear',mode='class')[-1], self.classifiers[task_index])
         return model
     def _init_weights(*args):
         pass 
