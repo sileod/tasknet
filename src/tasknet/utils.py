@@ -132,3 +132,30 @@ def search_module(m,name, mode='attr', lowercase=True):
         return [x for x in paths if name in process(module_name(x))]
     else:
         raise ValueError('mode must be "attr" or "class"')
+
+
+def load_pipeline(model_name, task_name, adapt_task_embedding=True):
+
+    from transformers import AutoModelForSequenceClassification, TextClassificationPipeline, AutoTokenizer
+    from .models import Adapter
+    try:
+        import tasksource
+    except:
+        raise ImportError('Requires tasksource.\n pip install tasksource')
+    task = tasksource.load_task(task_name)
+
+    model = AutoModelForSequenceClassification.from_pretrained(model_name,ignore_mismatched_sizes=True)
+    adapter = Adapter.from_pretrained(model_name.replace('-nli','')+'-adapters')
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = adapter.adapt_model_to_task(model, task_name)
+    model.config.id2label=task['train'].features['labels']._int2str
+    
+    task_index = adapter.config.tasks.index(task_name)
+    
+    if adapt_task_embedding:
+        with torch.no_grad():
+            model.deberta.embeddings.word_embeddings.weight[tokenizer.cls_token_id]+=adapter.Z[task_index]
+
+    pipe = TextClassificationPipeline(
+    model=model, tokenizer=tokenizer)
+    return pipe

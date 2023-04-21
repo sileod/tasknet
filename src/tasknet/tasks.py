@@ -89,13 +89,15 @@ class Task:
 
     def get_labels(self):
         try:
-            for key in 'label','labels':
-                return self.dataset[self.main_split].features[key].names
+            for key in 'labels','label':
+                if key in self.dataset[self.main_split].features:
+                    return self.dataset[self.main_split].features[key].names
         except:
             pass
         try:
             for key in 'label','labels':
-                return sorted(set(self.dataset[self.main_split]["labels"]))
+                if key in self.dataset[self.main_split].features:
+                    return sorted(set(self.dataset[self.main_split][key]))
         except:
             return []
 

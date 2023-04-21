@@ -50,7 +50,8 @@ class Adapter(transformers.PreTrainedModel):
         )
     def adapt_model_to_task(self, model, task_name):
         task_index=self.config.tasks.index(task_name)
-        setattr(model,search_module(model,'linear',mode='class')[-1], self.classifiers[task_index])
+        #setattr(model,search_module(model,'linear',mode='class')[-1], self.classifiers[task_index])
+        model.classifier=self.classifiers[task_index]
         return model
     def _init_weights(*args):
         pass 
@@ -138,6 +139,7 @@ class Model(transformers.PreTrainedModel):
         super().__init__(transformers.PretrainedConfig())
         args=to_dict(args)
         self.shared_encoder = warm_start
+        self.shared_pooler = None
         self.models={}
         self.task_names = [t.name for t in tasks]
         self.task_labels_list = [t.get_labels() for t in tasks]
@@ -173,6 +175,12 @@ class Model(transformers.PreTrainedModel):
                 self.shared_encoder = model.auto
             else:
                 shallow_copy_A_to_B(self.shared_encoder, model.auto)
+            
+            if hasattr(model,'pooler'):
+                if self.shared_pooler is None:
+                    self.shared_pooler = model.pooler
+                else:
+                    shallow_copy_A_to_B(self.shared_pooler, model.pooler)
             
             task_models_list += [model]
             model.i = i
@@ -258,11 +266,11 @@ class NLPDataCollator:
     def __call__(
         self, features: List[Union[InputDataClass, Dict]]
     ) -> Dict[str, torch.Tensor]:
-        try:
-            task_index = features[0]["task"].flatten()[0].item()
-        except:
-            print("features:",features)
-            task_index = features[-1]["task"].flatten()[0].item()
+        #try:
+        task_index = features[0]["task"].flatten()[0].item()
+        #except:
+        #    print("features:",features)
+        #   task_index = features[-1]["task"].flatten()[0].item()
             
         features = [{k:v for k,v in x.items() if k!='task'} for x in features]
         collated = self.tasks[task_index].data_collator.__call__(features)
@@ -514,7 +522,7 @@ class Trainer(transformers.Trainer):
         model.push_to_hub(repo)
         self.tokenizer.push_to_hub(repo)
         if push_adapter:
-            adapter.push_to_hub(f"{repo}-adapter")    
+            adapter.push_to_hub(f"{repo}-adapters")    
 
     def preprocess_tasks(self, tasks, tokenizer):
         
