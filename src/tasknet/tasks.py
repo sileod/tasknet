@@ -45,7 +45,9 @@ def sample_dataset(dataset,n=10000, n_eval=1000, oversampling=None):
 
 def get_len(outputs):
     try:
-        return len(outputs[fc.first(outputs)])
+        batch_length=len(outputs[fc.first(outputs)])
+        assert batch_length
+        return batch_length
     except:
         return 1
 
