@@ -160,7 +160,7 @@ class Model(transformers.PreTrainedModel):
             if task.task_type=='MultipleChoice':
                 key=task.task_type
             else:
-                labels = getattr(task.dataset["train"].features[task.y],"names",None)
+                labels = task.get_labels()#getattr(task.dataset["train"].features[task.y],"names",None)
                 key= tuple([normalize_label(x) for x in labels]) if labels else None
                 #key = key if task.num_labels!=2 or key else "binary"
 

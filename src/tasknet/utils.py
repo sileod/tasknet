@@ -134,7 +134,9 @@ def search_module(m,name, mode='attr', lowercase=True):
         raise ValueError('mode must be "attr" or "class"')
 
 
-def load_pipeline(model_name, task_name, adapt_task_embedding=True):
+def load_pipeline(model_name, task_name, adapt_task_embedding=True,multilingual=False):
+    if multilingual or 'mdeberta' in model_name:
+        multilingual=True 
 
     from transformers import AutoModelForSequenceClassification, TextClassificationPipeline, AutoTokenizer
     from .models import Adapter
@@ -142,7 +144,7 @@ def load_pipeline(model_name, task_name, adapt_task_embedding=True):
         import tasksource
     except:
         raise ImportError('Requires tasksource.\n pip install tasksource')
-    task = tasksource.load_task(task_name)
+    task = tasksource.load_task(task_name,multilingual=multilingual)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_name,ignore_mismatched_sizes=True)
     adapter = Adapter.from_pretrained(model_name.replace('-nli','')+'-adapters')

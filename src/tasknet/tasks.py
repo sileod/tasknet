@@ -284,14 +284,20 @@ class TokenClassification(Task):
         target = self.dataset[self.main_split].features[self.y]
         if not self.num_labels:
             self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
-        self.label_names = [f"{i}" for i in range(self.num_labels)]
-
+        try:
+            self.label_names=target.feature.names
+        except:
+            self.label_names = [f"{i}" for i in range(self.num_labels)]
+    def get_labels(self):
+        return self.label_names
     def set_tokenizer(self, tokenizer):
         self.tokenizer = tokenizer
         self.tokenizer.add_prefix_space = True
         self.data_collator = DataCollatorForTokenClassification(
             tokenizer=self.tokenizer
         )
+
+
 
     def preprocess_function(self, examples):
         if examples[self.tokens] and type(examples[self.tokens][0])==str:
