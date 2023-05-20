@@ -1,4 +1,4 @@
-## tasknet : simple multi-task transformers fine-tuning with Trainer and HuggingFace datasets. 
+## tasknet : simple multi-task transformer fine-tuning with Trainer and HuggingFace datasets. 
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
 
