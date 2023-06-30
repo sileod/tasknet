@@ -56,7 +56,7 @@ Minimal-ish example:
 
 https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sharing
 
-More complex example, where tasknet was scaled to [600 tasks](https://huggingface.co/sileod/deberta-v3-base-tasksource-nli)
+More complex example, where tasknet was scaled to [600 tasks](https://huggingface.co/sileod/deberta-v3-base-tasksource-nli):
 
 https://colab.research.google.com/drive/1iB4Oxl9_B5W3ZDzXoWJN-olUbqLBxgQS?usp=sharing
 
