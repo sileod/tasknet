@@ -50,8 +50,8 @@ AutoTask guesses a tempalte based on the dataset structure.
 tn.Classification(dataset,nrow=5000,nrows_eval=500 oversampling=2)
 ```
 You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
-## Additional examples:
-### Colab:
+
+## Colab examples
 Minimal-ish example:
 
 https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sharing
