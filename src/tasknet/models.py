@@ -452,12 +452,8 @@ class Trainer(transformers.Trainer):
         """
         if self.train_dataset is None:
             raise ValueError("Trainer: training requires a train_dataset.")
-        train_sampler = (
-            RandomSampler(train_dataset)
-            if self.args.local_rank == -1
-            else DistributedSampler(train_dataset)
-        )
-
+        train_sampler = (RandomSampler(train_dataset) if torch.cuda.device_count()<2 or self.args.local_rank == -1 else DistributedSampler(train_dataset))
+       
         data_loader = DataLoaderWithTaskname(
             task_name=task_name,
             data_loader=DataLoader(
