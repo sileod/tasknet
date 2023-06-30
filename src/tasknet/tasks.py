@@ -410,3 +410,23 @@ class Seq2SeqLM(Task):
         meta = {"name": self.name, "size": len(decoded_preds), "index": self.index}
 
         return {**result,**meta}
+
+
+def AutoTask(dataset, **kwargs):
+    if type(dataset)==str:
+        try:
+            import tasksource
+        except:
+            raise ImportError('To use this feature, use a valid tasksource id and pip install tasksource')
+        try:
+            dataset = tasksource.load_task(dataset)
+        except:
+            raise ValueError('pick an id from https://github.com/sileod/tasksource/blob/main/tasks.md or write your own preprocessing')
+    features=dataset['train'].features
+    if 'sentence1' in features:
+        return Classification(dataset, **kwargs)
+    if 'choice' in str(features):
+        return MultipleChoice(dataset, **kwargs)
+    if 'tokens' in features:
+        return TokenClassification(dataset,**kwargs)
+    
