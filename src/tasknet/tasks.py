@@ -274,8 +274,8 @@ class TokenClassification(Task):
                 # Same word as previous token
                 label = labels[word_id]
                 # If the label is B-XXX we change it to I-XXX
-                if label % 2 == 1:
-                    label += 1
+                #if label % 2 == 1:
+                #    label += 1
                 new_labels.append(label)
         return new_labels
 
@@ -288,6 +288,7 @@ class TokenClassification(Task):
             self.label_names=target.feature.names
         except:
             self.label_names = [f"{i}" for i in range(self.num_labels)]
+        #self.num_labels+=1 # padding =-100
     def get_labels(self):
         return self.label_names
     def set_tokenizer(self, tokenizer):

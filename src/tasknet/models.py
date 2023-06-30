@@ -40,7 +40,7 @@ class Adapter(transformers.PreTrainedModel):
     config_class = transformers.PretrainedConfig
     def __init__(self, config, classifiers=None, Z=None, labels_list=[]):
         super().__init__(config)    
-        self.Z= torch.nn.Embedding(len(config.classifiers_size),config.hidden_size).weight if Z==None else Z
+        self.Z= torch.nn.Embedding(len(config.classifiers_size),config.hidden_size, max_norm=1.0).weight if Z==None else Z
         self.classifiers=torch.nn.ModuleList(
             [torch.nn.Linear(config.hidden_size,size) for size in config.classifiers_size]
         ) if classifiers==None else classifiers
@@ -518,7 +518,7 @@ class Trainer(transformers.Trainer):
         model.push_to_hub(repo)
         self.tokenizer.push_to_hub(repo)
         if push_adapter:
-            adapter.push_to_hub(f"{repo}-adapters")    
+            adapter.push_to_hub(f"{repo.replace('-nli','')}-adapters")    
 
     def preprocess_tasks(self, tasks, tokenizer):
         
