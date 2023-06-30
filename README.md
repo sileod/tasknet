@@ -39,17 +39,18 @@ Tasknet is multitask by design. `model.task_models_list` contains one model per 
 ## Installation
 `pip install tasknet`
 
-## AutoTask
-You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
-```py
-rte = tn.AutoTask("glue/rte")
-```
-AutoTask guesses a template based on the dataset structure. It also accepts a dataset as input, if it fits the template (e.g. after tasksource custom preprocessing).
-## Sampling
+## Balancing dataset sizes 
 ```py
 tn.Classification(dataset,nrow=5000,nrows_eval=500 oversampling=2)
 ```
 You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
+
+## AutoTask
+You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
+```py
+rte = tn.AutoTask("glue/rte",nrow=5000)
+```
+AutoTask guesses a template based on the dataset structure. It also accepts a dataset as input, if it fits the template (e.g. after tasksource custom preprocessing).
 
 ## Colab examples
 Minimal-ish example:
