@@ -44,7 +44,7 @@ You can also leverage [tasksource](https://github.com/sileod/tasksource/) with t
 ```py
 rte = tn.AutoTask("glue/rte")
 ```
-AutoTask guesses a tempalte based on the dataset structure.
+AutoTask guesses a template based on the dataset structure. It also accepts a dataset as input, if it fits the template (e.g. after tasksource custom preprocessing).
 ## Sampling
 ```py
 tn.Classification(dataset,nrow=5000,nrows_eval=500 oversampling=2)
