@@ -12,7 +12,9 @@
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
 
-## Task instances and example
+## Installation and example
+
+`pip install tasknet`
 
 Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill in the mapping between the template fields and the dataset columns to instantiate a task. 
 ```py
@@ -35,9 +37,6 @@ p = trainer.pipeline()
 p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
 ```
 Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
-
-## Installation
-`pip install tasknet`
 
 ## Balancing dataset sizes 
 ```py
