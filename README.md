@@ -14,7 +14,7 @@ Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks
 
 ## Task instances and example
 
-Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill-in the mapping between the tempalte fields and the dataset columns to instanciate a task. 
+Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill in the mapping between the template fields and the dataset columns to instantiate a task. 
 ```py
 import tasknet as tn; from datasets import load_dataset
 
@@ -34,15 +34,31 @@ trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
 ```
-Tasknet is multitask by design. `model.task_models_list` contains one model per task, with shared encoder.
+Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
 
 ## Installation
 `pip install tasknet`
 
+## AutoTask
+You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
+```py
+rte = tn.AutoTask("glue/rte")
+```
+AutoTask guesses a tempalte based on the dataset structure.
+## Sampling
+```py
+tn.Classification(dataset,nrow=5000,nrows_eval=500 oversampling=2)
+```
+You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
 ## Additional examples:
 ### Colab:
+Minimal-ish example:
+
 https://colab.research.google.com/drive/15Xf4Bgs3itUmok7XlAK6EEquNbvjD9BD?usp=sharing
 
+More complex example, where tasknet was scaled to [600 tasks](https://huggingface.co/sileod/deberta-v3-base-tasksource-nli)
+
+https://colab.research.google.com/drive/1iB4Oxl9_B5W3ZDzXoWJN-olUbqLBxgQS?usp=sharing
 
 ## tasknet vs jiant
 [jiant](https://github.com/nyu-mll/jiant/) is another library comparable to tasknet.  tasknet is a minimal extension of `Trainer` centered on task templates, while jiant builds a `Trainer` equivalent from scratch called [`runner`](https://github.com/nyu-mll/jiant/blob/master/jiant/proj/main/runner.py).
