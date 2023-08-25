@@ -12,7 +12,9 @@
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
 Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
 
-## Task instances and example
+## Installation and example
+
+`pip install tasknet`
 
 Each task template has fields that should be matched with specific dataset columns. Classification has two text fields `s1`,`s2`, and a label `y`. Pass a dataset to a template, and fill in the mapping between the template fields and the dataset columns to instantiate a task. 
 ```py
@@ -20,7 +22,7 @@ import tasknet as tn; from datasets import load_dataset
 
 rte = tn.Classification(
     dataset=load_dataset("glue", "rte"),
-    s1="sentence1", s2="sentence2", y="label") #s2 is optional
+    s1="sentence1", s2="sentence2", y="label") #s2 is optional # See AutoTask for shorter code
 
 class hparams:
   model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
@@ -36,20 +38,18 @@ p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inf
 ```
 Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
 
-## Installation
-`pip install tasknet`
+## Balancing dataset sizes 
+```py
+tn.Classification(dataset, nrows=5000, nrows_eval=500, oversampling=2)
+```
+You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
 
 ## AutoTask
 You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
 ```py
-rte = tn.AutoTask("glue/rte")
+rte = tn.AutoTask("glue/rte", nrows=5000)
 ```
-AutoTask guesses a tempalte based on the dataset structure.
-## Sampling
-```py
-tn.Classification(dataset,nrow=5000,nrows_eval=500 oversampling=2)
-```
-You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
+AutoTask guesses a template based on the dataset structure. It also accepts a dataset as input, if it fits the template (e.g. after tasksource custom preprocessing).
 
 ## Colab examples
 Minimal-ish example:
