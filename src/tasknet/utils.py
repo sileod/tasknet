@@ -152,7 +152,14 @@ def search_module(m, name, mode="attr", lowercase=True):
         raise ValueError('mode must be "attr" or "class"')
 
 
-def load_pipeline(model_name, task_name, adapt_task_embedding=True, multilingual=False):
+def load_pipeline(
+    model_name: str,
+    task_name: str,
+    adapt_task_embedding: bool = True,
+    multilingual: bool = False,
+    device: int = -1,
+    return_all_scores: bool = False,
+) -> TextClassificationPipeline:
     """Load Text Classification Pipeline for a Specified Model.
 
     Load a text classification pipeline for the specified model and task. If
