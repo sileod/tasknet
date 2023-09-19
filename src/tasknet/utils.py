@@ -1,12 +1,17 @@
-from datasets import DatasetDict, Dataset, load_dataset
-from easydict import EasyDict as edict
 import copy
 import functools
-from tqdm.auto import tqdm
-from datasets import concatenate_datasets
+
 import funcy as fc
-import torch
 import magicattr
+import torch
+from datasets import Dataset, DatasetDict, concatenate_datasets, load_dataset
+from easydict import EasyDict as edict
+from tqdm.auto import tqdm
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TextClassificationPipeline,
+)
 
 
 class NoTqdm:
@@ -184,11 +189,6 @@ def load_pipeline(
     if multilingual or "mdeberta" in model_name:
         multilingual = True
 
-    from transformers import (
-        AutoModelForSequenceClassification,
-        TextClassificationPipeline,
-        AutoTokenizer,
-    )
     from .models import Adapter
 
     try:
