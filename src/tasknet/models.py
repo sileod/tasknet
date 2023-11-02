@@ -342,7 +342,6 @@ class Trainer(transformers.Trainer):
             save_steps = 1000000
             label_names = ["labels"]
             include_inputs_for_metrics = True
-            model_name = "sileod/deberta-v3-base-tasksource-nli"
             
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
@@ -350,7 +349,7 @@ class Trainer(transformers.Trainer):
         self.batched = hparams.get('batched',False)
 
         trainer_args = transformers.TrainingArguments(
-          **fc.project({**default,**hparams}, dir(transformers.TrainingArguments))
+            **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
         )
         if not tokenizer:
             tokenizer = AutoTokenizer.from_pretrained(hparams["model_name"])
@@ -383,7 +382,7 @@ class Trainer(transformers.Trainer):
             task: dataset["test"]
             for task, dataset in self.processed_tasks.items()
         }
-        # We preventstrainer from automatically evaluating on each dataset:
+        # We prevent Trainer from automatically evaluating on each dataset:
         # transformers.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
