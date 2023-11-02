@@ -342,6 +342,7 @@ class Trainer(transformers.Trainer):
             save_steps = 1000000
             label_names = ["labels"]
             include_inputs_for_metrics = True
+            model_name = "sileod/deberta-v3-base-tasksource-nli"
             
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
