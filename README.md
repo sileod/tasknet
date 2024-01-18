@@ -34,7 +34,7 @@ trainer = tn.Trainer(model, tasks, hparams)
 trainer.train()
 trainer.evaluate()
 p = trainer.pipeline()
-p([{'text':x.premise,'text_pair': x.hypothesis}]) # HuggingFace pipeline for inference
+p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeline for inference
 ```
 Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
 
