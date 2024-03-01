@@ -382,7 +382,7 @@ class Trainer(transformers.Trainer):
             task: dataset["test"]
             for task, dataset in self.processed_tasks.items()
         }
-        # We preventstrainer from automatically evaluating on each dataset:
+        # We prevent Trainer from automatically evaluating on each dataset:
         # transformers.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
