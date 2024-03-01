@@ -430,7 +430,8 @@ class Trainer(transformers.Trainer):
         outputs = []
         for i, task in enumerate(self.tasks):
             self.compute_metrics = task.compute_metrics
-            output = super().evaluate(
+            output = transformers.Trainer.evaluate(
+                self,
                 eval_dataset=dict([fc.nth(i, (self.eval_dataset if metric_key_prefix=="eval" else self.test_dataset).items())]),
                 metric_key_prefix=metric_key_prefix
             )
@@ -474,7 +475,7 @@ class Trainer(transformers.Trainer):
         return MultitaskDataloader(
             {
                 task_name: self.get_single_train_dataloader(task_name, task_dataset)
-                for task_name, task_dataset in self.train_dataset.items() if task_dataset
+                for task_name, task_dataset in self.train_dataset.items()
             }, p=self.p,
         )
 
@@ -540,8 +541,6 @@ class Trainer(transformers.Trainer):
                         task.preprocess_function, batched=self.batched, load_from_cache_file=True,
                         num_proc=self.num_proc
                     )
-                    if not features_dict[task][phase]:
-                        continue
                     features_dict[task][phase].set_format(
                         type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
                     )
