@@ -168,9 +168,11 @@ class Model(transformers.PreTrainedModel):
                 self.models[key] = model 
             if key and key in self.models:
                 last_linear(model.classifier).weight = last_linear(self.models[key].classifier).weight
+                #last_linear(model).weight = last_linear(self.models[key]).weight
+                #T5
 
             model.auto = getattr(model, self.get_encoder_attr_name(model))
-
+            #model.auto = list(model.modules())[1] #T5
             if self.shared_encoder is None:
                 self.shared_encoder = model.auto
             else:
@@ -431,7 +433,7 @@ class Trainer(transformers.Trainer):
         for i, task in enumerate(self.tasks):
             self.compute_metrics = task.compute_metrics
             output = super().evaluate(
-                eval_dataset=dict([fc.nth(i, (self.eval_dataset if metric_key_prefix=="eval" else self.test_dataset).items())]),
+                eval_dataset=MappingProxyType(dict([fc.nth(i, (self.eval_dataset if metric_key_prefix.startswith("eval") else self.test_dataset).items())])),
                 metric_key_prefix=metric_key_prefix
             )
             if "Accuracy" not in output:
