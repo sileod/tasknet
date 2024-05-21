@@ -1,7 +1,7 @@
 ## tasknet : simple multi-task Trainer and HuggingFace datasets. 
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface transformers [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
-Tasknet works with `transformers==4.34.1`.
+Tasknet should work with all recent versions of Transformers.
 
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
