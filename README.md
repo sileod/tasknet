@@ -1,5 +1,5 @@
 ## tasknet : simple multi-task Trainer and HuggingFace datasets. 
-`tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
+`tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface transformers [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
 Tasknet works with `transformers==4.34.1`.
 
