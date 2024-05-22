@@ -26,7 +26,8 @@ rte = tn.Classification(
     s1="sentence1", s2="sentence2", y="label") #s2 is optional # See AutoTask for shorter code
 
 class hparams:
-  model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
+  # model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
+  model_name = 'sileod/deberta-v3-base-tasksource-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 tasks = [rte]
