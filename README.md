@@ -23,7 +23,8 @@ import tasknet as tn; from datasets import load_dataset
 
 rte = tn.Classification(
     dataset=load_dataset("glue", "rte"),
-    s1="sentence1", s2="sentence2", y="label") #s2 is optional # See AutoTask for shorter code
+    s1="sentence1", s2="sentence2", y="label") #s2 is optional for classification, used to represent text pairs
+ # See AutoTask for shorter code
 
 class hparams:
   # model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
