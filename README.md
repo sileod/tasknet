@@ -32,8 +32,7 @@ class hparams:
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 tasks = [rte]
-model = tn.Model(tasks, hparams)
-trainer = tn.Trainer(model, tasks, hparams)
+model, trainer = tn.Model_Trainer(task,hparams)
 trainer.train()
 trainer.evaluate()
 p = trainer.pipeline()
