@@ -31,8 +31,7 @@ class hparams:
   model_name = 'sileod/deberta-v3-base-tasksource-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
-tasks = [rte]
-model, trainer = tn.Model_Trainer(tasks,hparams)
+model, trainer = tn.Model_Trainer(tasks=[rte],hparams)
 trainer.train(), trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeline for inference
