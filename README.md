@@ -28,7 +28,7 @@ rte = tn.Classification(
 
 class hparams:
   # model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
-  model_name = 'sileod/deberta-v3-base-tasksource-nli' # better performance for most tasks
+  model_name = 'tasksource/deberta-small-long-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 model, trainer = tn.Model_Trainer(tasks=[rte],hparams)
