@@ -73,10 +73,10 @@ class Task:
         self.__class__.__hash__ = Task.__hash__
         if type(self.dataset) == str:
             name = self.dataset
-            self.dataset = load_dataset(self.dataset)
+            self.dataset = load_dataset(self.dataset, trust_remote_code=True)
         elif type(self.dataset) == tuple:
             name = "/".join(self.dataset)
-            self.dataset = load_dataset(*self.dataset)
+            self.dataset = load_dataset(*self.dataset, trust_remote_code=True)
         else:
             name = get_dataset_name(self.dataset)
 
