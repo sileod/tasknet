@@ -1,4 +1,4 @@
-## tasknet : simple BERT/modernBERT multi-task fine-tuning with HF datasets
+## tasknet : simple modernBERT fine-tuning, with multi-task support
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface transformers [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
 Tasknet should work with all recent versions of Transformers.
