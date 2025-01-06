@@ -1,7 +1,7 @@
-## tasknet : simple multi-task Trainer and HuggingFace datasets. 
+## tasknet : simple BERT/modernBERT multi-task Trainer with HF datasets
 `tasknet` is an interface between Huggingface [datasets](https://huggingface.co/datasets) and Huggingface transformers [Trainer](https://huggingface.co/docs/transformers/main_classes/trainer).
 
-Tasknet works with `transformers==4.34.1`.
+Tasknet should work with all recent versions of Transformers.
 
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
@@ -23,17 +23,16 @@ import tasknet as tn; from datasets import load_dataset
 
 rte = tn.Classification(
     dataset=load_dataset("glue", "rte"),
-    s1="sentence1", s2="sentence2", y="label") #s2 is optional # See AutoTask for shorter code
+    s1="sentence1", s2="sentence2", y="label") #s2 is optional for classification, used to represent text pairs
+ # See AutoTask for shorter code
 
 class hparams:
-  model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
+  # model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
+  model_name = 'tasksource/deberta-small-long-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
-tasks = [rte]
-model = tn.Model(tasks, hparams)
-trainer = tn.Trainer(model, tasks, hparams)
-trainer.train()
-trainer.evaluate()
+model, trainer = tn.Model_Trainer(tasks=[rte],hparams)
+trainer.train(), trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeline for inference
 ```
