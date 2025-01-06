@@ -3,16 +3,6 @@
 
 Tasknet should work with all recent versions of Transformers.
 
-## Task templates
-`tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
-- `SequenceClassification` 
-- `TokenClassification`
-- `MultipleChoice`
-- `Seq2SeqLM` (experimental support)
-
-The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
-Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
-
 ## Installation and example
 
 `pip install tasknet`
@@ -27,8 +17,7 @@ rte = tn.Classification(
  # See AutoTask for shorter code
 
 class hparams:
-  # model_name='microsoft/deberta-v3-base' # deberta models have the best results (and tasknet support)
-  model_name = 'tasksource/deberta-small-long-nli' # better performance for most tasks
+  model_name = 'tasksource/ModernBERT-base-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
 model, trainer = tn.Model_Trainer(tasks=[rte],hparams)
@@ -37,6 +26,17 @@ p = trainer.pipeline()
 p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeline for inference
 ```
 Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
+
+## Task templates
+`tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
+- `SequenceClassification` 
+- `TokenClassification`
+- `MultipleChoice`
+- `Seq2SeqLM` (experimental support)
+
+The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
+Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks.py) and use existing templates as a starting point to implement a custom task template.
+
 
 ## AutoTask
 You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
