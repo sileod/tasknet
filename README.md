@@ -61,10 +61,6 @@ More complex example, where tasknet was scaled to [600 tasks](https://huggingfac
 
 https://colab.research.google.com/drive/1iB4Oxl9_B5W3ZDzXoWJN-olUbqLBxgQS?usp=sharing
 
-## tasknet vs jiant
-[jiant](https://github.com/nyu-mll/jiant/) is another library comparable to tasknet.  tasknet is a minimal extension of `Trainer` centered on task templates, while jiant builds a `Trainer` equivalent from scratch called [`runner`](https://github.com/nyu-mll/jiant/blob/master/jiant/proj/main/runner.py).
-`tasknet` is leaner and closer to Huggingface native tools. Jiant is config-based and command line focused while tasknet is designed for interactive use and python scripting.
-
 ## Credit
 
 This code uses some part of the examples of the [transformers](https://github.com/huggingface/transformers/tree/main/src/transformers) library and some code from 
