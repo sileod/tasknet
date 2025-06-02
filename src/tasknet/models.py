@@ -360,7 +360,7 @@ class Trainer(transformers.Trainer):
     def __init__(self, model, tasks, hparams, tokenizer=None, *args, **kwargs):
         class default:
             output_dir = "./models/multitask_model"
-            evaluation_strategy = "epoch"
+            eval_strategy = "epoch"
             logging_strategy = "epoch"
             overwrite_output_dir = True
             do_train = True
