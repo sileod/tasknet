@@ -29,9 +29,9 @@ Tasknet is multitask by design. `model.task_models_list` contains one model per 
 
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
-- `SequenceClassification` 
-- `TokenClassification`
-- `MultipleChoice`
+- `SequenceClassification(s1, s2, y)` 
+- `TokenClassification(tokens, labels)` (tokens and labels are lists of words and assigned labels)
+- `MultipleChoice(s1, choices)` (s1 is a prompt/qusetion, choices is a list of texts, y is the index of the correct choice)
 - `Seq2SeqLM` (experimental support)
 
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
