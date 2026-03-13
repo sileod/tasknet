@@ -375,7 +375,7 @@ class Trainer(transformers.Trainer):
         self.batched = hparams.get('batched',False)
 
         trainer_args = transformers.TrainingArguments(
-            **{**default, **fc.project(hparams, dir(transformers.TrainingArguments))},
+            **fc.project({**default, **hparams}, dir(transformers.TrainingArguments)),
         )
         if not tokenizer:
             path = hparams.get('tokenizer',hparams['model_name'])
