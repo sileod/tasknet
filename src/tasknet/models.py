@@ -380,10 +380,16 @@ class Trainer(transformers.Trainer):
         if not tokenizer:
             path = hparams.get('tokenizer',hparams['model_name'])
             tokenizer = AutoTokenizer.from_pretrained(path)
+            
+        import inspect
+        if 'processing_class' in inspect.signature(transformers.Trainer.__init__).parameters:
+            kwargs['processing_class'] = tokenizer
+        else:
+            kwargs['tokenizer'] = tokenizer
+            
         super().__init__(
             model,
             trainer_args,
-            tokenizer=tokenizer,
             compute_metrics=Classification.compute_metrics,
             eval_dataset=1, # truthy value required,overriden next
             *args,
