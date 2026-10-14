@@ -245,12 +245,13 @@ class Model(transformers.PreTrainedModel):
 
     def batch_unpad(self,kwargs,task_index):
         """Remove excess padding (improves speed)"""
-        batch_max_size=kwargs['attention_mask'].sum(axis=1).max().item()
-        kwargs['attention_mask']=kwargs['attention_mask'][:,:batch_max_size].contiguous() 
-        kwargs['input_ids']=kwargs['input_ids'][:,:batch_max_size].contiguous() 
+        # last axis is the sequence: inputs are (batch, len), or (batch, choices, len) for multiple choice
+        batch_max_size=kwargs['attention_mask'].sum(axis=-1).max().item()
+        kwargs['attention_mask']=kwargs['attention_mask'][...,:batch_max_size].contiguous()
+        kwargs['input_ids']=kwargs['input_ids'][...,:batch_max_size].contiguous()
         if len(kwargs['labels'].shape)>1 \
             and self.task_models_list[task_index].config.problem_type!="multi_label_classification":
-            kwargs['labels']=kwargs['labels'][:,:batch_max_size].contiguous() 
+            kwargs['labels']=kwargs['labels'][...,:batch_max_size].contiguous() 
         return kwargs
 
     def forward(self, task, **kwargs):
@@ -358,8 +359,14 @@ class MultitaskDataloader:
 
 def untied_copy(module):
     """Copy with every shared parameter duplicated: heads of tasks with the same label set share a classifier
-    weight, and safetensors (the only format in transformers>=5) refuses shared tensors."""
+    weight (or a whole classifier module), and safetensors (the only format in transformers>=5) refuses shared tensors."""
     module, seen = copy.deepcopy(module), set()
+    for name, m in list(module.named_modules(remove_duplicate=False)):  # aliased modules first: a new Parameter would reach every alias
+        if id(m) in seen and name:
+            parent, attr = name.rpartition(".")[::2]
+            setattr(module.get_submodule(parent), attr, copy.deepcopy(m))
+        seen.add(id(m))
+    seen = set()
     for name, p in list(module.named_parameters(remove_duplicate=False)):
         if p.data_ptr() in seen:
             parent, attr = name.rpartition(".")[::2]
