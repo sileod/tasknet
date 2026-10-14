@@ -158,9 +158,14 @@ class Classification(Task):
         avg={}
         predictions, labels = eval_pred.predictions, eval_pred.label_ids
         if "int" in str(eval_pred.label_ids.dtype):
-            metric = evaluate.load("super_glue", "cb")
+            # super_glue/cb (accuracy + macro F1), computed here: the evaluate metric breaks on newer datasets
+            from sklearn.metrics import f1_score
             predictions = np.argmax(predictions, axis=1)
-            
+            metrics = {"accuracy": float((predictions == labels).mean()),
+                       "f1": float(f1_score(labels, predictions, average="macro"))}
+            meta = {"name": self.name, "size": len(predictions), "index": self.index}
+            self.results += [metrics]
+            return {**metrics, **meta}
         elif getattr(self,"problem_type", None)=='multi_label_classification':
             metric=evaluate.load('f1','multilabel', average='macro')
             labels=labels.astype(int)
@@ -211,7 +216,7 @@ class MultipleChoice(Classification):
     def __post_init__(self):
         super().__post_init__()
         self.data_collator.tokenizer_kwargs = self.tokenizer_kwargs
-        choices = [x for x in self.dataset[self.main_split].features if re.match('choice\d+',x)]
+        choices = [x for x in self.dataset[self.main_split].features if re.match(r'choice\d+',x)]
         if choices and not self.choices:
             self.choices=choices
         self.num_choices = len(self.choices)
