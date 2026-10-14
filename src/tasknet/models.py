@@ -356,6 +356,18 @@ class MultitaskDataloader:
             yield next(dataloader_iter_dict[task_name])
 
 
+def untied_copy(module):
+    """Copy with every shared parameter duplicated: heads of tasks with the same label set share a classifier
+    weight, and safetensors (the only format in transformers>=5) refuses shared tensors."""
+    module, seen = copy.deepcopy(module), set()
+    for name, p in list(module.named_parameters(remove_duplicate=False)):
+        if p.data_ptr() in seen:
+            parent, attr = name.rpartition(".")[::2]
+            setattr(module.get_submodule(parent), attr, nn.Parameter(p.detach().clone(), requires_grad=p.requires_grad))
+        seen.add(p.data_ptr())
+    return module
+
+
 class Trainer(transformers.Trainer):
     def __init__(self, model, tasks, hparams, tokenizer=None, *args, **kwargs):
         class default:
@@ -557,14 +569,14 @@ class Trainer(transformers.Trainer):
         model, adapter = self.model.factorize(task_index=task_index)
         model.save_pretrained(output_dir)
         if push_adapter:
-            adapter.save_pretrained(f"{output_dir}-adapter", safe_serialization=False)
+            untied_copy(adapter).save_pretrained(f"{output_dir}-adapter")
     
     def push_to_hub(self, repo, task_index=0, push_adapter=True):
         model, adapter = self.model.factorize(task_index=task_index)
         model.push_to_hub(repo)
         self.tokenizer.push_to_hub(repo)
         if push_adapter:
-            adapter.push_to_hub(f"{repo.replace('-nli','')}-adapters",safe_serialization=False)
+            untied_copy(adapter).push_to_hub(f"{repo.replace('-nli','')}-adapters")
 
     def preprocess_tasks(self, tasks, tokenizer):
         
