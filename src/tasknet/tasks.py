@@ -171,8 +171,13 @@ class Classification(Task):
             labels=labels.astype(int)
             predictions = (expit(predictions)>0.5).astype(int)
             avg={"average":"macro"}
-        else:
-            metric = evaluate.load("glue", "stsb")
+        else:  # regression: glue/stsb metrics, computed here (the evaluate metric rejects (n, 1) predictions)
+            from scipy.stats import pearsonr, spearmanr
+            predictions, labels = np.ravel(predictions), np.ravel(labels)
+            metrics = {"pearson": float(pearsonr(predictions, labels)[0]), "spearmanr": float(spearmanr(predictions, labels)[0])}
+            meta = {"name": self.name, "size": len(predictions), "index": self.index}
+            self.results += [metrics]
+            return {**metrics, **meta}
         meta = {"name": self.name, "size": len(predictions), "index": self.index}
         metrics = metric.compute(predictions=predictions, references=labels,**avg)
         self.results+=[metrics]
