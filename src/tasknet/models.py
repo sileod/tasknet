@@ -167,8 +167,9 @@ class Model(transformers.PreTrainedModel):
                 if hasattr(task, a)
             }
 
+            attn = {'attn_implementation': args['attn_implementation']} if args.get('attn_implementation') else {}
             model = deep_copy_cache(model_type.from_pretrained)(args.model_name,
-                ignore_mismatched_sizes=True, torch_dtype=self.torch_dtype, **nl)
+                ignore_mismatched_sizes=True, torch_dtype=self.torch_dtype, **attn, **nl)
 
             if task.task_type=='MultipleChoice':
                 if args.get('share_mc',False):
