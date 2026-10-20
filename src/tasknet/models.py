@@ -1,3 +1,4 @@
+import inspect
 import numpy as np
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForMultipleChoice,
     AutoModelForTokenClassification,
+    AutoModelForQuestionAnswering,
 )
 from easydict import EasyDict as edict
 import funcy as fc
@@ -259,14 +261,16 @@ class Model(transformers.PreTrainedModel):
         task_index = task[0].item()
         if self.batch_truncation:
             kwargs=self.batch_unpad(kwargs, task_index)
-        y = self.task_models_list[task_index](**kwargs)
-        return y
+        model = self.task_models_list[task_index]
+        if 'labels' in kwargs and 'start_positions' in inspect.signature(model.forward).parameters:
+            kwargs['start_positions'], kwargs['end_positions'] = kwargs.pop('labels').unbind(-1)
+        return model(**kwargs)
 
 
     def factorize(self, task_index=0, tasks=[]):
         m_i = self.task_models_list[task_index]
 
-        classifiers = torch.nn.ModuleList([a.classifier for a in self.task_models_list])
+        classifiers = torch.nn.ModuleList([getattr(a, 'classifier', None) or a.qa_outputs for a in self.task_models_list])
         id2label=dict(enumerate(self.task_labels_list[task_index]))
         label2id = {str(v):k for k,v in id2label.items()}
 

@@ -298,7 +298,7 @@ class TokenClassification(Task):
         super().__post_init__()
         target = self.dataset[self.main_split].features[self.y]
         if not self.num_labels:
-            self.num_labels = 1 if "float" in target.dtype else target.feature.num_classes
+            self.num_labels = 1 if "float" in str(getattr(target.feature, "dtype", "")) else target.feature.num_classes
         try:
             self.label_names=target.feature.names
         except:
@@ -307,8 +307,11 @@ class TokenClassification(Task):
     def get_labels(self):
         return self.label_names
     def set_tokenizer(self, tokenizer):
+        if getattr(tokenizer, "add_prefix_space", None) is False:
+            # byte-level BPE glues pre-split words without it; setting the attribute later does not reach a fast tokenizer
+            from transformers import AutoTokenizer
+            tokenizer = AutoTokenizer.from_pretrained(tokenizer.name_or_path, add_prefix_space=True, trust_remote_code=True)
         self.tokenizer = tokenizer
-        self.tokenizer.add_prefix_space = True
         self.data_collator = DataCollatorForTokenClassification(
             tokenizer=self.tokenizer
         )
@@ -356,6 +359,73 @@ class TokenClassification(Task):
     def check(self):
         features = self.dataset['train'].features
         return self.tokens in features and self.y in features
+
+
+@dataclass
+class QuestionAnswering(Task):
+    """Extractive question answering in the SQuAD format: ``context``, ``question`` and ``answers`` =
+    ``{'text': [...], 'answer_start': [...]}``. Labels are the [start, end] tokens of the first answer, or
+    [0, 0] (the first token) when the context does not answer the question or truncation cuts the answer.
+    Metrics: exact match and F1 over token spans, the null answer being its own span."""
+    task_type = "QuestionAnswering"
+    dataset: Dataset = None
+    data_collator = DefaultDataCollator()
+    context: str = "context"
+    question: str = "question"
+    y: str = "answers"
+    num_labels: int = 2
+    max_answer_tokens: int = 30
+
+    def get_labels(self):
+        return []
+
+    def check(self):
+        features = self.dataset[self.main_split].features
+        return all(k in features for k in (self.context, self.question, self.y))
+
+    def preprocess_function(self, examples):
+        unbatched = type(examples[self.context]) == str
+        if unbatched:
+            examples = wrap_examples(examples)
+        kwargs = {**self.tokenizer_kwargs, "truncation": "only_second"}
+        enc = self.tokenizer(examples[self.question], examples[self.context], return_offsets_mapping=True, **kwargs)
+        labels = []
+        for i, answers in enumerate(examples["labels"]):  # preprocess_tasks renames y to labels
+            span = [0, 0]
+            if answers["text"]:
+                start = answers["answer_start"][0]
+                end = start + len(answers["text"][0])
+                tokens = [t for t, (s, (a, b)) in enumerate(zip(enc.sequence_ids(i), enc["offset_mapping"][i]))
+                          if s == 1 and a < end and b > start]
+                if tokens:
+                    span = [tokens[0], tokens[-1]]
+            labels.append(span)
+        outputs = {k: v for k, v in enc.items() if k != "offset_mapping"}
+        outputs["labels"] = labels
+        if unbatched:
+            outputs = {k: v[0] for k, v in outputs.items()}
+        outputs["task"] = [self.index] * get_len(outputs)
+        return outputs
+
+    def best_span(self, start, end):
+        """Highest start + end score over spans of at most ``max_answer_tokens``, against the null span [0, 0]."""
+        i, j = np.indices((len(start), len(end)))
+        scores = np.where((j >= i) & (j - i < self.max_answer_tokens) & (i > 0), start[:, None] + end[None, :], -np.inf)
+        a, b = np.unravel_index(scores.argmax(), scores.shape)
+        return (a, b) if scores[a, b] > start[0] + end[0] else (0, 0)
+
+    def compute_metrics(self, eval_pred):
+        (starts, ends), labels = eval_pred.predictions[:2], eval_pred.label_ids
+        em, f1 = [], []
+        for start, end, (c, d) in zip(starts, ends, labels):
+            a, b = self.best_span(start, end)
+            overlap = max(0, min(b, d) - max(a, c) + 1) if a and c else int(a == c)
+            precision, recall = overlap / (b - a + 1), overlap / (d - c + 1)
+            em.append(float((a, b) == (c, d)))
+            f1.append(2 * precision * recall / (precision + recall) if overlap else 0.0)
+        metrics = {"exact_match": np.mean(em), "f1": np.mean(f1)}
+        self.results += [metrics]
+        return {**metrics, "name": self.name, "size": len(labels), "index": self.index}
 
 @dataclass
 class Seq2SeqLM(Task):
@@ -444,4 +514,6 @@ def AutoTask(dataset, **kwargs):
         return MultipleChoice(dataset, **kwargs)
     if 'tokens' in features:
         return TokenClassification(dataset,**kwargs)
+    if 'answers' in features:
+        return QuestionAnswering(dataset, **kwargs)
     
