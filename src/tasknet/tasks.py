@@ -427,6 +427,74 @@ class QuestionAnswering(Task):
         self.results += [metrics]
         return {**metrics, "name": self.name, "size": len(labels), "index": self.index}
 
+
+@dataclass
+class SpanTagging(Task):
+    """Query-conditioned span extraction: ``question`` (what to extract), ``context`` and ``spans`` = character
+    ``[[start, end], ...]`` in the context, any number (none: the context has no answer). Context tokens are tagged
+    O / B / I, so one head answers single spans, lists and nulls. Metric: F1 over exact token spans."""
+    task_type = "TokenClassification"
+    dataset: Dataset = None
+    context: str = "context"
+    question: str = "question"
+    y: str = "spans"
+    num_labels: int = 3
+
+    def get_labels(self):
+        return ["O", "B-answer", "I-answer"]  # distinct from NER label sets, so the head is not shared
+
+    def check(self):
+        features = self.dataset[self.main_split].features
+        return all(k in features for k in (self.context, self.question, self.y))
+
+    def set_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.data_collator = DataCollatorForTokenClassification(tokenizer=tokenizer)
+
+    def preprocess_function(self, examples):
+        unbatched = type(examples[self.context]) == str
+        if unbatched:
+            examples = wrap_examples(examples)
+        kwargs = {**self.tokenizer_kwargs, "truncation": "only_second"}
+        enc = self.tokenizer(examples[self.question], examples[self.context], return_offsets_mapping=True, **kwargs)
+        labels = []
+        for i, spans in enumerate(examples["labels"]):  # preprocess_tasks renames y to labels
+            tags = []
+            for s, (a, b) in zip(enc.sequence_ids(i), enc["offset_mapping"][i]):
+                overlapping = [x for x, y in spans if a < y and b > x]
+                tags.append(-100 if s != 1 else 0 if not overlapping else 1 if a <= overlapping[0] else 2)
+            labels.append(tags)
+        outputs = {k: v for k, v in enc.items() if k != "offset_mapping"}
+        outputs["labels"] = labels
+        if unbatched:
+            outputs = {k: v[0] for k, v in outputs.items()}
+        outputs["task"] = [self.index] * get_len(outputs)
+        return outputs
+
+    @staticmethod
+    def decode(tags):
+        """Token spans (start, end) from O / B / I tags; an I without a B opens a span."""
+        spans, start = set(), None
+        for t, tag in enumerate(list(tags) + [0]):
+            if start is not None and tag != 2:
+                spans.add((start, t - 1))
+                start = None
+            if tag in (1, 2) and start is None:
+                start = t
+        return spans
+
+    def compute_metrics(self, eval_pred):
+        predictions, labels = eval_pred.predictions.argmax(-1), eval_pred.label_ids
+        tp = n_pred = n_gold = 0
+        for p, l in zip(predictions, labels):
+            keep = l != -100
+            pred, gold = self.decode(p[keep]), self.decode(l[keep])
+            tp, n_pred, n_gold = tp + len(pred & gold), n_pred + len(pred), n_gold + len(gold)
+        metrics = {"f1": 2 * tp / (n_pred + n_gold) if n_pred + n_gold else 1.0,
+                   "precision": tp / n_pred if n_pred else 1.0, "recall": tp / n_gold if n_gold else 1.0}
+        self.results += [metrics]
+        return {**metrics, "name": self.name, "size": len(labels), "index": self.index}
+
 @dataclass
 class Seq2SeqLM(Task):
     task_type='Seq2SeqLM'

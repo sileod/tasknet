@@ -278,7 +278,7 @@ class Model(transformers.PreTrainedModel):
             {**m_i.config.to_dict(),
             'classifiers_size': [c.out_features for c in classifiers],
             'tasks': (tasks if tasks else self.task_names),
-            'label2id':label2id,'id2label':id2label
+            **({'label2id':label2id,'id2label':id2label} if id2label else {})  # QA heads have no labels
             })
         adapter=Adapter(m_i.config, classifiers, self.Z, self.task_labels_list)
 
