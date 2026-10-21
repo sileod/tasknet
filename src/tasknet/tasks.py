@@ -439,6 +439,7 @@ class SpanTagging(Task):
     question: str = "question"
     y: str = "spans"
     num_labels: int = 3
+    tokenizer_kwargs: ... = fdict(padding=False, max_length=512, truncation=True)  # the collator pads each batch
 
     def get_labels(self):
         return ["O", "B-answer", "I-answer"]  # distinct from NER label sets, so the head is not shared
