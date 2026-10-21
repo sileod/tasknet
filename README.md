@@ -32,6 +32,8 @@ Tasknet is multitask by design. `model.task_models_list` contains one model per 
 - `SequenceClassification(s1, s2, y)` 
 - `TokenClassification(tokens, labels)` (tokens and labels are lists of words and assigned labels)
 - `MultipleChoice(s1, choices)` (s1 is a prompt/qusetion, choices is a list of texts, y is the index of the correct choice)
+- `QuestionAnswering(context, question, answers)` (extractive QA in the SQuAD format; empty answers mean unanswerable)
+- `SpanTagging(question, context, spans)` (query-conditioned extraction: character spans of the context answering the question, any number, none for no answer)
 - `Seq2SeqLM` (experimental support)
 
 The task templates follow the same interface. They implement `preprocess_function`, a data collator and `compute_metrics`.
