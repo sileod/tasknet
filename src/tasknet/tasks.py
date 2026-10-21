@@ -432,12 +432,15 @@ class QuestionAnswering(Task):
 class SpanTagging(Task):
     """Query-conditioned span extraction: ``question`` (what to extract), ``context`` and ``spans`` = character
     ``[[start, end], ...]`` in the context, any number (none: the context has no answer). Context tokens are tagged
-    O / B / I, so one head answers single spans, lists and nulls. Metric: F1 over exact token spans."""
+    O / B / I, so one head answers single spans, lists and nulls. Metric: F1 over exact token spans.
+    An optional ``count`` column (-1: unknown) trains the expected number of spans, the sum of P(B) over the context,
+    with no extra output; a row with a count and no spans ("how many X", items not annotated) has no tagging loss."""
     task_type = "TokenClassification"
     dataset: Dataset = None
     context: str = "context"
     question: str = "question"
     y: str = "spans"
+    count: str = "count"
     num_labels: int = 3
     tokenizer_kwargs: ... = fdict(padding=False, max_length=512, truncation=True)  # the collator pads each batch
 
@@ -458,15 +461,19 @@ class SpanTagging(Task):
             examples = wrap_examples(examples)
         kwargs = {**self.tokenizer_kwargs, "truncation": "only_second"}
         enc = self.tokenizer(examples[self.question], examples[self.context], return_offsets_mapping=True, **kwargs)
+        counts = examples.get(self.count)
         labels = []
         for i, spans in enumerate(examples["labels"]):  # preprocess_tasks renames y to labels
+            count_only = counts is not None and counts[i] > 0 and not spans
             tags = []
             for s, (a, b) in zip(enc.sequence_ids(i), enc["offset_mapping"][i]):
                 overlapping = [x for x, y in spans if a < y and b > x]
-                tags.append(-100 if s != 1 else 0 if not overlapping else 1 if a <= overlapping[0] else 2)
+                tags.append(-100 if s != 1 else 3 if count_only else 0 if not overlapping else 1 if a <= overlapping[0] else 2)
             labels.append(tags)
         outputs = {k: v for k, v in enc.items() if k != "offset_mapping"}
         outputs["labels"] = labels
+        if counts is not None:
+            outputs["count"] = list(counts)
         if unbatched:
             outputs = {k: v[0] for k, v in outputs.items()}
         outputs["task"] = [self.index] * get_len(outputs)
@@ -488,7 +495,7 @@ class SpanTagging(Task):
         predictions, labels = eval_pred.predictions.argmax(-1), eval_pred.label_ids
         tp = n_pred = n_gold = 0
         for p, l in zip(predictions, labels):
-            keep = l != -100
+            keep = (l != -100) & (l != 3)
             pred, gold = self.decode(p[keep]), self.decode(l[keep])
             tp, n_pred, n_gold = tp + len(pred & gold), n_pred + len(pred), n_gold + len(gold)
         metrics = {"f1": 2 * tp / (n_pred + n_gold) if n_pred + n_gold else 1.0,

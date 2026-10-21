@@ -162,6 +162,7 @@ class Model(transformers.PreTrainedModel):
         self.add_cln = args.get('add_cln',False)
         self.torch_dtype = args.get('torch_dtype',None)
         self.drop_probability=args.get('drop_probability',0.1)
+        self.count_loss_weight=args.get('count_loss_weight',0.1)
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -264,7 +265,20 @@ class Model(transformers.PreTrainedModel):
         model = self.task_models_list[task_index]
         if 'labels' in kwargs and 'start_positions' in inspect.signature(model.forward).parameters:
             kwargs['start_positions'], kwargs['end_positions'] = kwargs.pop('labels').unbind(-1)
-        return model(**kwargs)
+        count = kwargs.pop('count', None)
+        if count is None or 'labels' not in kwargs:
+            return model(**kwargs)
+        # SpanTagging counts: the expected number of spans, sum of P(B) over the context, regresses to the count.
+        # Label 3 marks the context of rows with a count but no span labels; it is ignored by the tagging loss.
+        context = kwargs['labels'] != -100
+        kwargs['labels'] = kwargs['labels'].masked_fill(kwargs['labels'] == 3, -100)
+        out = model(**kwargs)
+        known = count >= 0
+        if known.any():
+            expected = (out.logits.float().softmax(-1)[..., 1] * context).sum(-1)
+            extra = self.count_loss_weight * torch.nn.functional.smooth_l1_loss(expected[known], count[known].float())
+            out.loss = extra if out.loss is None or torch.isnan(out.loss) else out.loss + extra
+        return out
 
 
     def factorize(self, task_index=0, tasks=[]):
@@ -617,8 +631,9 @@ class Trainer(transformers.Trainer):
                     )
                     if not features_dict[task][phase]:
                         continue
-                    features_dict[task][phase].set_format(
+                    features_dict[task][phase].set_format(  # count: SpanTagging rows with a count
                         type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
+                        + (["count"] if "count" in features_dict[task][phase].features else [])
                     )
                 task.processed_features=features_dict[task] #added
         return features_dict
