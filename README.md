@@ -70,7 +70,9 @@ print(result.matrix())  # mean treatment minus baseline, by source and target
 ```
 
 The experiment API uses `nrows`; existing task constructors use `max_rows`.
-Classification and multiple-choice tasks reuse their existing templates and heads.
+Start with classification-to-classification or MCQ-to-MCQ comparisons, which
+reuse their existing templates and heads. Mixed task types are exploratory:
+the source fraction controls batches rather than examples or tokens.
 See [the transfer protocol and examples](docs/transfer.md) for controls, multi-source
 studies, CLI configuration, and JSON/CSV results.
 

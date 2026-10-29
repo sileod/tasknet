@@ -2,8 +2,10 @@
 
 `tasknet.transfer` is a thin experimental layer over `Model_Trainer`. It compares
 training on B alone with training jointly on A and B, then evaluates held-out B.
-It currently supports single-label Classification and MultipleChoice, including
-mixed pairs where the selected Transformers checkpoint supports both heads.
+Start with comparisons of the same task type: classification-to-classification
+or MCQ-to-MCQ. These provide the default setup for assessing transfer at a fixed
+optimization budget. Single-label Classification and MultipleChoice are supported.
+Mixed pairs are exploratory and require a checkpoint supporting both heads.
 Regression, multilabel tasks and sequential adaptation are outside this protocol.
 
 ## Minimal classification study
@@ -26,7 +28,10 @@ Strings are tasksource IDs. `tn.list_tasks()` returns the installed tasksource
 catalog without downloading datasets; `tasknet list-tasks` prints it as JSON.
 Dataset loading errors retain the original cause. AutoTask validates the inferred
 template and accepts `label` as well as `labels`. You can pass named task objects
-instead, which is useful for custom column mappings or datasets.
+instead, which is useful for custom column mappings or datasets. Outside transfer,
+`tn.AutoTask("glue/rte", tasksource_kwargs={"max_rows": 1000, "seed": 0})`
+passes loader options directly to tasksource; constructor `max_rows` alone applies
+after loading.
 
 ## Multiple choice
 
@@ -54,8 +59,9 @@ result = tn.transfer(
 )
 ```
 
-For mixed classification/MCQ experiments, put either kind of task in the sources
-and targets lists. The source fraction measures **batches**, not examples or tokens.
+For exploratory mixed classification/MCQ experiments, put either kind of task in
+the sources and targets lists. Interpret these separately from same-task-type
+studies. The source fraction measures **batches**, not examples or tokens.
 The existing trainer divides MCQ batch sizes by the number of choices, so equal
 optimization budgets do not imply equal token counts, example counts or runtime.
 
@@ -92,10 +98,14 @@ differently named datasets; tasknet does not infer cross-dataset contamination.
   of training data before applying the training row cap. An explicit `eval_split`
   must exist. No split is selected from a test set automatically. Evaluation is
   identical for all arms and seeds and never used for checkpoint selection.
-* `nrows` caps each task's training data; evaluation is uncapped. Existing task
-  constructors use `max_rows` and `max_rows_eval`; any sampling already performed
-  before passing a Task cannot be undone. Prefer uncapped tasks and let transfer
-  apply deterministic sampling.
+* `nrows` reaches tasksource as `max_rows`, with `seed=data_seed` and
+  `max_rows_eval=None`. This bounds row-dependent processing after tasksource's
+  split preparation while leaving evaluation uncapped. Eager Hugging Face loaders
+  can still download or read the full underlying dataset; a row cap is not a
+  download limit. If a preprocessor returns train-only data, transfer reloads it
+  uncapped to create a fixed holdout before sampling. Existing task constructors
+  use `max_rows` and `max_rows_eval`; sampling already performed before passing a
+  Task cannot be undone. Prefer uncapped Task objects and let transfer sample.
 * The default score is accuracy for every task, including CoLA. Use `metric="f1"`
   for macro F1 from the existing classification/MCQ metrics. Deltas use raw score
   units, with positive values indicating that source inclusion improved B versus
@@ -134,6 +144,21 @@ tasknet report results/study
 tasknet list-tasks
 # Equivalently: python -m tasknet ...
 ```
+
+A small real-data CLI check is provided in
+[`examples/transfer-smoke.yaml`](../examples/transfer-smoke.yaml):
+
+```sh
+tasknet transfer --config examples/transfer-smoke.yaml
+tasknet report results/transfer-smoke
+```
+
+This MRPC → RTE classification run uses ModernBERT-base, 32 training rows per
+task, one seed, and four updates per arm. It has been executed end to end,
+including reading the saved report. This validates execution rather than transfer
+quality. Evaluation uses tasksource's canonical splits, which can differ from raw
+upstream dataset splits; for the tested tasksource version, RTE evaluation had
+138 rows. Check the recorded sizes and fingerprints for your installed version.
 
 JSON configs also work. CLI studies default to `<config-stem>-results` when no
 output directory is set. Python callers can omit `output_dir` for in-memory

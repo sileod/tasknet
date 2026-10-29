@@ -579,8 +579,12 @@ def list_tasks():
     return tasksource.list_tasks()
 
 
-def AutoTask(dataset, **kwargs):
-    """Infer an existing template from tasksource output or a DatasetDict."""
+def AutoTask(dataset, tasksource_kwargs=None, **kwargs):
+    """Infer a template from a tasksource ID or DatasetDict.
+
+    For IDs, tasksource_kwargs is forwarded to load_task before construction.
+    Other keyword arguments configure the existing task template.
+    """
     if isinstance(dataset, str):
         name = dataset
         try:
@@ -588,7 +592,7 @@ def AutoTask(dataset, **kwargs):
         except ImportError as exc:
             raise ImportError("AutoTask requires pip install tasksource") from exc
         try:
-            dataset = tasksource.load_task(name)
+            dataset = tasksource.load_task(name, **(tasksource_kwargs or {}))
         except Exception as exc:
             raise ValueError(f"Could not load tasksource task {name!r}: {exc}. "
                              "Use tasknet list-tasks to discover IDs.") from exc

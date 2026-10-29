@@ -143,3 +143,47 @@ def test_cli_report_and_config(monkeypatch, tmp_path, capsys):
     main(['transfer', '--config', str(config)])
     assert calls[0]['output_dir'] == str(tmp_path / 'study-results')
     assert calls[0]['steps'] == 10
+
+
+def test_tasksource_caps_reach_loader_without_capping_evaluation(monkeypatch):
+    import sys
+    from types import SimpleNamespace
+    calls = []
+    full = task().dataset
+
+    def load_task(name, **kwargs):
+        calls.append((name, kwargs))
+        data = DatasetDict(full)
+        limit = kwargs.get('max_rows')
+        if limit:
+            data['train'] = data['train'].select(range(limit))
+        return data
+
+    monkeypatch.setitem(sys.modules, 'tasksource', SimpleNamespace(load_task=load_task))
+    small = experiment._prepare('source/id', 4, 7, 'validation', .2)
+    large = experiment._prepare('source/id', 8, 7, 'validation', .2)
+    assert calls == [('source/id', dict(max_rows=4, max_rows_eval=None, seed=7)),
+                     ('source/id', dict(max_rows=8, max_rows_eval=None, seed=7))]
+    assert small.dataset['validation']._fingerprint == large.dataset['validation']._fingerprint
+    assert len(small.dataset['train']) == 4
+    assert small.name == 'source/id'
+
+
+def test_tasksource_train_only_holdout_ignores_loader_cap(monkeypatch):
+    calls = []
+    original = task(validation=False)
+
+    def load(spec, tasksource_kwargs):
+        calls.append(tasksource_kwargs)
+        loaded = Classification(DatasetDict(original.dataset), name=spec)
+        limit = tasksource_kwargs['max_rows']
+        if limit:
+            loaded.dataset['train'] = loaded.dataset['train'].select(range(limit))
+        return loaded
+
+    monkeypatch.setattr(experiment, 'AutoTask', load)
+    small = experiment._prepare('train-only', 4, 7, 'validation', .2)
+    large = experiment._prepare('train-only', 8, 7, 'validation', .2)
+    assert [call['max_rows'] for call in calls] == [4, None, 8, None]
+    assert small.dataset['validation']._fingerprint == large.dataset['validation']._fingerprint
+    assert set(small.dataset['train']['sentence1']).isdisjoint(small.dataset['validation']['sentence1'])

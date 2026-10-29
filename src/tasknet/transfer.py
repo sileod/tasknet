@@ -71,7 +71,17 @@ class TransferResult:
 
 def _prepare(spec, nrows, data_seed, eval_split, holdout_fraction):
     set_seed(data_seed)
-    task = copy.deepcopy(spec) if isinstance(spec, Task) else AutoTask(spec)
+    if isinstance(spec, Task):
+        task = copy.deepcopy(spec)
+    else:
+        # tasksource completes native splits before applying this training cap.
+        # Keep evaluation uncapped and independent of the experiment's nrows.
+        loader_kwargs = dict(max_rows=nrows, max_rows_eval=None, seed=data_seed)
+        task = AutoTask(spec, tasksource_kwargs=loader_kwargs)
+        if nrows is not None and eval_split == 'validation' and eval_split not in task.dataset:
+            # Older/custom tasksource preprocessors may leave train-only data.
+            # Hold out from the complete training split, never from a capped sample.
+            task = AutoTask(spec, tasksource_kwargs=dict(loader_kwargs, max_rows=None))
     if not isinstance(task, (Classification, MultipleChoice)) or task.task_type not in (
             'SequenceClassification', 'MultipleChoice'):
         raise ValueError(f'{task.name}: transfer currently supports Classification and MultipleChoice')

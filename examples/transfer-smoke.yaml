@@ -1,0 +1,16 @@
+# End-to-end CLI smoke test, not a meaningful transfer benchmark.
+sources: [glue/mrpc]
+targets: [glue/rte]
+model: answerdotai/ModernBERT-base
+nrows: 32
+steps: 4
+seeds: [0]
+source_fraction: 0.5
+data_seed: 0
+output_dir: results/transfer-smoke
+training_args:
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 8
+  max_length: 64
+  attn_implementation: eager
+  disable_tqdm: true
