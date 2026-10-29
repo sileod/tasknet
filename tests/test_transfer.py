@@ -187,3 +187,16 @@ def test_tasksource_train_only_holdout_ignores_loader_cap(monkeypatch):
     assert [call['max_rows'] for call in calls] == [4, None, 8, None]
     assert small.dataset['validation']._fingerprint == large.dataset['validation']._fingerprint
     assert set(small.dataset['train']['sentence1']).isdisjoint(small.dataset['validation']['sentence1'])
+
+
+def test_classification_pads_per_batch_and_mcq_keeps_fixed_padding():
+    from transformers import AutoTokenizer
+    tok = AutoTokenizer.from_pretrained('google-bert/bert-base-uncased')
+    t = task()
+    t.set_tokenizer(tok)
+    t.index = 0
+    rows = [t.preprocess_function({'sentence1': [s]}) for s in ['short', 'a much longer sentence than the other one']]
+    assert len(rows[0]['input_ids'][0]) < len(rows[1]['input_ids'][0])
+    batch = t.data_collator([{k: v[0] for k, v in r.items() if k != 'task'} for r in rows])
+    assert batch['input_ids'].shape == (2, len(rows[1]['input_ids'][0]))
+    assert MultipleChoice.__dataclass_fields__['tokenizer_kwargs'].default['padding'] == 'max_length'

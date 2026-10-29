@@ -4,16 +4,14 @@ import torch
 import datasets
 import datasets as ds
 from datasets import load_dataset, Dataset
-from transformers import DefaultDataCollator
+from transformers import DefaultDataCollator, DataCollatorWithPadding
 from transformers import DataCollatorForTokenClassification
 from transformers import DataCollatorForSeq2Seq
 from transformers import PreTrainedTokenizerBase
-import evaluate
 from lazy_load import lazy_func
 from easydict import EasyDict as edict
 from frozendict import frozendict as fdict
 import funcy as fc
-import evaluate
 from dataclasses import dataclass, field
 import re
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -117,6 +115,11 @@ class Classification(Task):
     s2: str = "sentence2"
     y: str = "labels"
     num_labels: int = None
+    tokenizer_kwargs: ... = fdict(padding=False, max_length=512, truncation=True)  # the collator pads each batch
+
+    def set_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     def __post_init__(self):
         super().__post_init__()
@@ -167,6 +170,7 @@ class Classification(Task):
             self.results += [metrics]
             return {**metrics, **meta}
         elif getattr(self,"problem_type", None)=='multi_label_classification':
+            import evaluate
             metric=evaluate.load('f1','multilabel', average='macro')
             labels=labels.astype(int)
             predictions = (expit(predictions)>0.5).astype(int)
@@ -215,6 +219,7 @@ class MultipleChoice(Classification):
     task_type = "MultipleChoice"
     num_labels:int = 2
     data_collator:...= field(default_factory=DataCollatorForMultipleChoice)
+    tokenizer_kwargs: ... = fdict(padding="max_length", max_length=512, truncation=True)
     choices: ... = tuple()
     s1: str = "inputs"
         
@@ -266,7 +271,7 @@ class MultipleChoice(Classification):
 class TokenClassification(Task):
     task_type = "TokenClassification"
     dataset: Dataset = None
-    metric:... = evaluate.load("seqeval")
+    metric:... = field(default_factory=lambda: __import__("evaluate").load("seqeval"))
 
     tokens: str = 'tokens'
     y: str = 'labels'
@@ -509,7 +514,7 @@ class Seq2SeqLM(Task):
     data_collator:... = field(default_factory=lambda: DataCollatorForSeq2Seq(None))
     s1:str=''
     s2:str=''
-    metric:...=evaluate.load("bleu")
+    metric:...=field(default_factory=lambda: __import__("evaluate").load("bleu"))
     def set_tokenizer(self,tokenizer):
         self.tokenizer=self.data_collator.tokenizer=tokenizer
         self.tokenizer_kwargs=self.data_collator.tokenizer_kwargs=edict(self.tokenizer_kwargs)

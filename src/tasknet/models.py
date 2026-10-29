@@ -260,6 +260,7 @@ class Model(transformers.PreTrainedModel):
 
     def forward(self, task, **kwargs):
         task_index = task[0].item()
+        kwargs.pop('num_items_in_batch', None)  # recent Trainers pass it; not every task model accepts it
         if self.batch_truncation:
             kwargs=self.batch_unpad(kwargs, task_index)
         model = self.task_models_list[task_index]
