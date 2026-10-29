@@ -20,7 +20,7 @@ class hparams:
   model_name = 'tasksource/ModernBERT-base-nli' # better performance for most tasks
   learning_rate = 3e-5 # see hf.co/docs/transformers/en/main_classes/trainer#transformers.TrainingArguments
  
-model, trainer = tn.Model_Trainer(tasks=[rte],hparams)
+model, trainer = tn.Model_Trainer(tasks=[rte], args=hparams)
 trainer.train(), trainer.evaluate()
 p = trainer.pipeline()
 p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeline for inference
@@ -29,9 +29,9 @@ Tasknet is multitask by design. `model.task_models_list` contains one model per 
 
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
-- `SequenceClassification(s1, s2, y)` 
+- `Classification(s1, s2, y)`
 - `TokenClassification(tokens, labels)` (tokens and labels are lists of words and assigned labels)
-- `MultipleChoice(s1, choices)` (s1 is a prompt/qusetion, choices is a list of texts, y is the index of the correct choice)
+- `MultipleChoice(s1, choices)` (s1 is a prompt/question, choices is a list of texts, y is the index of the correct choice)
 - `QuestionAnswering(context, question, answers)` (extractive QA in the SQuAD format; empty answers mean unanswerable)
 - `SpanTagging(question, context, spans)` (query-conditioned extraction: character spans of the context answering the question, any number, none for no answer)
 - `Seq2SeqLM` (experimental support)
@@ -43,16 +43,42 @@ Look at [tasks.py](https://github.com/sileod/tasknet/blob/main/src/tasknet/tasks
 ## AutoTask
 You can also leverage [tasksource](https://github.com/sileod/tasksource/) with tn.AutoTask and have one-line access to 600+ datasets, see [implemented tasks](https://github.com/sileod/tasksource/blob/main/README.md).
 ```py
-rte = tn.AutoTask("glue/rte", nrows=5000)
+rte = tn.AutoTask("glue/rte", max_rows=5000)
 ```
 AutoTask guesses a template based on the dataset structure. It also accepts a dataset as input, if it fits the template (e.g. after tasksource custom preprocessing).
 
 ## Balancing dataset sizes 
 ```py
-tn.Classification(dataset, nrows=5000, nrows_eval=500, oversampling=2)
+tn.Classification(dataset, max_rows=5000, max_rows_eval=500, oversampling=2)
 ```
-You can balance multiple datasets with `nrows` and `oversampling`. `nrows` is the maximal number of examples. If a dataset has less than `nrows`, it will be oversampled at most `oversampling` times.
+You can balance multiple datasets with `max_rows` and `oversampling`. `max_rows` is the maximal number of examples. If a dataset has less than `max_rows`, it will be oversampled at most `oversampling` times.
 
+
+## Transfer experiments
+
+Compare target-only training with source+target training at the same optimization budget:
+
+```py
+result = tn.transfer(
+    sources=["glue/mrpc", "glue/qqp"],
+    targets=["glue/rte", "glue/cola"],
+    model="answerdotai/ModernBERT-base",
+    nrows=1000, steps=200, seeds=[0, 1],
+    output_dir="results/study",
+)
+print(result.matrix())  # mean treatment minus baseline, by source and target
+```
+
+The experiment API uses `nrows`; existing task constructors use `max_rows`.
+Classification and multiple-choice tasks reuse their existing templates and heads.
+See [the transfer protocol and examples](docs/transfer.md) for controls, multi-source
+studies, CLI configuration, and JSON/CSV results.
+
+```sh
+tasknet transfer --config study.yaml
+tasknet report results/study
+tasknet list-tasks
+```
 
 ## Colab examples
 Minimal-ish example:

@@ -573,23 +573,44 @@ class Seq2SeqLM(Task):
         return {**result,**meta}
 
 
+def list_tasks():
+    """Return tasksource's local catalog (without downloading datasets)."""
+    import tasksource
+    return tasksource.list_tasks()
+
+
 def AutoTask(dataset, **kwargs):
-    if type(dataset)==str:
+    """Infer an existing template from tasksource output or a DatasetDict."""
+    if isinstance(dataset, str):
+        name = dataset
         try:
             import tasksource
-        except:
-            raise ImportError('To use this feature, use a valid tasksource id and pip install tasksource')
+        except ImportError as exc:
+            raise ImportError("AutoTask requires pip install tasksource") from exc
         try:
-            dataset = tasksource.load_task(dataset)
-        except:
-            raise ValueError('pick an id from https://github.com/sileod/tasksource/blob/main/tasks.md or write your own preprocessing')
-    features=dataset['train'].features
-    if 'sentence1' in features:
-        return Classification(dataset, **kwargs)
-    if 'choice' in str(features):
-        return MultipleChoice(dataset, **kwargs)
-    if 'tokens' in features:
-        return TokenClassification(dataset,**kwargs)
-    if 'answers' in features:
-        return QuestionAnswering(dataset, **kwargs)
-    
+            dataset = tasksource.load_task(name)
+        except Exception as exc:
+            raise ValueError(f"Could not load tasksource task {name!r}: {exc}. "
+                             "Use tasknet list-tasks to discover IDs.") from exc
+        kwargs.setdefault("name", name)
+    if "train" not in dataset or not len(dataset["train"]):
+        raise ValueError("AutoTask requires a nonempty train split")
+    features = dataset['train'].features
+    # MCQ data can also contain sentence1, so detect choices first.
+    if any(re.fullmatch(r"choice\d+", key) for key in features):
+        template = MultipleChoice
+    elif 'sentence1' in features:
+        template = Classification
+    elif 'tokens' in features:
+        template = TokenClassification
+    elif 'answers' in features:
+        template = QuestionAnswering
+    else:
+        raise ValueError(f"Cannot infer a task template from columns {list(features)}; "
+                         "construct Classification or MultipleChoice explicitly.")
+    if 'labels' not in features and 'label' in features:
+        kwargs.setdefault('y', 'label')
+    task = template(dataset, **kwargs)
+    if not task.check():
+        raise ValueError(f"Invalid {template.__name__} columns for {task.name!r}")
+    return task

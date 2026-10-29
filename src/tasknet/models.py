@@ -340,7 +340,7 @@ class MultitaskDataloader:
     data loaders.
     """
 
-    def __init__(self, dataloader_dict, p=1):
+    def __init__(self, dataloader_dict, p=1, batch_counts=None):
         self.dataloader_dict = dataloader_dict
         N=max([len(x)**(1-p) for x in dataloader_dict.values()])
         f_p = lambda x: int(N*x**p)
@@ -349,6 +349,10 @@ class MultitaskDataloader:
             task_name: f_p(len(dataloader))
             for task_name, dataloader in self.dataloader_dict.items()
         }
+        if batch_counts is not None:
+            if len(batch_counts) != len(dataloader_dict) or any(n < 0 for n in batch_counts):
+                raise ValueError("batch_counts must contain one nonnegative count per task")
+            self.num_batches_dict = dict(zip(dataloader_dict, batch_counts))
         self.task_name_list = list(self.dataloader_dict)
         self.dataset = [None] * sum(
             f_p(len(dataloader.dataset)) for dataloader in self.dataloader_dict.values()
@@ -373,7 +377,12 @@ class MultitaskDataloader:
         }
         for task_choice in task_choice_list:
             task_name = self.task_name_list[task_choice]
-            yield next(dataloader_iter_dict[task_name])
+            try:
+                batch = next(dataloader_iter_dict[task_name])
+            except StopIteration:
+                dataloader_iter_dict[task_name] = iter(self.dataloader_dict[task_name])
+                batch = next(dataloader_iter_dict[task_name])
+            yield batch
 
 
 def untied_copy(module):
@@ -409,6 +418,7 @@ class Trainer(transformers.Trainer):
             
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
+        self.task_batch_counts = hparams.get('task_batch_counts')
         self.num_proc = hparams.get('num_proc',None)
         self.batched = hparams.get('batched',False)
 
@@ -563,7 +573,7 @@ class Trainer(transformers.Trainer):
             {
                 task_name: self.get_single_train_dataloader(task_name, task_dataset)
                 for task_name, task_dataset in self.train_dataset.items() if task_dataset
-            }, p=self.p,
+            }, p=self.p, batch_counts=self.task_batch_counts,
         )
 
     def get_eval_dataloader(self, eval_dataset=None):
