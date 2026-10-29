@@ -65,6 +65,71 @@ studies. The source fraction measures **batches**, not examples or tokens.
 The existing trainer divides MCQ batch sizes by the number of choices, so equal
 optimization budgets do not imply equal token counts, example counts or runtime.
 
+## UltraBERT classification
+
+UltraBERT-150M classification transfer has been tested end to end with tasksource
+MRPC → RTE on Transformers 5.17 using the author's custom model classes:
+
+```sh
+tasknet transfer --config examples/transfer-ultrabert-smoke.yaml
+```
+
+The config explicitly sets `training_args.trust_remote_code: true` and pins the
+model code and weights with `training_args.revision`. Both options reach the
+model and tokenizer loaders. The author's released config exposes sequence
+classification, token classification and QA classes; it does not expose an
+`AutoModelForMultipleChoice` class. UltraBERT MCQ transfer is therefore unsupported
+with this release. Use its classification checkpoint for classification studies.
+The [author's model card](https://huggingface.co/dmis-lab/UltraBERT-150M) documents
+native loading on Transformers 5.20 or later; the tested example uses explicit
+remote-code loading rather than upgrading your environment automatically.
+
+## Performance controls
+
+Transfer batches tokenization by default, reuses a tokenizer and tokenized rows
+across seeds and treatments, and rewrites cached task indices when a source moves
+within a treatment. It processes source training data only and target training
+and validation data. Ordinary `Model_Trainer` runs retain all dataset splits.
+Classification uses dynamic batch padding; MCQ retains its existing padding.
+
+Evaluation honors `per_device_eval_batch_size` independently of training batch
+size and uses sequential sampling. MCQ divides either batch size by the number
+of choices. Custom loaders also honor worker, pin-memory and prefetch settings.
+Start with zero workers for small in-memory studies; additional workers can cost
+more than they save.
+
+A study keeps one pristine initial target model on CPU for the current target and
+seed. Reusing it restores the RNG state after checkpoint loading, so source head
+initialization is unchanged. Trained weights are never reused between arms.
+This costs one extra target model's CPU memory; set
+`training_args.cache_initialization: false` to disable that cache. Source models
+still load independently before encoder sharing.
+
+On supported GPUs, benchmark `training_args.bf16: true` with
+`training_args.attn_implementation: sdpa`. These remain opt-in and apply identically
+to both arms. Numerical scores can differ from FP32/eager attention; compare
+baseline and treatment within the same settings. Short runs can be dominated by
+loading and preprocessing, even when optimizer steps run faster. `max_length`
+limits truncation and must stay fixed across comparable studies. `batched: false`
+remains available for custom preprocessing that requires individual rows.
+
+On one A30 run with cached datasets, ModernBERT-base, MRPC → RTE, 128 training
+rows per task, 100 updates per arm, seed 0, `max_length=64`, training batch size 8
+and requested evaluation batch size 32:
+
+| Path | Total wall time | Training, both arms | Evaluation, both arms |
+| --- | ---: | ---: | ---: |
+| Before these fixes (`a117725`, FP32/eager) | 67.7 s | 25.3 s | 1.46 s |
+| Optimized FP32/eager | 64.9 s | 24.9 s | 0.97 s |
+| Optimized BF16/SDPA | 59.0 s | 19.8 s | 0.39 s |
+
+Wall time includes interpreter startup, loading and preprocessing. This is a
+single comparison on shared hardware, not a stable throughput guarantee. FP32
+accuracy was unchanged: 0.5797 baseline and 0.5580 treatment. BF16/SDPA produced
+different scores. The measured stack was torch 2.7.1+cu126, Transformers 5.17.0
+and datasets 5.0.1. Source models still load independently; reducing that cost
+further requires preserving their head initialization carefully.
+
 ## Multi-source treatments
 
 Each top-level source is a separate treatment. A nested list combines sources in

@@ -6,7 +6,7 @@ import transformers
 from torch.utils.data.dataloader import DataLoader
 from transformers.data.data_collator import InputDataClass
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, WeightedRandomSampler
+from torch.utils.data.sampler import RandomSampler, SequentialSampler, WeightedRandomSampler
 from typing import List, Union, Dict
 from transformers import (
     EncoderDecoderModel,
@@ -23,7 +23,7 @@ import copy
 import logging
 from types import MappingProxyType
 from .tasks import Classification
-from .utils import to_dict, shallow_copy_A_to_B, deep_copy_cache, normalize_label, NoTqdm, search_module
+from .utils import to_dict, shallow_copy_A_to_B, normalize_label, NoTqdm, search_module
 from transformers import AutoTokenizer
 import magicattr
 import gc
@@ -148,6 +148,29 @@ def last_linear(classifier):
     L = list([m for m in classifier.modules() if type(m)==torch.nn.Linear])[-1]
     return L
 
+def _load_initial_target(model_type, args, **kwargs):
+    """Reuse one pristine CPU target model, replaying post-load RNG state."""
+    cache = args.get('_transfer_cache') if args.get('cache_initialization', True) else None
+    key = (model_type, args.model_name, args.get('seed'), repr(sorted(kwargs.items())))
+    entry = cache.get('initial_target') if cache is not None else None
+    if entry is not None and entry[0] == key:
+        model = copy.deepcopy(entry[1])
+        py_state, np_state, cpu_state, cuda_states = entry[2]
+        random.setstate(py_state)
+        np.random.set_state(np_state)
+        torch.set_rng_state(cpu_state)
+        if cuda_states is not None:
+            torch.cuda.set_rng_state_all(cuda_states)
+        return model
+    model = model_type.from_pretrained(args.model_name, **kwargs)
+    if cache is not None:
+        state = (random.getstate(), np.random.get_state(), torch.get_rng_state(),
+                 torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None)
+        # Bound memory to the current target/seed, and never cache trained weights.
+        cache['initial_target'] = (key, copy.deepcopy(model).cpu(), state)
+    return model
+
+
 class Model(transformers.PreTrainedModel):
     def __init__(self, tasks, args, warm_start=None):
         super().__init__(transformers.PretrainedConfig())
@@ -161,6 +184,7 @@ class Model(transformers.PreTrainedModel):
         self.add_cls = args.get('add_cls',True)
         self.add_cln = args.get('add_cln',False)
         self.torch_dtype = args.get('torch_dtype',None)
+        self.trust_remote_code = args.get('trust_remote_code', False)
         self.drop_probability=args.get('drop_probability',0.1)
         self.count_loss_weight=args.get('count_loss_weight',0.1)
         task_models_list = []
@@ -171,8 +195,16 @@ class Model(transformers.PreTrainedModel):
             }
 
             attn = {'attn_implementation': args['attn_implementation']} if args.get('attn_implementation') else {}
-            model = deep_copy_cache(model_type.from_pretrained)(args.model_name,
-                ignore_mismatched_sizes=True, torch_dtype=self.torch_dtype, **attn, **nl)
+            try:
+                load_kwargs = dict(ignore_mismatched_sizes=True, torch_dtype=self.torch_dtype,
+                    trust_remote_code=self.trust_remote_code,
+                    **({'revision': args['revision']} if args.get('revision') else {}), **attn, **nl)
+                model = (_load_initial_target(model_type, args, **load_kwargs) if i == 0 else
+                         model_type.from_pretrained(args.model_name, **load_kwargs))
+            except ValueError as exc:
+                raise ValueError(f"Cannot load {args.model_name!r} for {task.task_type}: {exc}. "
+                                 "Check the model's supported task heads and Transformers version; "
+                                 "custom models may require explicit trust_remote_code=True.") from exc
 
             if task.task_type=='MultipleChoice':
                 if args.get('share_mc',False):
@@ -240,6 +272,9 @@ class Model(transformers.PreTrainedModel):
 
     @classmethod
     def get_encoder_attr_name(cls, model):
+        prefix = getattr(model, 'base_model_prefix', '')
+        if prefix and hasattr(model, prefix):
+            return prefix
         if hasattr(model,'model'):
             return 'model'
         if hasattr(model, "encoder"):
@@ -422,13 +457,21 @@ class Trainer(transformers.Trainer):
         self.task_batch_counts = hparams.get('task_batch_counts')
         self.num_proc = hparams.get('num_proc',None)
         self.batched = hparams.get('batched',False)
+        self.transfer_cache = hparams.get('_transfer_cache')
+        self.preprocess_splits = hparams.get('_preprocess_splits')
 
         trainer_args = transformers.TrainingArguments(
             **fc.project({**default, **hparams}, dir(transformers.TrainingArguments)),
         )
-        if not tokenizer:
+        if tokenizer is None and self.transfer_cache is not None:
+            tokenizer = self.transfer_cache.get('tokenizer')
+        if tokenizer is None:
             path = hparams.get('tokenizer',hparams['model_name'])
-            tokenizer = AutoTokenizer.from_pretrained(path)
+            tokenizer = AutoTokenizer.from_pretrained(path,
+                trust_remote_code=hparams.get('trust_remote_code', False),
+                **({'revision': hparams['revision']} if hparams.get('revision') else {}))
+            if self.transfer_cache is not None:
+                self.transfer_cache['tokenizer'] = tokenizer
             
         import inspect
         if 'processing_class' in inspect.signature(transformers.Trainer.__init__).parameters:
@@ -475,11 +518,11 @@ class Trainer(transformers.Trainer):
         }
         self.eval_dataset = {
             task: dataset["validation"]
-            for task, dataset in self.processed_tasks.items()
+            for task, dataset in self.processed_tasks.items() if "validation" in dataset
         }
         self.test_dataset = {
             task: dataset["test"]
-            for task, dataset in self.processed_tasks.items()
+            for task, dataset in self.processed_tasks.items() if "test" in dataset
         }
         # We prevent Trainer from automatically evaluating on each dataset:
         # transformers.Trainer recognizes eval_dataset instances of "dict"
@@ -527,10 +570,13 @@ class Trainer(transformers.Trainer):
         except:
             logging.info('No training_tracker')
         outputs = []
-        for i, task in enumerate(self.tasks):
+        evaluation = self.eval_dataset if metric_key_prefix.startswith("eval") else self.test_dataset
+        for task in self.tasks:
+            if task not in evaluation:
+                continue
             self.compute_metrics = task.compute_metrics
             output = super().evaluate(
-                eval_dataset=MappingProxyType(dict([fc.nth(i, (self.eval_dataset if metric_key_prefix.startswith("eval") else self.test_dataset).items())])),
+                eval_dataset=MappingProxyType({task: evaluation[task]}),
                 metric_key_prefix=metric_key_prefix
             )
             if "Accuracy" not in output:
@@ -538,31 +584,29 @@ class Trainer(transformers.Trainer):
             outputs += [output]
         return fc.join(outputs) if metric_key_prefix!="test" else outputs
 
-    def task_batch_size(self,task_name):
+    def task_batch_size(self, task_name, evaluation=False):
+        batch_size = self.args.eval_batch_size if evaluation else self.args.train_batch_size
         if hasattr(task_name, 'num_choices'):
-            return max(1, self.args.train_batch_size//task_name.num_choices)
+            return max(1, batch_size // task_name.num_choices)
+        return batch_size
+
+    def get_single_train_dataloader(self, task_name, train_dataset, evaluation=False):
+        """Build a task loader, using evaluation batching and ordering when requested."""
+        if evaluation:
+            sampler = SequentialSampler(train_dataset)
+        elif torch.cuda.device_count() < 2 or self.args.local_rank == -1:
+            sampler = RandomSampler(train_dataset)
         else:
-            return self.args.train_batch_size
-
-    def get_single_train_dataloader(self, task_name, train_dataset):
-        """
-        Create a single-task data loader that also yields task names
-        """
-        if self.train_dataset is None:
-            raise ValueError("Trainer: training requires a train_dataset.")
-        train_sampler = (RandomSampler(train_dataset) if torch.cuda.device_count()<2 or self.args.local_rank == -1 else DistributedSampler(train_dataset))
-       
-        data_loader = DataLoaderWithTaskname(
-            task_name=task_name,
-            data_loader=DataLoader(
-                train_dataset,
-                batch_size=self.task_batch_size(task_name),
-                sampler=train_sampler,
-                collate_fn=self.data_collator.__call__,
-            ),
-        )
-
-        return data_loader
+            sampler = DistributedSampler(train_dataset)
+        workers = self.args.dataloader_num_workers
+        options = dict(num_workers=workers, pin_memory=self.args.dataloader_pin_memory,
+                       persistent_workers=workers > 0 and self.args.dataloader_persistent_workers)
+        if workers > 0 and getattr(self.args, 'dataloader_prefetch_factor', None) is not None:
+            options['prefetch_factor'] = self.args.dataloader_prefetch_factor
+        return DataLoaderWithTaskname(task_name, DataLoader(
+            train_dataset, batch_size=self.task_batch_size(task_name, evaluation),
+            sampler=sampler, collate_fn=self.data_collator,
+            drop_last=False if evaluation else self.args.dataloader_drop_last, **options))
 
     def get_train_dataloader(self):
         """
@@ -580,7 +624,7 @@ class Trainer(transformers.Trainer):
     def get_eval_dataloader(self, eval_dataset=None):
         return MultitaskDataloader(
             {
-                task_name: self.get_single_train_dataloader(task_name, task_dataset)
+                task_name: self.get_single_train_dataloader(task_name, task_dataset, evaluation=True)
                 for task_name, task_dataset in (
                     eval_dataset if eval_dataset else self.eval_dataset
                 ).items()
@@ -590,7 +634,7 @@ class Trainer(transformers.Trainer):
     def get_test_dataloader(self, test_dataset=None):
         return MultitaskDataloader(
             {
-                task_name: self.get_single_train_dataloader(task_name, task_dataset)
+                task_name: self.get_single_train_dataloader(task_name, task_dataset, evaluation=True)
                 for task_name, task_dataset in (
                     test_dataset if test_dataset else self.test_dataset
                 ).items()
@@ -616,38 +660,44 @@ class Trainer(transformers.Trainer):
             untied_copy(adapter).push_to_hub(f"{repo.replace('-nli','')}-adapters")
 
     def preprocess_tasks(self, tasks, tokenizer):
-        
         features_dict = {}
+        cache = self.transfer_cache.setdefault('processed', {}) if self.transfer_cache is not None else None
         for i, task in progress(list(enumerate(tasks))):
             with NoTqdm():
-                if hasattr(task, 'processed_features') and tokenizer==task.tokenizer:
-                    features_dict[task]=task.processed_features #added
-                    continue # added
                 task.set_tokenizer(tokenizer)
-                if hasattr(task, "y") and task.y != "labels":
-                    task.dataset = task.dataset.rename_column(task.y, "labels")
-                for split in task.dataset:
-                    tdp=task.dataset[split]
-                    if 'task' in tdp.features:
-                        tdp=tdp.remove_columns('task')
-                    task.index = task.dataset[split].index = i
-
-
+                if hasattr(task, 'y') and task.y != 'labels' and task.y in task.dataset['train'].column_names:
+                    task.dataset = task.dataset.rename_column(task.y, 'labels')
+                task.index = i
                 features_dict[task] = {}
                 for phase, phase_dataset in task.dataset.items():
-                    phase_dataset.index = i
-                    features_dict[task][phase] = phase_dataset.map(
-                        task.preprocess_function, batched=self.batched, load_from_cache_file=True,
-                        num_proc=self.num_proc
-                    )
-                    if not features_dict[task][phase]:
+                    if self.preprocess_splits is not None and phase not in self.preprocess_splits[task.name]:
                         continue
-                    features_dict[task][phase].set_format(  # count: SpanTagging rows with a count
-                        type="torch", columns=["input_ids", "attention_mask", "labels", "task"]
-                        + (["count"] if "count" in features_dict[task][phase].features else [])
-                    )
-                task.processed_features=features_dict[task] #added
+                    if 'task' in phase_dataset.column_names:
+                        phase_dataset = phase_dataset.remove_columns('task')
+                    # Transfer caches tokenization without task indices, so a source can
+                    # occupy different positions in different multi-source treatments.
+                    key = (type(task), task.name, phase_dataset._fingerprint,
+                           repr(task.tokenizer_kwargs),
+                           tuple(str(getattr(task, attr, None)) for attr in
+                                 ('s1', 's2', 'y', 'choices', 'num_labels', 'problem_type')))
+                    if cache is not None and key in cache:
+                        processed = cache[key]
+                    else:
+                        processed = phase_dataset.map(task.preprocess_function,
+                            batched=self.batched, load_from_cache_file=True, num_proc=self.num_proc)
+                        if 'task' in processed.column_names:
+                            processed = processed.remove_columns('task')
+                        if cache is not None:
+                            cache[key] = processed
+                    processed = processed.add_column('task', [i] * len(processed))
+                    if len(processed):
+                        processed.set_format(type='torch',
+                            columns=['input_ids', 'attention_mask', 'labels', 'task']
+                            + (['count'] if 'count' in processed.features else []))
+                    features_dict[task][phase] = processed
+                task.processed_features = features_dict[task]
         return features_dict
+
 
 
 

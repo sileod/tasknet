@@ -124,6 +124,8 @@ def _batch_counts(steps, accumulation, source_fraction, nsources):
 def _run(tasks, args, seed, metric):
     # Target first: its encoder and head consume the same initialization RNG in both arms.
     set_seed(seed)
+    args = dict(args, _preprocess_splits={task.name: ['train', 'validation'] if i == 0 else ['train']
+                                           for i, task in enumerate(tasks)})
     model, trainer = Model_Trainer(copy.deepcopy(tasks), args)
     try:
         trainer.train()
@@ -172,7 +174,7 @@ def transfer(sources, targets, model='answerdotai/ModernBERT-base', nrows=None,
     protected = {'model_name', 'max_steps', 'seed', 'data_seed', 'task_batch_counts',
                  'add_cls', 'add_cln', 'eval_strategy', 'evaluation_strategy', 'save_strategy',
                  'output_dir', 'load_best_model_at_end', 'do_train', 'max_time',
-                 'auto_find_batch_size', 'deepspeed', 'fsdp'}
+                 'auto_find_batch_size', 'deepspeed', 'fsdp', '_transfer_cache', '_preprocess_splits'}
     if protected.intersection(overrides):
         raise ValueError(f'Protocol-controlled training_args: {sorted(protected.intersection(overrides))}')
     if torch.cuda.device_count() > 1 and not (overrides.get('use_cpu') or overrides.get('no_cuda')):
@@ -215,11 +217,12 @@ def transfer(sources, targets, model='answerdotai/ModernBERT-base', nrows=None,
     # Validate serializability before launching any training.
     json.dumps(config, allow_nan=False)
     result = TransferResult(config, [])
+    runtime_cache = {}
     for target_index, target in enumerate(target_tasks):
         for seed in seeds:
             base_args = dict(model_name=model, max_steps=steps, seed=seed, data_seed=seed,
                              add_cls=False, add_cln=False, eval_strategy='no', save_strategy='no',
-                             report_to=[], learning_rate=3e-5)
+                             report_to=[], learning_rate=3e-5, batched=True, _transfer_cache=runtime_cache)
             base_args.update(overrides)
             run_root = Path(output_dir or 'models/transfer') / 'runs' / str(target_index) / str(seed)
             base_args['output_dir'] = str(run_root / 'baseline')

@@ -74,7 +74,9 @@ Start with classification-to-classification or MCQ-to-MCQ comparisons, which
 reuse their existing templates and heads. Mixed task types are exploratory:
 the source fraction controls batches rather than examples or tokens.
 See [the transfer protocol and examples](docs/transfer.md) for controls, multi-source
-studies, CLI configuration, and JSON/CSV results.
+studies, UltraBERT classification, speed controls, CLI configuration, and JSON/CSV results.
+Transfer reuses tokenization and initial target weights, skips unused source evaluation
+processing, and honors a separate evaluation batch size.
 
 ```sh
 tasknet transfer --config study.yaml
