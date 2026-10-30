@@ -65,7 +65,7 @@ studies. The source fraction measures **batches**, not examples or tokens.
 The existing trainer divides MCQ batch sizes by the number of choices, so equal
 optimization budgets do not imply equal token counts, example counts or runtime.
 
-## UltraBERT classification
+## UltraBERT classification and MCQ
 
 UltraBERT-150M classification transfer has been tested end to end with tasksource
 MRPC → RTE on Transformers 5.17 using the author's custom model classes:
@@ -77,9 +77,38 @@ tasknet transfer --config examples/transfer-ultrabert-smoke.yaml
 The config explicitly sets `training_args.trust_remote_code: true` and pins the
 model code and weights with `training_args.revision`. Both options reach the
 model and tokenizer loaders. The author's released config exposes sequence
-classification, token classification and QA classes; it does not expose an
-`AutoModelForMultipleChoice` class. UltraBERT MCQ transfer is therefore unsupported
-with this release. Use its classification checkpoint for classification studies.
+classification, token classification and QA classes. For MCQ, tasknet supplies a
+head when the checkpoint has no native `AutoModelForMultipleChoice` class:
+
+```sh
+tasknet transfer --config examples/transfer-ultrabert-mcq-smoke.yaml
+```
+
+This Social IQa → PIQA run was tested with the released UltraBERT-150M weights,
+32 training rows per task, four updates per arm and 919 held-out PIQA examples.
+It exercises three-choice sources and two-choice targets. It is an execution
+smoke test, not evidence of a transfer benefit.
+
+The head flattens `(batch, choices, sequence)` inputs, scores each pair with the
+existing UltraBERT classification head configured for one scalar, and applies
+cross-entropy across choices. The encoder, pooling and dropout remain the
+checkpoint's existing implementations. It works through both `Model_Trainer`
+and `transfer`; other backbones retain their existing native MCQ classes.
+
+Save with `trainer.save_model(path)` and reload the MCQ model explicitly:
+
+```python
+model = tn.UltrabertForMultipleChoice.from_pretrained(path, trust_remote_code=True)
+outputs = model(input_ids=choice_input_ids, attention_mask=choice_attention_mask)
+# outputs.logits: (batch, choices)
+```
+
+Saved files preserve the author's config/code, scalar classifier weights and a
+`tasknet_head: multiple_choice` marker. Use the tasknet class to restore MCQ
+behavior; the exported underlying checkpoint remains a scalar sequence
+classifier for Transformers AutoClasses that do not know tasknet's MCQ wrapper.
+Saving the tokenizer is separate: `trainer.tokenizer.save_pretrained(path)`.
+
 The [author's model card](https://huggingface.co/dmis-lab/UltraBERT-150M) documents
 native loading on Transformers 5.20 or later; the tested example uses explicit
 remote-code loading rather than upgrading your environment automatically.

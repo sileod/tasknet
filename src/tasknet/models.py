@@ -23,6 +23,7 @@ import copy
 import logging
 from types import MappingProxyType
 from .tasks import Classification
+from .ultrabert import UltrabertForMultipleChoice
 from .utils import to_dict, shallow_copy_A_to_B, normalize_label, NoTqdm, search_module
 from transformers import AutoTokenizer
 import magicattr
@@ -148,6 +149,17 @@ def last_linear(classifier):
     L = list([m for m in classifier.modules() if type(m)==torch.nn.Linear])[-1]
     return L
 
+def _load_task_model(model_type, model_name, **kwargs):
+    try:
+        return model_type.from_pretrained(model_name, **kwargs)
+    except ValueError as exc:
+        # Older Transformers / the author's custom code expose classification,
+        # but no MCQ AutoClass. Leave other backbones and future native heads alone.
+        if model_type is AutoModelForMultipleChoice and 'ultrabert' in str(exc).lower():
+            return UltrabertForMultipleChoice.from_pretrained(model_name, **kwargs)
+        raise
+
+
 def _load_initial_target(model_type, args, **kwargs):
     """Reuse one pristine CPU target model, replaying post-load RNG state."""
     cache = args.get('_transfer_cache') if args.get('cache_initialization', True) else None
@@ -162,7 +174,7 @@ def _load_initial_target(model_type, args, **kwargs):
         if cuda_states is not None:
             torch.cuda.set_rng_state_all(cuda_states)
         return model
-    model = model_type.from_pretrained(args.model_name, **kwargs)
+    model = _load_task_model(model_type, args.model_name, **kwargs)
     if cache is not None:
         state = (random.getstate(), np.random.get_state(), torch.get_rng_state(),
                  torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None)
@@ -200,7 +212,7 @@ class Model(transformers.PreTrainedModel):
                     trust_remote_code=self.trust_remote_code,
                     **({'revision': args['revision']} if args.get('revision') else {}), **attn, **nl)
                 model = (_load_initial_target(model_type, args, **load_kwargs) if i == 0 else
-                         model_type.from_pretrained(args.model_name, **load_kwargs))
+                         _load_task_model(model_type, args.model_name, **load_kwargs))
             except ValueError as exc:
                 raise ValueError(f"Cannot load {args.model_name!r} for {task.task_type}: {exc}. "
                                  "Check the model's supported task heads and Transformers version; "
@@ -321,7 +333,7 @@ class Model(transformers.PreTrainedModel):
         m_i = self.task_models_list[task_index]
 
         classifiers = torch.nn.ModuleList([getattr(a, 'classifier', None) or a.qa_outputs for a in self.task_models_list])
-        id2label=dict(enumerate(self.task_labels_list[task_index]))
+        id2label={i: str(label) for i, label in enumerate(self.task_labels_list[task_index])}
         label2id = {str(v):k for k,v in id2label.items()}
 
         m_i.config = m_i.config.from_dict(
