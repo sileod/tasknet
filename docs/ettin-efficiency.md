@@ -266,3 +266,29 @@ time reaches the budget; evaluation overhead and any overshoot remain in the
 reported time. Setup is separate. Final predictions are evaluated without
 choosing a checkpoint from validation accuracy. This tests allocating more
 steps to the faster encoder, independently of the recurrent architectures.
+
+The sequential FLD → FOLIO screen is complete:
+
+| Encoder initialization | Mean FOLIO accuracy | Total training time |
+|---|---:|---:|
+| Native 68M + 200 target steps | 34.65% | 13.42s |
+| FLD-trained 68M + 200 target steps | 52.97% | 188.82s |
+| Native 150M + 200 target steps | 38.61% | 17.53s |
+| FLD-trained 150M + 200 target steps | 55.45% | 326.16s |
+
+Source training improves accuracy at a fixed short target-adaptation budget,
+but that comparison spends substantially more total training time. Comparing
+the sequential pipelines, the 68M model is 2.48 points worse than 150M, outside
+the stated one-point screening criterion. Neither comparison establishes an
+efficiency gain. The earlier 1,000-step target-only transfer screen reached
+59.41% for both sizes in approximately 64s/87s; it uses a different training
+ordering, so it is a contextual warning about undertrained short controls rather
+than a strict paired sequential comparison. Extending source pretraining is not
+justified by these results alone.
+
+[Sequential artifacts](../benchmarks/results/fld-sequential/) preserve all eight
+runs, ordered predictions, source costs and the aggregate summary. The actual
+68M seed-0 checkpoint alignment was also checked on one input: mapped logits
+agree within FP32 rounding (maximum absolute error 1.19e-7). The semantic
+alignment and source-cost/split guards are covered by unit tests; the targeted
+reasoning protocol/report suite passes 12 tests in the native environment.

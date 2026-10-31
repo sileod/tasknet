@@ -1,0 +1,6 @@
+{
+  "initialization": "native",
+  "source_train_seconds": 0,
+  "source_setup_seconds": 0,
+  "source_optimizer_steps": 0
+}

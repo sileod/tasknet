@@ -1,0 +1,12 @@
+{
+  "initialization": "fld",
+  "source_train_seconds": 176.26536428369582,
+  "source_setup_seconds": 1.8510584868490696,
+  "source_optimizer_steps": 1000,
+  "source_checkpoint": "runs/fld-scaling/68m-baseline/baseline/1/checkpoint",
+  "label_permutation": [
+    1,
+    2,
+    0
+  ]
+}

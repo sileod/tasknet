@@ -1,0 +1,15 @@
+{
+  "source_checkpoint": "runs/fld-scaling/68m-baseline/baseline/0/checkpoint",
+  "aligned_checkpoint": "runs/fld-sequential/68m-fld/seed-0/aligned-source",
+  "label_permutation": [
+    1,
+    2,
+    0
+  ],
+  "max_absolute_logit_error": 1.1920928955078125e-07,
+  "rtol": 1e-06,
+  "atol": 1e-06,
+  "precision": "float32",
+  "device": "cpu",
+  "examples": 1
+}
