@@ -59,3 +59,7 @@ target/
 
 # ipynb
 **/.ipynb_checkpoints/
+
+# Local recurrent experiment environments and checkpoints
+.venv-recurrent/
+runs/

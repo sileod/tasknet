@@ -150,6 +150,10 @@ def last_linear(classifier):
     return L
 
 def _load_task_model(model_type, model_name, **kwargs):
+    from pathlib import Path
+    if (Path(model_name) / 'recurrent_config.json').is_file():
+        from .recurrent import RecurrentModel
+        return RecurrentModel.from_pretrained(model_name, **kwargs)
     try:
         return model_type.from_pretrained(model_name, **kwargs)
     except ValueError as exc:
@@ -217,6 +221,13 @@ class Model(transformers.PreTrainedModel):
                 raise ValueError(f"Cannot load {args.model_name!r} for {task.task_type}: {exc}. "
                                  "Check the model's supported task heads and Transformers version; "
                                  "custom models may require explicit trust_remote_code=True.") from exc
+
+            if args.get('recurrent'):
+                from .recurrent import make_recurrent_model
+                from .recurrent import RecurrentModel
+                if isinstance(model, RecurrentModel):
+                    raise ValueError('Reload recurrent checkpoints without a new recurrent configuration')
+                model = make_recurrent_model(model, task.task_type, args['recurrent'])
 
             if task.task_type=='MultipleChoice':
                 if args.get('share_mc',False):

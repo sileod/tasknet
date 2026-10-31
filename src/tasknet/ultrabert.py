@@ -27,7 +27,8 @@ class UltrabertForMultipleChoice(PreTrainedModel):
 
     @property
     def ultrabert(self):
-        return self.model.ultrabert
+        prefix = self.model.base_model_prefix
+        return getattr(self.model, prefix)
 
     @property
     def classifier(self):

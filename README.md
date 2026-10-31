@@ -110,3 +110,11 @@ You can request features on github or reach me at `damien.sileo@inria.fr`
   version = {1.5.0},
   year = {2022}}
 ```
+
+## Experimental recurrent reasoning
+
+A separate [recurrent model wrapper](docs/recurrent.md) supports ModernBERT and
+UltraBERT classification/MCQ: compact TRM-like answer refinement, a nonrecurrent
+control, and damped or trainable middle-layer depth recurrence. The original head
+is preserved, and zero-loop predictions match the base model. This is an
+experimental model option; the existing training path stays the default.
