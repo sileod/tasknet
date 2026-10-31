@@ -100,10 +100,14 @@ def test_real_trainer_pair(tmp_path, monkeypatch, source_mc, target_mc):
         return MultipleChoice(DatasetDict(train=data, validation=data.select([0, 1])), name=name)
 
     initial_states = []
+    previous_trainers = []
     original_factory = experiment.Model_Trainer
 
     def factory(tasks, args):
+        import weakref
+        assert all(reference() is None for reference in previous_trainers)
         model, trainer = original_factory(tasks, args)
+        previous_trainers.append(weakref.ref(trainer))
         initial_states.append({k: v.detach().cpu().clone()
                                for k, v in model.task_models_list[0].state_dict().items()})
         return model, trainer

@@ -178,7 +178,7 @@ def _run(tasks, args, seed, metric):
         return score
     finally:
         trainer.training_step = original_step
-        del trainer, model
+        del trainer, model, original_step
         gc.collect()
 
 
