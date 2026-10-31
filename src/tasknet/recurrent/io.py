@@ -32,7 +32,8 @@ def load_recurrent(directory, **loading_kwargs):
     # revision identifies the upstream Hub checkpoint, not this local saved base.
     loading_kwargs.pop('revision', None)
     loading_kwargs.setdefault('attn_implementation', payload.get('attn_implementation'))
-    loading_kwargs.setdefault('torch_dtype', payload.get('dtype', 'float32'))
+    if loading_kwargs.get('torch_dtype') is None:
+        loading_kwargs['torch_dtype'] = payload.get('dtype', 'float32')
     model = make_recurrent_model(directory / 'base', payload['task_type'], payload['recurrent'], **loading_kwargs)
     if model.refiner is not None:
         model.refiner.load_state_dict(load_file(str(directory / 'refiner.safetensors')), strict=True)

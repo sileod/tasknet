@@ -95,6 +95,8 @@ class RecurrentModel(PreTrainedModel):
             raise ValueError('MCQ requires a scalar pretrained choice head, not a multi-class classifier')
         if task_type == 'SequenceClassification' and self.classifier.out_features < 2:
             raise ValueError('Answer refinement currently requires single-label classification')
+        if task_type == 'SequenceClassification' and base.config.problem_type not in (None, 'single_label_classification'):
+            raise ValueError('Recurrent classification currently supports single-label classification only')
         c = self.recurrent
         blocks = getattr(self.encoder, 'layers', None)
         if blocks is None and capability is None:

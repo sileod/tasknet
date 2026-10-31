@@ -19,13 +19,13 @@ class AnswerRefiner(nn.Module):
         nn.init.zeros_(self.update.bias)
 
     def prepare(self, representations, logits):
-        x = self.anchor(representations)
+        x = self.anchor(representations.to(self.anchor.weight.dtype))
         if x.ndim == 2:
             x = x[:, None, :] + self.class_embeddings[None, :, :]
         return x, x, logits
 
     def step(self, z, x, y):
-        h = z + x + self.answer(y.unsqueeze(-1))
+        h = z + x + self.answer(y.unsqueeze(-1).to(self.answer.weight.dtype))
         for block in self.blocks:
             h = block(h)
         z = self.norm(h)

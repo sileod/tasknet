@@ -164,3 +164,10 @@ def test_damped_zero_intervention_and_native_capability_no_double_wrap():
 def test_invalid_configuration(config):
     with pytest.raises(ValueError):
         make_recurrent_model(base_model(), config=config)
+
+
+def test_multilabel_checkpoint_is_rejected_instead_of_using_the_wrong_loss():
+    base = base_model()
+    base.config.problem_type = 'multi_label_classification'
+    with pytest.raises(ValueError, match='single-label'):
+        make_recurrent_model(base, config=options())

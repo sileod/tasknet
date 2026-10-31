@@ -36,3 +36,19 @@ def test_saved_checkpoint_works_through_tasknet_model_construction(tmp_path):
         expected = original(**data, steps=4).logits
         actual = multitask(task=torch.zeros(2, dtype=torch.long), **data).logits
     torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('mc', [False, True])
+def test_bfloat16_checkpoint_without_autocast_preserves_dtype_and_logits(tmp_path, mc):
+    model = make_recurrent_model(base_model(mc).to(torch.bfloat16),
+        'MultipleChoice' if mc else 'Classification', options()).eval()
+    data = inputs(mc)
+    with torch.no_grad():
+        expected = model(**data, steps=2).logits
+    model.save_pretrained(tmp_path)
+    # TaskNet passes torch_dtype=None unless the user explicitly overrides it.
+    restored = RecurrentModel.from_pretrained(tmp_path, torch_dtype=None)
+    assert next(restored.parameters()).dtype == torch.bfloat16
+    with torch.no_grad():
+        actual = restored(**data, steps=2).logits
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
