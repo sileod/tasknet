@@ -1,0 +1,108 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "comparisons": [
+    {
+      "task": "glue-mnli",
+      "variant": "68m-baseline",
+      "paired_seeds": 2,
+      "mean_accuracy_delta": -0.0400390625,
+      "paired_delta_std": 0.027621358640099514,
+      "median_training_speedup": 1.196809923184377,
+      "pairs": [
+        {
+          "seed": 0,
+          "small_accuracy": 0.751953125,
+          "large_accuracy": 0.8115234375,
+          "accuracy_delta": -0.0595703125,
+          "training_speedup": 1.1741255082176363,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 800,
+            "seconds": 63.767766723409295,
+            "accuracy": 0.80810546875,
+            "phase": "train",
+            "estimated_train_flops": 698032429728768.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.1546110141173904
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 1.141074275423575
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 0.7924653268417706
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.646138007764327
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.861119353699279
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.8593661457958814
+            }
+          ]
+        },
+        {
+          "seed": 1,
+          "small_accuracy": 0.7744140625,
+          "large_accuracy": 0.794921875,
+          "accuracy_delta": -0.0205078125,
+          "training_speedup": 1.2194943381511174,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 800,
+            "seconds": 58.89166823402047,
+            "accuracy": 0.78955078125,
+            "phase": "train",
+            "estimated_train_flops": 698691263431680.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.6653324698793863
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 1.6395442059617718
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 1.141978749279086
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.654470255017206
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.8669221143043442
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.8658545374543423
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

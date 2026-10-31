@@ -65,3 +65,24 @@ Record split provenance rather than treating names as interchangeable.
 The broader goal remains active until measured evidence supports the gains.
 Screening compatibility, smaller parameter counts, faster but less accurate
 models, and launching jobs do not establish success.
+
+## First screen evidence
+
+Two-seed MNLI baseline runs are complete (2,048 held-out screening rows):
+
+| Encoder | Mean accuracy | Measured training speed relative to 150M |
+|---|---:|---:|
+| Ettin-68M | 76.32% | 1.20x |
+| Ettin-150M | 80.32% | 1.00x |
+
+This is a negative comparison under the stated quality margin. The larger
+encoder also beats the smaller one at its latest observed checkpoints within
+the smaller encoder's elapsed training budget. The smaller encoder's reduced
+parameter count and runtime do not establish an efficiency gain here.
+
+Raw paired [68M](../benchmarks/results/ettin-screen/glue-mnli/68m-baseline.json)
+and [150M](../benchmarks/results/ettin-screen/glue-mnli/150m-baseline.json) runs,
+plus the [screen comparison](../benchmarks/results/ettin-screen/summary.json),
+are committed. Refinement and the other tasks remain in progress. If this size
+pair cannot close the quality gap, extend the ladder to 150M/400M and evaluate
+source+target transfer rather than weakening the quality requirement.
