@@ -1,0 +1,69 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "rows": [
+    {
+      "seed": 0,
+      "small_accuracy": 0.57470703125,
+      "large_accuracy": 0.625,
+      "small_train_seconds": 312.25438270904124,
+      "large_train_seconds": 307.9712997134775,
+      "small_optimizer_steps": 1801,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "latency_speedup": 1.6822147852298823
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "latency_speedup": 1.6945420747195672
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "latency_speedup": 1.8458509291855347
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "latency_speedup": 1.838788432373916
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "small_accuracy": 0.68505859375,
+      "large_accuracy": 0.6435546875,
+      "small_train_seconds": 313.22207775339484,
+      "large_train_seconds": 309.4162920098752,
+      "small_optimizer_steps": 1801,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "latency_speedup": 1.7043024216634772
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "latency_speedup": 1.692338507239419
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "latency_speedup": 1.8655668829162806
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "latency_speedup": 1.8319176792252545
+        }
+      ]
+    }
+  ],
+  "mean_small_accuracy": 0.6298828125,
+  "mean_large_accuracy": 0.63427734375,
+  "note": "Two validation seeds have opposite signed deltas; requires untouched-test confirmation. Actual elapsed time slightly exceeds the stopping budget."
+}

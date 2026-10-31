@@ -268,7 +268,8 @@ def condition_config(name, args):
     method = dict(damped='damped', depth='depth', **{'trm-frozen': 'trm', 'trm-partial': 'trm',
                   'trm-full': 'trm', 'control': 'control'})[name]
     if method in ('damped', 'depth'):
-        return dict(method=method, steps=args.iterations, train_steps=tuple(args.train_iterations))
+        return dict(method=method, steps=args.iterations, train_steps=tuple(args.train_iterations),
+                    train_repeated_layers=args.train_repeated_layers)
     return dict(method=method, steps=args.iterations, hidden_size=args.hidden_size, layers=args.layers,
         heads=4, train_steps=tuple(args.train_iterations), freeze_encoder=name in ('trm-frozen', 'trm-partial', 'control'),
         unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0)
@@ -309,6 +310,8 @@ def main():
     parser.add_argument('--revision')
     parser.add_argument('--cache-representations', action='store_true',
                         help='Cache frozen TRM/control features; include encoding cost separately')
+    parser.add_argument('--train-repeated-layers', action='store_true',
+                        help='For depth only, freeze all weights except the repeated middle blocks')
     parser.add_argument('--initial-checkpoint', help='Finetuned B0 checkpoint used by B1 (or all conditions)')
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
@@ -320,6 +323,8 @@ def main():
         parser.error('B1/damped requires --initial-checkpoint from a trained classifier/MCQ model')
     if 'damped' in args.conditions and 'baseline' in args.conditions and not args.eval_only:
         parser.error('Compare B1 to the same trained B0 checkpoint using --eval-only')
+    if args.train_repeated_layers and set(args.conditions) != {'depth'}:
+        parser.error('--train-repeated-layers requires only --conditions depth')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)

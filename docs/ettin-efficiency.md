@@ -292,3 +292,31 @@ runs, ordered predictions, source costs and the aggregate summary. The actual
 agree within FP32 rounding (maximum absolute error 1.19e-7). The semantic
 alignment and source-cost/split guards are covered by unit tests; the targeted
 reasoning protocol/report suite passes 12 tests in the native environment.
+
+The native 68M time-budget screen completed at 1,801 steps for both seeds.
+Mean accuracy is 62.99%, versus 63.43% for 150M. Actual training averaged
+312.74s versus 308.69s: step-boundary stopping plus evaluation overhead slightly
+overshot the requested budgets. Small-model inference was approximately 1.69×
+faster at batch 1 and 1.85× at batch 32 for the measured lengths 128/512.
+However, paired accuracy differences are −5.03 and +4.15 points; the close mean
+is not evidence of stable quality equivalence.
+[The complete screen](../benchmarks/results/fld-equal-time/) preserves predictions,
+latency and the original paired time-budget references.
+
+`python -m benchmarks.fld_time_confirm` runs the predeclared confirmation:
+new seeds 2–6, full FLD test split, no initial or in-training test evaluation,
+150M with 1,000 steps, then 68M with a 2,000-step ceiling and its paired measured
+150M training-time budget. Other data/model settings match the screen. Test
+predictions are saved only at the final checkpoint; no test-based hyperparameter
+or checkpoint selection is allowed. Latency uses 30 repeats at batches 1/32 and
+lengths 128/512. This protocol is fixed before accessing confirmation scores.
+
+The suggested [How to Loop Your Transformer paper](https://arxiv.org/html/2610.40325v1)
+reinforces separating parameter, training-compute and inference budgets. Its
+middle-stack and modest-loop findings motivate a contained follow-up using the
+existing `--train-repeated-layers` option, starting from B0 and including zero
+extra passes during training. Loop-specific low-rank corrections are a later
+hypothesis. The paper studies decoder-only models trained from scratch;
+its autoregressive parallel-loop mechanism does not directly apply to this
+bidirectional encoder setup. These observations do not establish encoder gains
+or justify replacing the current experimental protocol.
