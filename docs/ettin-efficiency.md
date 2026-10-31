@@ -193,3 +193,11 @@ group pass, then falling at deeper counts (60.11% at two, 59.57% at four,
 not a gain over its paired 150M model (62.50%) or a replicated efficiency result.
 The second depth seed is still running. Partial depth evidence is archived
 explicitly as partial.
+
+The depth breakdown limits that preliminary interpretation. On the same seed,
+one extra pass raises UNKNOWN accuracy from 30.24% to 55.78%, while depth-2
+accuracy falls from 67.55% to 60.71% and depth-3 from 53.64% to 44.59%. Thus the
+overall improvement is not evidence of better deeper proofs. Also, zero extra
+passes were not in this model's training-depth schedule. Native B0 and matched
+training-cost comparisons remain necessary; the zero-pass intervention alone
+cannot establish an iterative-reasoning benefit.
