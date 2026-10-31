@@ -81,7 +81,7 @@ This compares 68M and 150M with seeds 0/1, 1,000 steps per arm and source fracti
 0.5. The source training is included in the treatment budget.
 The existing transfer API now records synchronized training time, setup time,
 peak GPU allocation, trainable parameters and actual optimizer steps per arm.
-No transfer gain is claimed until those real-task runs are complete and audited.
+The completed FLD transfer screen below is negative.
 
 ## First screen evidence
 
@@ -140,7 +140,8 @@ For seed 0, the depth breakdown is: 78.2% at supplied proof depth
 baseline and diagnostic, not an efficiency result. The paired 150M baseline
 mean is 63.43%, versus 59.77% for 68M. The 68M training speedup is 1.76x, but
 the 3.66-point quality loss fails the one-point criterion. Cases with null proof depth
-are reported separately, not treated as zero-hop proofs. The recurrent comparisons are still running.
+are reported separately, not treated as zero-hop proofs. The completed recurrent
+comparisons are reported below.
 
 Reproduce premise-retention and proof-depth matching with:
 
