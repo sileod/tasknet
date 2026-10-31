@@ -5,6 +5,9 @@ It adds either compact answer refinement or repeated pretrained encoder blocks.
 The methods are independent; combining them and learned halting are deferred.
 The default TaskNet model path is unchanged.
 
+See the [initial measured results](recurrent-results.md) for the paired PIQA
+pilot and full inference grid. This pilot does not establish a recurrence benefit.
+
 ## Model factory and original predictions
 
 ```python
@@ -69,6 +72,8 @@ projection, 1–2 small Transformer blocks, and a residual logit update. The anc
 is reinjected on every iteration. Update weights start at standard deviation
 `1e-3` (configurable with `init_scale`), and update biases start at zero. Positive
 loop counts therefore start near the original head; zero loops preserve it.
+Residual logits accumulate in FP32 even with BF16 encoder/head execution, keeping
+small updates and matching cached and live refinement arithmetic.
 This is a classification adaptation inspired by
 [TRM](https://github.com/SamsungSAILMontreal/TinyRecursiveModels), not a port of
 its original architecture or training algorithm.

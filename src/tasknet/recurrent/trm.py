@@ -32,6 +32,9 @@ class AnswerRefiner(nn.Module):
         return z, self.update(z).squeeze(-1)
 
     def forward(self, representations, initial_logits, steps, control=False, backprop_steps=None):
+        # Keep small residual updates when the encoder/head uses BF16, and use
+        # identical arithmetic for cached FP32 logits and live reduced-precision logits.
+        initial_logits = initial_logits.float()
         x, z, y = self.prepare(representations, initial_logits)
         predictions = []
         early = max(0, steps - backprop_steps) if backprop_steps is not None else 0

@@ -112,6 +112,21 @@ def test_partial_unfreezing_truncation_and_control_parameter_match():
     assert sum(p.numel() for p in model.refiner.parameters()) == sum(p.numel() for p in control.refiner.parameters())
 
 
+def test_bfloat16_cached_and_live_refinement_match():
+    model = make_recurrent_model(base_model(True), 'MultipleChoice',
+        options(freeze_encoder=True)).eval()
+    data = inputs(True)
+    with torch.no_grad(), torch.autocast('cpu', dtype=torch.bfloat16):
+        encoded = model.encode(input_ids=data['input_ids'], attention_mask=data['attention_mask'])
+        cached = {key: value.float() for key, value in encoded.items()}
+        expected = model(**cached, steps=8).logits
+        actual = model(**data, steps=8).logits
+        zero = model(**data, steps=0).logits
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    torch.testing.assert_close(zero, encoded['initial_logits'], rtol=0, atol=0)
+    assert actual.dtype == torch.float32
+
+
 def test_depth_repeats_selected_blocks_and_cleans_up_hooks():
     model = make_recurrent_model(base_model(), 'Classification',
         options(method='depth', layer_start=1, layer_end=2, train_repeated_layers=True))
