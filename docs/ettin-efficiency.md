@@ -28,6 +28,12 @@ synchronized CUDA timing. The complete earlier sequence-length grid remains
 available through `benchmarks.recurrent`. Initial training budgets are matched
 in optimizer steps, **not** wall time or FLOPs.
 
+`python -m benchmarks.ettin_report runs/ettin-scaling` summarizes available
+paired results and refuses mismatched data fingerprints or screening budgets.
+It reports the larger model's latest measured checkpoint within the smaller
+model's training-time budget as a screening diagnostic; this is not an exact
+matched-time experiment. Its output explicitly leaves gains unconfirmed.
+
 Tasksource's split definitions matter: the current catalog yields FOLIO
 train/validation/test sizes 1001/101/102 and RTE 2490/138/139; neither tiny
 validation split can support a strong general accuracy claim by itself.
