@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "note": "Includes required B0 finetuning and feature caching; excludes separately recorded model/trainer setup. Training timers include scheduled evaluation.",
+  "rows": [
+    {
+      "seed": 0,
+      "condition": "trm-frozen",
+      "backbone_train_seconds": 174.8238112460822,
+      "cache_seconds": 34.20547831617296,
+      "head_train_seconds": 25.305533496662974,
+      "total_tracked_training_seconds": 234.33482305891812,
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.55419921875
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.54931640625
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.54931640625
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.548828125
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.54931640625
+        }
+      ]
+    },
+    {
+      "seed": 0,
+      "condition": "control",
+      "backbone_train_seconds": 174.8238112460822,
+      "cache_seconds": 33.80417506955564,
+      "head_train_seconds": 31.460017628967762,
+      "total_tracked_training_seconds": 240.0880039446056,
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.55419921875
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.54931640625
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.55224609375
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.5498046875
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.55029296875
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "condition": "trm-frozen",
+      "backbone_train_seconds": 176.26536428369582,
+      "cache_seconds": 33.96767914108932,
+      "head_train_seconds": 25.58314555697143,
+      "total_tracked_training_seconds": 235.81618898175657,
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.64453125
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.64599609375
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.6474609375
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.64599609375
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "condition": "control",
+      "backbone_train_seconds": 176.26536428369582,
+      "cache_seconds": 33.67969290912151,
+      "head_train_seconds": 26.07652335986495,
+      "total_tracked_training_seconds": 236.02158055268228,
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.6435546875
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.6474609375
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.6494140625
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.654296875
+        }
+      ]
+    }
+  ]
+}

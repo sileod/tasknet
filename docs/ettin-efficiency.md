@@ -214,3 +214,15 @@ The complete paired shared-depth results also fail to establish a gain:
 
 The four-pass mean is 57.74%, below native 68M (59.77%) and 150M (63.43%).
 The trained-checkpoint cached refiner/control trial is next, followed by transfer.
+
+
+The cached trained-checkpoint trial is now complete. At four iterations, frozen
+refinement averages 59.81% and its nonrecurrent control 59.96%, versus native
+68M 59.77% and 150M 63.43%. These are not meaningful quality gains. Including
+B0 finetuning and cache construction, tracked training times average 235.08s
+(refinement) and 238.05s (control), versus 308.69s for 150M; setup is recorded
+separately. The quality deficit prevents an efficiency claim despite lower time.
+Zero-iteration predictions exactly reproduce each paired B0 score. Raw results,
+depth breakdowns and explicit cost accounting are in
+[the cached-refinement artifacts](../benchmarks/results/fld-cached-refinement/).
+FLD → FOLIO transfer has started.
