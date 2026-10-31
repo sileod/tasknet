@@ -5,6 +5,7 @@ import gc
 import json
 import math
 import os
+import time
 from pathlib import Path
 from statistics import mean, stdev
 from types import MappingProxyType
@@ -126,9 +127,25 @@ def _run(tasks, args, seed, metric):
     set_seed(seed)
     args = dict(args, _preprocess_splits={task.name: ['train', 'validation'] if i == 0 else ['train']
                                            for i, task in enumerate(tasks)})
+    setup_started = time.perf_counter()
     model, trainer = Model_Trainer(copy.deepcopy(tasks), args)
     try:
+        device = next(model.parameters()).device
+        if device.type == 'cuda':
+            torch.cuda.synchronize(device)
+            torch.cuda.reset_peak_memory_stats(device)
+        setup_seconds = time.perf_counter() - setup_started
+        started = time.perf_counter()
         trainer.train()
+        if device.type == 'cuda':
+            torch.cuda.synchronize(device)
+        measurements = args.get('_transfer_measurements')
+        if measurements is not None:
+            measurements.update(setup_seconds=setup_seconds,
+                train_seconds=time.perf_counter() - started,
+                peak_allocated_bytes=torch.cuda.max_memory_allocated(device) if device.type == 'cuda' else None,
+                optimizer_steps=trainer.state.global_step,
+                trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad))
         target = trainer.tasks[0]
         trainer.compute_metrics = target.compute_metrics
         scores = HFTrainer.evaluate(trainer, eval_dataset=MappingProxyType({target: trainer.processed_tasks[target]['validation']}))
@@ -224,12 +241,16 @@ def transfer(sources, targets, model='answerdotai/ModernBERT-base', nrows=None,
                              add_cls=False, add_cln=False, eval_strategy='no', save_strategy='no',
                              report_to=[], learning_rate=3e-5, batched=True, _transfer_cache=runtime_cache)
             base_args.update(overrides)
+            baseline_measurements = {}
+            base_args['_transfer_measurements'] = baseline_measurements
             run_root = Path(output_dir or 'models/transfer') / 'runs' / str(target_index) / str(seed)
             base_args['output_dir'] = str(run_root / 'baseline')
             base_args['task_batch_counts'] = _batch_counts(steps, accumulation, 0, 0)
             baseline = _run([target], base_args, seed, metric)
             for source_index, group in enumerate(source_groups):
+                treatment_measurements = {}
                 args = dict(base_args, output_dir=str(run_root / f'source-{source_index}'),
+                            _transfer_measurements=treatment_measurements,
                             task_batch_counts=_batch_counts(steps, accumulation, source_fraction, len(group)))
                 treatment = _run([target, *group], args, seed, metric)
                 result.rows.append(dict(source=labels[source_index], target=target.name, seed=seed,
@@ -238,6 +259,8 @@ def transfer(sources, targets, model='answerdotai/ModernBERT-base', nrows=None,
                                         source_batches=sum(args['task_batch_counts'][1:]),
                                         target_batches=args['task_batch_counts'][0],
                                         baseline_target_batches=steps * accumulation))
+                result.rows[-1].update({'baseline_' + key: value for key, value in baseline_measurements.items()})
+                result.rows[-1].update({'treatment_' + key: value for key, value in treatment_measurements.items()})
                 if output_dir:
                     result.save(output_dir)
     return result

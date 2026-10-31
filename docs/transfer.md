@@ -215,6 +215,14 @@ still share examples. Check dataset provenance before interpreting a gain.
 
 ## CLI and output
 
+Each real run also records flat `baseline_...` and `treatment_...` fields for
+`setup_seconds`, `train_seconds`, `peak_allocated_bytes`, `optimizer_steps`, and
+`trainable_parameters`. Training time excludes held-out scoring and synchronizes
+CUDA before and after training. Setup covers model/trainer construction and
+tokenization, not tasksource dataset loading. Peak allocated GPU memory is null
+on CPU. These measurements do not turn equal optimizer steps into equal compute;
+source sequence lengths and batch composition still affect runtime.
+
 ```yaml
 # study.yaml
 sources: [glue/mrpc, glue/qqp]

@@ -116,6 +116,11 @@ def test_real_trainer_pair(tmp_path, monkeypatch, source_mc, target_mc):
     assert len(result.rows) == 1
     assert result.rows[0]['source_batches'] == 1
     assert 0 <= result.rows[0]['baseline'] <= 1
+    for arm in ['baseline', 'treatment']:
+        assert result.rows[0][arm + '_train_seconds'] > 0
+        assert result.rows[0][arm + '_optimizer_steps'] == 2
+        assert result.rows[0][arm + '_trainable_parameters'] > 0
+        assert result.rows[0][arm + '_peak_allocated_bytes'] is None
 
     import torch
     assert initial_states[0].keys() == initial_states[1].keys()
