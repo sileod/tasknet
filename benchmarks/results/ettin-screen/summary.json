@@ -3,6 +3,108 @@
   "confirmed_efficiency_gain": false,
   "comparisons": [
     {
+      "task": "folio",
+      "variant": "68m-baseline",
+      "paired_seeds": 2,
+      "mean_accuracy_delta": -0.009900990099009854,
+      "paired_delta_std": 7.850462293418876e-17,
+      "median_training_speedup": 1.410662823330353,
+      "pairs": [
+        {
+          "seed": 0,
+          "small_accuracy": 0.594059405940594,
+          "large_accuracy": 0.6039603960396039,
+          "accuracy_delta": -0.00990099009900991,
+          "training_speedup": 1.3256148196967228,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 600,
+            "seconds": 51.30664700642228,
+            "accuracy": 0.6138613861386139,
+            "phase": "train",
+            "estimated_train_flops": 1203362850305682.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.1550053124714765
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 1.1680310509497223
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 1.1616071543827469
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.6705847733241186
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.8570559687754613
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.864504566707469
+            }
+          ]
+        },
+        {
+          "seed": 1,
+          "small_accuracy": 0.5544554455445545,
+          "large_accuracy": 0.5643564356435643,
+          "accuracy_delta": -0.009900990099009799,
+          "training_speedup": 1.4957108269639834,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 600,
+            "seconds": 49.97751545347273,
+            "accuracy": 0.5544554455445545,
+            "phase": "train",
+            "estimated_train_flops": 1198643046512274.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.1478947104474617
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 0.7912674775831487
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 0.7802587918065494
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.157444711564759
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.8303273750922364
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.8490986662688274
+            }
+          ]
+        }
+      ]
+    },
+    {
       "task": "glue-mnli",
       "variant": "68m-baseline",
       "paired_seeds": 2,

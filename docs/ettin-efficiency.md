@@ -96,3 +96,13 @@ The four-step refiner mean is 76.27%, with no gain from additional iterations.
 The other tasks remain in progress. If this size
 pair cannot close the quality gap, extend the ladder to 150M/400M and evaluate
 source+target transfer rather than weakening the quality requirement.
+
+The two-seed FOLIO screen is a candidate for confirmation: 68M averages 57.43%
+versus 58.42% for 150M, trains 1.41x faster, and has approximately 1.85x faster
+batch-32 inference at lengths 128/256. Batch-1 timings are less consistent.
+The quality difference is one example per seed on only 101 validation rows.
+This is not adequate evidence of general accuracy equivalence: confirm with
+additional paired seeds, untouched held-out predictions and uncertainty before
+claiming a gain. Raw [68M](../benchmarks/results/ettin-screen/folio/68m-baseline.json)
+and [150M](../benchmarks/results/ettin-screen/folio/150m-baseline.json) results are
+preserved alongside the failures.
