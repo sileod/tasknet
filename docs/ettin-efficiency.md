@@ -169,22 +169,21 @@ assume independent evaluation examples; clustered stories need a grouped audit
 before general population claims. No confirmed efficiency gain is claimed yet.
 
 
-A follow-up frozen-head trial is queued after the first FLD comparison:
+The completed frozen-head follow-up is reproducible with:
 `bash benchmarks/fld_cached_refinement.sh`. It starts from each trained 68M B0
 checkpoint, freezes its encoder and classifier, and compares compact refinement
 with the same-parameter nonrecurrent control. It uses cached features and a
 1e-3 learning rate for the new head, instead of reusing the backbone's 3e-5 rate.
 The copied `backbone-training-results.json` records the required earlier B0 cost.
 Any total training-cost comparison must add B0 finetuning, cache construction and
-head training; a pretrained local checkpoint is not free. FLD → FOLIO transfer
-runs afterward. None of these queued trials is counted as a gain.
+head training; a pretrained local checkpoint is not free. FLD → FOLIO transfer was also completed. Neither trial establishes a gain.
 
 
 The joint-finetuned 68M compact refiner finished both FLD seeds. Its four-step
 mean is 59.86%, versus 59.91% with zero refinement on that same trained model;
 more iterations do not establish a benefit. The shared encoder-depth experiment
-has also completed; its paired results are reported below. These negative results motivate the trained-checkpoint frozen-head
-trial, not a claim that recurrence improves reasoning.
+has also completed; its paired results are reported below. The trained-checkpoint frozen-head follow-up below tests whether preserving the
+trained encoder changes this result.
 
 One trained recurrent-depth seed provides a useful preliminary signal: its
 zero-extra-pass accuracy is 55.86%, rising to 60.30% with one extra selected-block
@@ -213,7 +212,7 @@ The complete paired shared-depth results also fail to establish a gain:
 | 8 | 55.86% |
 
 The four-pass mean is 57.74%, below native 68M (59.77%) and 150M (63.43%).
-The trained-checkpoint cached refiner/control trial is next, followed by transfer.
+The trained-checkpoint cached refiner/control results follow below.
 
 
 The cached trained-checkpoint trial is now complete. At four iterations, frozen
@@ -225,4 +224,17 @@ separately. The quality deficit prevents an efficiency claim despite lower time.
 Zero-iteration predictions exactly reproduce each paired B0 score. Raw results,
 depth breakdowns and explicit cost accounting are in
 [the cached-refinement artifacts](../benchmarks/results/fld-cached-refinement/).
-FLD → FOLIO transfer has started.
+FLD → FOLIO joint transfer also completed (two paired seeds, 1,000 optimizer
+steps, source batch fraction 0.5, full contexts up to 2,048 tokens):
+
+| Encoder | FOLIO only | FLD + FOLIO | Delta |
+|---|---:|---:|---:|
+| Ettin 68M | 59.41% | 53.96% | −5.45 pp |
+| Ettin 150M | 59.41% | 54.46% | −4.95 pp |
+
+These validation screens contain only 101 FOLIO examples and do not establish
+population effects. Both treatments consumed about 2.08× as many nonpadding
+tokens as their baselines, despite equal optimizer steps, and took longer.
+This tests joint mixing, not sequential FLD pretraining followed by FOLIO
+adaptation. Raw paired results, training times and consumed-token counts are in
+[the transfer artifacts](../benchmarks/results/fld-transfer/).

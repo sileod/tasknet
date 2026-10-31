@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "config": {
+    "model": "jhu-clsp/ettin-encoder-68m",
+    "nrows": 8192,
+    "steps": 1000,
+    "seeds": [
+      0,
+      1
+    ],
+    "data_seed": 0,
+    "source_fraction": 0.5,
+    "eval_split": "validation",
+    "holdout_fraction": 0.2,
+    "metric": "accuracy",
+    "sources": [
+      [
+        "FLD.v2/default"
+      ]
+    ],
+    "targets": [
+      "folio"
+    ],
+    "training_args": {
+      "per_device_train_batch_size": 16,
+      "per_device_eval_batch_size": 64,
+      "max_length": 2048,
+      "bf16": true,
+      "learning_rate": 3e-05,
+      "attn_implementation": "sdpa",
+      "disable_tqdm": true
+    },
+    "versions": {
+      "torch": "2.9.1+cu126",
+      "transformers": "5.20.0",
+      "datasets": "5.0.1"
+    },
+    "datasets": {
+      "folio": {
+        "train": {
+          "rows": 1001,
+          "fingerprint": "9461ed0e87590523"
+        },
+        "validation": {
+          "rows": 101,
+          "fingerprint": "453f226fe218ccd1"
+        }
+      },
+      "FLD.v2/default": {
+        "train": {
+          "rows": 8192,
+          "fingerprint": "62a68e62701e39c6"
+        },
+        "validation": {
+          "rows": 5000,
+          "fingerprint": "e516dcbc722bb9d8"
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seed": 0,
+      "metric": "accuracy",
+      "baseline": 0.594059405940594,
+      "treatment": 0.5346534653465347,
+      "delta": -0.05940594059405935,
+      "source_batches": 500,
+      "target_batches": 500,
+      "baseline_target_batches": 1000,
+      "baseline_setup_seconds": 4.4347081910818815,
+      "baseline_train_seconds": 63.3976868391037,
+      "baseline_examples": 15895,
+      "baseline_tokens": 1538512,
+      "baseline_examples_per_second": 250.71892670689624,
+      "baseline_tokens_per_second": 24267.636197903765,
+      "baseline_peak_allocated_bytes": 2705715712,
+      "baseline_optimizer_steps": 1000,
+      "baseline_trainable_parameters": 68408835,
+      "treatment_setup_seconds": 4.739829376339912,
+      "treatment_train_seconds": 106.14428658038378,
+      "treatment_examples": 15951,
+      "treatment_tokens": 3205223,
+      "treatment_examples_per_second": 150.27657647800197,
+      "treatment_tokens_per_second": 30196.849055767718,
+      "treatment_peak_allocated_bytes": 5832180736,
+      "treatment_optimizer_steps": 1000,
+      "treatment_trainable_parameters": 68674054
+    },
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seed": 1,
+      "metric": "accuracy",
+      "baseline": 0.594059405940594,
+      "treatment": 0.5445544554455446,
+      "delta": -0.04950495049504944,
+      "source_batches": 500,
+      "target_batches": 500,
+      "baseline_target_batches": 1000,
+      "baseline_setup_seconds": 1.9175841715186834,
+      "baseline_train_seconds": 64.06692677550018,
+      "baseline_examples": 15895,
+      "baseline_tokens": 1538199,
+      "baseline_examples_per_second": 248.0999292458399,
+      "baseline_tokens_per_second": 24009.252158919262,
+      "baseline_peak_allocated_bytes": 2705332736,
+      "baseline_optimizer_steps": 1000,
+      "baseline_trainable_parameters": 68408835,
+      "treatment_setup_seconds": 2.4127358831465244,
+      "treatment_train_seconds": 106.18673907220364,
+      "treatment_examples": 15951,
+      "treatment_tokens": 3205722,
+      "treatment_examples_per_second": 150.216497270472,
+      "treatment_tokens_per_second": 30189.475898871046,
+      "treatment_peak_allocated_bytes": 5814614016,
+      "treatment_optimizer_steps": 1000,
+      "treatment_trainable_parameters": 68674054
+    }
+  ],
+  "summary": [
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seeds": 2,
+      "baseline": 0.594059405940594,
+      "treatment": 0.5396039603960396,
+      "delta": -0.05445544554455439,
+      "delta_std": 0.007001057239470774
+    }
+  ],
+  "matrix": {
+    "FLD.v2/default": {
+      "folio": -0.05445544554455439
+    }
+  }
+}

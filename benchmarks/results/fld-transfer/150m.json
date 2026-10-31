@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "config": {
+    "model": "jhu-clsp/ettin-encoder-150m",
+    "nrows": 8192,
+    "steps": 1000,
+    "seeds": [
+      0,
+      1
+    ],
+    "data_seed": 0,
+    "source_fraction": 0.5,
+    "eval_split": "validation",
+    "holdout_fraction": 0.2,
+    "metric": "accuracy",
+    "sources": [
+      [
+        "FLD.v2/default"
+      ]
+    ],
+    "targets": [
+      "folio"
+    ],
+    "training_args": {
+      "per_device_train_batch_size": 16,
+      "per_device_eval_batch_size": 64,
+      "max_length": 2048,
+      "bf16": true,
+      "learning_rate": 3e-05,
+      "attn_implementation": "sdpa",
+      "disable_tqdm": true
+    },
+    "versions": {
+      "torch": "2.9.1+cu126",
+      "transformers": "5.20.0",
+      "datasets": "5.0.1"
+    },
+    "datasets": {
+      "folio": {
+        "train": {
+          "rows": 1001,
+          "fingerprint": "9461ed0e87590523"
+        },
+        "validation": {
+          "rows": 101,
+          "fingerprint": "453f226fe218ccd1"
+        }
+      },
+      "FLD.v2/default": {
+        "train": {
+          "rows": 8192,
+          "fingerprint": "62a68e62701e39c6"
+        },
+        "validation": {
+          "rows": 5000,
+          "fingerprint": "e516dcbc722bb9d8"
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seed": 0,
+      "metric": "accuracy",
+      "baseline": 0.6138613861386139,
+      "treatment": 0.5643564356435643,
+      "delta": -0.04950495049504955,
+      "source_batches": 500,
+      "target_batches": 500,
+      "baseline_target_batches": 1000,
+      "baseline_setup_seconds": 2.588321750983596,
+      "baseline_train_seconds": 86.94390253163874,
+      "baseline_examples": 15895,
+      "baseline_tokens": 1538512,
+      "baseline_examples_per_second": 182.81903085976427,
+      "baseline_tokens_per_second": 17695.455980252762,
+      "baseline_peak_allocated_bytes": 5118324224,
+      "baseline_optimizer_steps": 1000,
+      "baseline_trainable_parameters": 149607171,
+      "treatment_setup_seconds": 4.983906090259552,
+      "treatment_train_seconds": 173.45685680396855,
+      "treatment_examples": 15951,
+      "treatment_tokens": 3205223,
+      "treatment_examples_per_second": 91.95946642816749,
+      "treatment_tokens_per_second": 18478.502718531145,
+      "treatment_peak_allocated_bytes": 10331545600,
+      "treatment_optimizer_steps": 1000,
+      "treatment_trainable_parameters": 150201606
+    },
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seed": 1,
+      "metric": "accuracy",
+      "baseline": 0.5742574257425742,
+      "treatment": 0.5247524752475248,
+      "delta": -0.04950495049504944,
+      "source_batches": 500,
+      "target_batches": 500,
+      "baseline_target_batches": 1000,
+      "baseline_setup_seconds": 2.5212115608155727,
+      "baseline_train_seconds": 87.95003191754222,
+      "baseline_examples": 15895,
+      "baseline_tokens": 1538199,
+      "baseline_examples_per_second": 180.72762059827787,
+      "baseline_tokens_per_second": 17489.464943482253,
+      "baseline_peak_allocated_bytes": 5119327232,
+      "baseline_optimizer_steps": 1000,
+      "baseline_trainable_parameters": 149607171,
+      "treatment_setup_seconds": 3.112725982442498,
+      "treatment_train_seconds": 172.90374107286334,
+      "treatment_examples": 15951,
+      "treatment_tokens": 3205722,
+      "treatment_examples_per_second": 92.25364298669565,
+      "treatment_tokens_per_second": 18540.501091003447,
+      "treatment_peak_allocated_bytes": 10315858944,
+      "treatment_optimizer_steps": 1000,
+      "treatment_trainable_parameters": 150201606
+    }
+  ],
+  "summary": [
+    {
+      "source": "FLD.v2/default",
+      "target": "folio",
+      "seeds": 2,
+      "baseline": 0.594059405940594,
+      "treatment": 0.5445544554455446,
+      "delta": -0.04950495049504949,
+      "delta_std": 7.850462293418876e-17
+    }
+  ],
+  "matrix": {
+    "FLD.v2/default": {
+      "folio": -0.04950495049504949
+    }
+  }
+}

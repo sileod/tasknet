@@ -1,4 +1,4 @@
-"""Equal-step MNLI transfer measurements across the Ettin encoder sizes."""
+"""Equal-step tasksource transfer measurements across the Ettin encoder sizes."""
 import argparse
 from pathlib import Path
 import tasknet as tn
