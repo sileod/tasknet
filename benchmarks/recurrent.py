@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import platform
 import statistics
+from importlib.metadata import version
 from collections import defaultdict
 import time
 from collections import Counter
@@ -70,7 +71,9 @@ class Recorder(TrainerCallback):
                       else self.trainer.model)
         n = getattr(task_model, 'last_steps', 0)
         self.iterations[n] += 1
-        batch, length, choices = self.batches.pop(0)
+        batch, length, choices, tokens = self.batches.pop(0)
+        self.examples += batch
+        self.tokens += tokens
         enc, ref = estimate_forward_flops(task_model, batch, length, choices, n)
         recurrent = getattr(task_model, 'recurrent', None)
         fraction = 1.0
@@ -91,8 +94,7 @@ class Recorder(TrainerCallback):
                 batch = original_collate(features)
                 n = len(features)
                 choices = batch['representations'].shape[1] if batch['representations'].ndim == 3 else 1
-                self.examples += n
-                self.batches.append((n, 0, choices))
+                self.batches.append((n, 0, choices, 0))
                 return batch
 
             def evaluation(*args, **kwargs):
@@ -116,9 +118,7 @@ class Recorder(TrainerCallback):
                     batch = collate(features)
                     mask = batch['attention_mask']
                     choices = mask.shape[1] if mask.ndim == 3 else 1
-                    self.examples += len(features)
-                    self.tokens += int(mask.sum())
-                    self.batches.append((len(features), int(mask.sum(-1).max()), choices))
+                    self.batches.append((len(features), int(mask.sum(-1).max()), choices, int(mask.sum())))
                     return batch
                 result.data_loader.collate_fn = counted
             return result
@@ -372,6 +372,7 @@ def main():
                 args.latency_lengths, args.eval_iterations if config is not None else [0],
                 args.latency_repeats, dtype)
             runs.append(dict(condition=condition, seed=seed, setup_seconds=setup_seconds,
+                model_revision=getattr(task_model.config, '_commit_hash', None),
                 train_seconds=train_seconds, peak_allocated_bytes=peak,
                 cached_training=cached_training, cache_seconds=cache_seconds,
                 cache_estimated_forward_flops=cache_flops,
@@ -400,7 +401,8 @@ def main():
                     paired_delta_std=statistics.stdev(deltas) if len(deltas)>1 else None))
             payload = dict(schema_version=1, summary=summary, config=vars(args), runs=runs,
                 environment=dict(torch=torch.__version__, transformers=transformers.__version__,
-                    datasets=datasets.__version__, python=platform.python_version(),
+                    datasets=datasets.__version__, tasksource=version('tasksource'),
+                    tasknet=version('tasknet'), python=platform.python_version(),
                     device=torch.cuda.get_device_name() if torch.cuda.is_available() else 'cpu'),
                 splits={k:dict(rows=len(v),fingerprint=v._fingerprint) for k,v in task.dataset.items()},
                 flops_method='Analytic 2*linear_weights*tokens + dense attention; backward ~2x trainable fraction; excludes norms/activations and local-window savings')
