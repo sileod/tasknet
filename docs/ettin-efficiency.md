@@ -185,3 +185,11 @@ mean is 59.86%, versus 59.91% with zero refinement on that same trained model;
 more iterations do not establish a benefit. The shared encoder-depth experiment
 is still live. These negative results motivate the trained-checkpoint frozen-head
 trial, not a claim that recurrence improves reasoning.
+
+One trained recurrent-depth seed provides a useful preliminary signal: its
+zero-extra-pass accuracy is 55.86%, rising to 60.30% with one extra selected-block
+group pass, then falling at deeper counts (60.11% at two, 59.57% at four,
+57.08% at eight). This is a comparison within the same depth-trained checkpoint,
+not a gain over its paired 150M model (62.50%) or a replicated efficiency result.
+The second depth seed is still running. Partial depth evidence is archived
+explicitly as partial.
