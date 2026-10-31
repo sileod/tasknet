@@ -45,16 +45,17 @@ def compare(small, large, iterations):
 
 def report(root):
     rows = []
-    for task in sorted(root.iterdir()):
+    tasks = [root] if (root/'150m-baseline'/'results.json').is_file() else sorted(root.iterdir())
+    for task in tasks:
         large_path = task/'150m-baseline'/'results.json'
         if not large_path.is_file():
             continue
         large = json.loads(large_path.read_text())
-        for variant, iterations in [('68m-baseline', 0), ('68m-trm', 4)]:
+        for variant, iterations in [('68m-baseline', 0), ('68m-trm', 4), ('68m-depth', 4)]:
             path = task/variant/'results.json'
             if path.is_file():
                 small = json.loads(path.read_text())
-                rows.append(dict(task=task.name, variant=variant,
+                rows.append(dict(task=large['config']['task'] if task == root else task.name, variant=variant,
                     **compare(small, large, iterations)))
     return dict(screen_only=True, confirmed_efficiency_gain=False, comparisons=rows)
 

@@ -1,0 +1,57 @@
+{
+  "dataset": "hitachi-nlp/FLD.v2",
+  "config": "default",
+  "revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "label_names": [
+    "DISPROVED",
+    "PROVED",
+    "UNKNOWN"
+  ],
+  "splits": {
+    "train": {
+      "rows": 8192,
+      "fingerprint": "8c9669731eed80ab",
+      "max_tokens": 782,
+      "truncated_at_256": 4811,
+      "truncated_at_512": 849,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "null": 2732,
+        "3": 1865,
+        "2": 1760,
+        "1": 1647,
+        "0": 188
+      }
+    },
+    "validation": {
+      "rows": 2048,
+      "fingerprint": "b10a65facd0b3d7e",
+      "max_tokens": 738,
+      "truncated_at_256": 1212,
+      "truncated_at_512": 187,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "2": 453,
+        "3": 453,
+        "null": 658,
+        "1": 436,
+        "0": 48
+      }
+    },
+    "test": {
+      "rows": 2048,
+      "fingerprint": "0d343db68d8cc9ec",
+      "max_tokens": 769,
+      "truncated_at_256": 1187,
+      "truncated_at_512": 214,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "2": 461,
+        "0": 53,
+        "null": 702,
+        "3": 455,
+        "1": 377
+      }
+    }
+  }
+}

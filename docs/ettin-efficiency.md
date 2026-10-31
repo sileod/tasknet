@@ -66,9 +66,19 @@ The broader goal remains active until measured evidence supports the gains.
 Screening compatibility, smaller parameter counts, faster but less accurate
 models, and launching jobs do not establish success.
 
-The transfer phase uses `python -m benchmarks.ettin_transfer`: MNLI → FOLIO/RTE,
-68M and 150M, paired seeds 0/1, 1,000 steps per arm and source fraction 0.5.
-It is queued behind the classification screen so GPU measurements do not overlap.
+The current primary reasoning targets are FOLIO and FLD.v2; MNLI remains a
+classification/transfer-source control. The unfinished broad RTE/MRPC queue was
+stopped after its live RTE-68M job completed. The unstarted MNLI transfer queue
+was replaced with FLD.v2 → FOLIO, queued behind the FLD screen to avoid GPU
+measurement overlap. Use:
+
+```sh
+python -m benchmarks.ettin_transfer --sources FLD.v2/default --targets folio \
+  --max-length 2048 --output runs/fld-transfer
+```
+
+This compares 68M and 150M with seeds 0/1, 1,000 steps per arm and source fraction
+0.5. The source training is included in the treatment budget.
 The existing transfer API now records synchronized training time, setup time,
 peak GPU allocation, trainable parameters and actual optimizer steps per arm.
 No transfer gain is claimed until those real-task runs are complete and audited.
@@ -93,7 +103,7 @@ plus the [screen comparison](../benchmarks/results/ettin-screen/summary.json),
 are committed. The [paired refiner runs](../benchmarks/results/ettin-screen/glue-mnli/68m-trm.json)
 also finished: both seeds have identical accuracy at 0/1/2/4/8 iterations.
 The four-step refiner mean is 76.27%, with no gain from additional iterations.
-The other tasks remain in progress. If this size
+The other broad-screen tasks remain supporting controls. If this size
 pair cannot close the quality gap, extend the ladder to 150M/400M and evaluate
 source+target transfer rather than weakening the quality requirement.
 
@@ -106,3 +116,65 @@ additional paired seeds, untouched held-out predictions and uncertainty before
 claiming a gain. Raw [68M](../benchmarks/results/ettin-screen/folio/68m-baseline.json)
 and [150M](../benchmarks/results/ettin-screen/folio/150m-baseline.json) results are
 preserved alongside the failures.
+
+
+## FLD.v2 reasoning screen
+
+[FLD.v2](https://huggingface.co/datasets/hitachi-nlp/FLD.v2) is available through
+Tasksource IDs `FLD.v2/default` and `FLD.v2/star`. The current screen uses the
+**default** subset, dataset commit `7ead9a0429604efb473e96d4dc279bc3453ce995`.
+Only `context` and `hypothesis` enter the model. The supervised classes are
+DISPROVED/PROVED/UNKNOWN; proof text, formulas and depth metadata do not enter
+training inputs.
+
+`TASKNET_PYTHON=python bash benchmarks/fld_scaling.sh` compares 68M/150M baselines,
+68M compact refinement and 68M trainable shared encoder-depth recurrence. Each
+uses seeds 0/1, 1,000 optimizer steps, 8,192 training examples and a fixed
+2,048-row validation screen. Sequence limit 2,048 retains every audited input
+(maximum observed training length 782 tokens). A 256-token cap would cut 4,811
+training examples; 512 would cut 849. Equal steps are not equal compute.
+
+The paired 68M baselines score 55.42% and 64.11% (mean 59.77%).
+For seed 0, the depth breakdown is: 78.2% at supplied proof depth
+1 (436 examples), 52.8% at depth 2 (453), and 40.4% at depth 3 (453). This is a
+baseline and diagnostic, not an efficiency result. The paired 150M baseline
+mean is 63.43%, versus 59.77% for 68M. The 68M training speedup is 1.76x, but
+the 3.66-point quality loss fails the one-point criterion. Cases with null proof depth
+are reported separately, not treated as zero-hop proofs. The recurrent comparisons are still running.
+
+Reproduce premise-retention and proof-depth matching with:
+
+```sh
+python -m benchmarks.fld_data_audit --revision 7ead9a0429604efb473e96d4dc279bc3453ce995
+python -m benchmarks.fld_depth_report --predictions runs/fld-scaling/68m-baseline \
+  --audit runs/fld-scaling/data-audit.json --output runs/fld-scaling/depth-report.json
+```
+
+The audit requires unique exact matches of standardized context/hypothesis to
+raw source rows and verifies the proof label. Prediction fingerprints must
+match the audited split before depth scores are computed.
+
+[Initial FLD evidence](../benchmarks/results/fld-screen/) includes raw aggregate
+results, ordered seed-0 predictions, the depth report and input-retention audit.
+Confirmation support uses `--eval-split test --save-predictions`, with five new
+paired seeds and no evaluation cap. Test mode disables initial and in-training
+scoring, so held-out test predictions are produced only after training. Fix the
+chosen recurrent evaluation depth before confirmation; do not select it on test
+scores. Training times from test mode exclude the screen's scheduled evaluation
+overhead and must be paired against the same mode. `benchmarks.ettin_confirm` reports paired
+seed/example bootstrap intervals plus conservative gain/harm binomial bounds;
+it refuses validation reuse and does not mistake zero observed disagreements
+on a tiny sample for one-point equivalence. These uncertainty calculations
+assume independent evaluation examples; clustered stories need a grouped audit
+before general population claims. No confirmed efficiency gain is claimed yet.
+
+
+A follow-up frozen-head trial is queued after the first FLD comparison:
+`bash benchmarks/fld_cached_refinement.sh`. It starts from each trained 68M B0
+checkpoint, freezes its encoder and classifier, and compares compact refinement
+with the same-parameter nonrecurrent control. It uses cached features and a
+1e-3 learning rate for the new head, instead of reusing the backbone's 3e-5 rate.
+The copied `backbone-training-results.json` records the required earlier B0 cost.
+Any total training-cost comparison must add B0 finetuning, cache construction and
+head training; a pretrained local checkpoint is not free. FLD → FOLIO transfer
+runs afterward. None of these queued trials is counted as a gain.

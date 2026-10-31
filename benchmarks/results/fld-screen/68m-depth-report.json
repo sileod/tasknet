@@ -1,0 +1,100 @@
+[
+  {
+    "prediction_file": "runs/fld-scaling/68m-baseline/baseline/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5275938189845475,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5273556231003039,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-baseline/baseline/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5960264900662252,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,88 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "comparisons": [
+    {
+      "task": "FLD.v2/default",
+      "variant": "68m-baseline",
+      "paired_seeds": 2,
+      "mean_accuracy_delta": -0.03662109375,
+      "paired_delta_std": 0.04833737762017415,
+      "median_training_speedup": 1.7585049901198082,
+      "pairs": [
+        {
+          "seed": 0,
+          "small_accuracy": 0.55419921875,
+          "large_accuracy": 0.625,
+          "accuracy_delta": -0.07080078125,
+          "training_speedup": 1.7616095743386853,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 400,
+            "seconds": 124.10280750133097,
+            "accuracy": 0.4951171875,
+            "phase": "train",
+            "estimated_train_flops": 2853797338169856.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.1462685443219023
+            },
+            {
+              "batch": 1,
+              "sequence_length": 512,
+              "inference_speedup": 1.157016444535782
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.8072745096048466
+            },
+            {
+              "batch": 32,
+              "sequence_length": 512,
+              "inference_speedup": 1.8399342865560817
+            }
+          ]
+        },
+        {
+          "seed": 1,
+          "small_accuracy": 0.64111328125,
+          "large_accuracy": 0.6435546875,
+          "accuracy_delta": -0.00244140625,
+          "training_speedup": 1.7554004059009314,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 400,
+            "seconds": 124.15661846846342,
+            "accuracy": 0.5224609375,
+            "phase": "train",
+            "estimated_train_flops": 2860951061316096.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.13891131549043
+            },
+            {
+              "batch": 1,
+              "sequence_length": 512,
+              "inference_speedup": 1.1409354543827468
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.817866249212625
+            },
+            {
+              "batch": 32,
+              "sequence_length": 512,
+              "inference_speedup": 1.8346057400850593
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
