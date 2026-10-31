@@ -243,5 +243,250 @@
         }
       }
     }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-depth/depth/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.53125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.3068432671081678,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.1545253863134658,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.8753799392097265,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.6651376146788991,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.2708333333333333,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-depth/depth/1/predictions-1.json",
+    "seed": 1,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.5556640625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.39514348785871967,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.2229580573951435,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7781155015197568,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7408256880733946,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.4791666666666667,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-depth/depth/1/predictions-2.json",
+    "seed": 1,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.5654296875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4216335540838852,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.2693156732891832,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7386018237082067,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.768348623853211,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-depth/depth/1/predictions-4.json",
+    "seed": 1,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55908203125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4260485651214128,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.25165562913907286,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7370820668693009,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7660550458715596,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.3958333333333333,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-scaling/68m-depth/depth/1/predictions-8.json",
+    "seed": 1,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54638671875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4083885209713024,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.24944812362030905,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7218844984802432,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7522935779816514,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.375,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
   }
 ]

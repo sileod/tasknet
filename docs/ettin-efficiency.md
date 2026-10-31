@@ -183,7 +183,7 @@ runs afterward. None of these queued trials is counted as a gain.
 The joint-finetuned 68M compact refiner finished both FLD seeds. Its four-step
 mean is 59.86%, versus 59.91% with zero refinement on that same trained model;
 more iterations do not establish a benefit. The shared encoder-depth experiment
-is still live. These negative results motivate the trained-checkpoint frozen-head
+has also completed; its paired results are reported below. These negative results motivate the trained-checkpoint frozen-head
 trial, not a claim that recurrence improves reasoning.
 
 One trained recurrent-depth seed provides a useful preliminary signal: its
@@ -191,8 +191,7 @@ zero-extra-pass accuracy is 55.86%, rising to 60.30% with one extra selected-blo
 group pass, then falling at deeper counts (60.11% at two, 59.57% at four,
 57.08% at eight). This is a comparison within the same depth-trained checkpoint,
 not a gain over its paired 150M model (62.50%) or a replicated efficiency result.
-The second depth seed is still running. Partial depth evidence is archived
-explicitly as partial.
+Both depth seeds have now completed; the paired results are reported below.
 
 The depth breakdown limits that preliminary interpretation. On the same seed,
 one extra pass raises UNKNOWN accuracy from 30.24% to 55.78%, while depth-2
@@ -201,3 +200,17 @@ overall improvement is not evidence of better deeper proofs. Also, zero extra
 passes were not in this model's training-depth schedule. Native B0 and matched
 training-cost comparisons remain necessary; the zero-pass intervention alone
 cannot establish an iterative-reasoning benefit.
+
+
+The complete paired shared-depth results also fail to establish a gain:
+
+| Extra passes | Mean accuracy |
+|---:|---:|
+| 0 | 54.49% |
+| 1 | 57.93% |
+| 2 | 58.33% |
+| 4 | 57.74% |
+| 8 | 55.86% |
+
+The four-pass mean is 57.74%, below native 68M (59.77%) and 150M (63.43%).
+The trained-checkpoint cached refiner/control trial is next, followed by transfer.
