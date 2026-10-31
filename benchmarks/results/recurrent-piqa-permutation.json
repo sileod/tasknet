@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "model": "dmis-lab/UltraBERT-150M",
+  "model_revision": "545ac9d9c7aece444f014ada5a1e9818132b4d35",
+  "code_revision": "d24ff11",
+  "task": "piqa",
+  "seed": 0,
+  "sequence_length": 128,
+  "checks": [
+    {
+      "condition": "baseline",
+      "precision": "bf16",
+      "examples": 919,
+      "ties": 8,
+      "changed_predictions": 4,
+      "changed_with_tied_original_logits": 4,
+      "max_absolute_logit_difference": 0,
+      "correct_original": 510,
+      "correct_shuffled": 506
+    },
+    {
+      "condition": "baseline",
+      "precision": "fp32",
+      "examples": 919,
+      "ties": 1,
+      "changed_predictions": 1,
+      "changed_with_tied_original_logits": 1,
+      "max_absolute_logit_difference": 0,
+      "correct_original": 510,
+      "correct_shuffled": 509
+    },
+    {
+      "condition": "trm-frozen",
+      "precision": "bf16",
+      "examples": 919,
+      "ties": 76,
+      "changed_predictions": 37,
+      "changed_with_tied_original_logits": 37,
+      "max_absolute_logit_difference": 0,
+      "correct_original": 465,
+      "correct_shuffled": 466
+    },
+    {
+      "condition": "trm-frozen",
+      "precision": "fp32",
+      "examples": 919,
+      "ties": 1,
+      "changed_predictions": 1,
+      "changed_with_tied_original_logits": 1,
+      "max_absolute_logit_difference": 0,
+      "correct_original": 478,
+      "correct_shuffled": 477
+    }
+  ]
+}

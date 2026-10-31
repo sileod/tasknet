@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "model": "dmis-lab/UltraBERT-380M",
+  "model_revision": "671a38c087233c0cc72c5bfceea6fffa2822f1db",
+  "device": "cpu",
+  "torch": "2.9.1+cu126",
+  "transformers": "5.20.0",
+  "checks": [
+    {
+      "task": "classification",
+      "zero_loop_exact": true,
+      "reload_exact": true,
+      "frozen_gradients": true,
+      "output_shape": [
+        1,
+        2
+      ]
+    },
+    {
+      "task": "mcq",
+      "zero_loop_exact": true,
+      "reload_exact": true,
+      "frozen_gradients": true,
+      "output_shape": [
+        1,
+        4
+      ]
+    }
+  ]
+}
