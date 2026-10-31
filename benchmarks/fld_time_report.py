@@ -35,6 +35,8 @@ def report(root):
             for key, value in expected.items():
                 if config.get(key) != value:
                     raise ValueError(f'Protocol mismatch: {size}/{seed}/{key}')
+            if config.get('group_by_length', False):
+                raise ValueError('Confirmation protocol uses random batching')
             if len(data['runs']) != 1:
                 raise ValueError('Expected one final checkpoint per run')
             run = data['runs'][0]

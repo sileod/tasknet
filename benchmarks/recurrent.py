@@ -299,6 +299,7 @@ def main():
     parser.add_argument('--eval-rows', type=int, help='Fixed held-out subset for screening; omit for full evaluation')
     parser.add_argument('--eval-split', choices=['validation', 'test'], default='validation')
     parser.add_argument('--save-predictions', action='store_true', help='Save ordered evaluation predictions for paired audits')
+    parser.add_argument('--group-by-length', action='store_true', help='Group training examples by token length to reduce padding')
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--eval-batch-size', type=int, default=32)
     parser.add_argument('--max-length', type=int, default=128)
@@ -352,6 +353,7 @@ def main():
             config = condition_config(condition, args)
             hparams = dict(model_name=args.initial_checkpoint or args.model, seed=seed, data_seed=seed,
                 max_steps=args.steps, per_device_train_batch_size=args.batch_size,
+                group_by_length=args.group_by_length,
                 per_device_eval_batch_size=args.eval_batch_size, learning_rate=args.learning_rate,
                 bf16=args.precision == 'bf16', attn_implementation=args.attn,
                 trust_remote_code=args.trust_remote_code, revision=args.revision,

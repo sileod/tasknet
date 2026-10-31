@@ -351,3 +351,25 @@ hypothesis; the test split shares none. Distinct contexts do not rule out shared
 logical templates or other dependence, so uncertainty is interpreted within
 this benchmark. The [audit summary](../benchmarks/results/fld-time-confirm/data-audit-summary.json)
 is recorded before reading the complete confirmation scores.
+
+A separate padding audit found a substantial training-throughput opportunity:
+random batches process approximately 4.67M padded token positions per FLD epoch,
+versus 2.56M with the standard Transformers length-grouped sampler (same 8,192
+examples and batch size 16). Dense attention positions fall by about 63%.
+These are geometry estimates, not GPU measurements or accuracy gains. The
+[five-seed geometry audit](../benchmarks/results/fld-padding-audit.json) is saved.
+
+TaskNet now honors opt-in `group_by_length=True` (also the newer Transformers
+`train_sampling_strategy='group_by_length'`) in its existing per-task loader.
+Classification uses nonpadding token lengths; MCQ uses the longest candidate
+and retains the existing effective example batch size. The single-process sampler covers every example once per task-loader pass;
+evaluation ordering and default random training remain unchanged. Both spellings work with the existing TaskNet hparams.
+The benchmark flag is `--group-by-length`.
+
+`bash benchmarks/fld_grouped.sh` measures this optimization on **both** native
+68M and 150M encoders, paired seeds 0/1, 1,000 steps and the existing validation
+screen. Compare measured time and quality with their same-size random-batch
+references, then compare sizes under the same sampler. Length grouping changes
+training order and may affect optimization, so padding estimates alone cannot
+establish equivalent quality or an efficiency gain. The original untouched-test
+confirmation stays on random batching; its audit rejects grouped runs.

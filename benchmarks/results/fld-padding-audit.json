@@ -1,0 +1,74 @@
+{
+  "task": "FLD.v2/default",
+  "fingerprint": "8c9669731eed80ab",
+  "batch_size": 16,
+  "nonpadding_tokens": 2493585,
+  "measurements": [
+    {
+      "seed": 0,
+      "random": {
+        "examples": 8192,
+        "padded_tokens": 4660672,
+        "dense_attention_positions": 2688305664
+      },
+      "length_grouped": {
+        "examples": 8192,
+        "padded_tokens": 2556432,
+        "dense_attention_positions": 1001442608
+      }
+    },
+    {
+      "seed": 1,
+      "random": {
+        "examples": 8192,
+        "padded_tokens": 4669024,
+        "dense_attention_positions": 2696398144
+      },
+      "length_grouped": {
+        "examples": 8192,
+        "padded_tokens": 2555136,
+        "dense_attention_positions": 1000064288
+      }
+    },
+    {
+      "seed": 2,
+      "random": {
+        "examples": 8192,
+        "padded_tokens": 4651264,
+        "dense_attention_positions": 2679269088
+      },
+      "length_grouped": {
+        "examples": 8192,
+        "padded_tokens": 2554864,
+        "dense_attention_positions": 999359440
+      }
+    },
+    {
+      "seed": 3,
+      "random": {
+        "examples": 8192,
+        "padded_tokens": 4680848,
+        "dense_attention_positions": 2710014480
+      },
+      "length_grouped": {
+        "examples": 8192,
+        "padded_tokens": 2556000,
+        "dense_attention_positions": 1000793312
+      }
+    },
+    {
+      "seed": 4,
+      "random": {
+        "examples": 8192,
+        "padded_tokens": 4672704,
+        "dense_attention_positions": 2701843680
+      },
+      "length_grouped": {
+        "examples": 8192,
+        "padded_tokens": 2556032,
+        "dense_attention_positions": 1000770304
+      }
+    }
+  ],
+  "note": "Geometry estimate only, not measured runtime or quality. Both samplers cover each training example once."
+}

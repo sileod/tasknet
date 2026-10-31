@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import transformers
 from torch.utils.data.dataloader import DataLoader
+from transformers.trainer_pt_utils import LengthGroupedSampler, DistributedLengthGroupedSampler
 from transformers.data.data_collator import InputDataClass
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, SequentialSampler, WeightedRandomSampler
@@ -478,6 +479,8 @@ class Trainer(transformers.Trainer):
         default, hparams = to_dict(default), to_dict(hparams)
         self.p = hparams.get('p', 1)
         self.task_batch_counts = hparams.get('task_batch_counts')
+        self.length_grouping = bool(hparams.get('group_by_length', False) or
+                                   hparams.get('train_sampling_strategy') == 'group_by_length')
         self.num_proc = hparams.get('num_proc',None)
         self.batched = hparams.get('batched',False)
         self.transfer_cache = hparams.get('_transfer_cache')
@@ -617,6 +620,25 @@ class Trainer(transformers.Trainer):
         """Build a task loader, using evaluation batching and ordering when requested."""
         if evaluation:
             sampler = SequentialSampler(train_dataset)
+        elif self.length_grouping:
+            name = getattr(self.args, 'length_column_name', 'length')
+            if name in train_dataset.column_names:
+                lengths = list(train_dataset[name])
+                train_dataset = train_dataset.remove_columns(name)
+            else:
+                masks = train_dataset['attention_mask']
+                lengths = [max(int(torch.as_tensor(choice).sum()) for choice in row)
+                           if hasattr(task_name, 'num_choices') else int(torch.as_tensor(row).sum())
+                           for row in masks]
+            batch_size = self.task_batch_size(task_name) * self.args.gradient_accumulation_steps
+            if self.args.world_size > 1:
+                sampler = DistributedLengthGroupedSampler(batch_size, lengths=lengths,
+                    num_replicas=self.args.world_size, rank=self.args.process_index,
+                    seed=self.args.data_seed if self.args.data_seed is not None else self.args.seed)
+            else:
+                generator = torch.Generator().manual_seed(
+                    self.args.data_seed if self.args.data_seed is not None else self.args.seed)
+                sampler = LengthGroupedSampler(batch_size, lengths=lengths, generator=generator)
         elif torch.cuda.device_count() < 2 or self.args.local_rank == -1:
             sampler = RandomSampler(train_dataset)
         else:
