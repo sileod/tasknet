@@ -129,8 +129,24 @@ def _run(tasks, args, seed, metric):
                                            for i, task in enumerate(tasks)})
     setup_started = time.perf_counter()
     model, trainer = Model_Trainer(copy.deepcopy(tasks), args)
+    original_step = trainer.training_step
     try:
         device = next(model.parameters()).device
+        measurements = args.get('_transfer_measurements')
+        examples = 0
+        cpu_tokens = 0
+        tokens = torch.zeros((), dtype=torch.long, device=device)
+        if measurements is not None:
+            def counted_step(current_model, inputs, *rest, **kwargs):
+                nonlocal examples, cpu_tokens
+                mask = inputs['attention_mask']
+                examples += mask.shape[0]
+                if mask.device.type == 'cpu':
+                    cpu_tokens += int(mask.sum())
+                else:
+                    tokens.add_(mask.sum())
+                return original_step(current_model, inputs, *rest, **kwargs)
+            trainer.training_step = counted_step
         if device.type == 'cuda':
             torch.cuda.synchronize(device)
             torch.cuda.reset_peak_memory_stats(device)
@@ -139,10 +155,12 @@ def _run(tasks, args, seed, metric):
         trainer.train()
         if device.type == 'cuda':
             torch.cuda.synchronize(device)
-        measurements = args.get('_transfer_measurements')
         if measurements is not None:
+            train_seconds = time.perf_counter() - started
+            total_tokens = cpu_tokens + int(tokens.item())
             measurements.update(setup_seconds=setup_seconds,
-                train_seconds=time.perf_counter() - started,
+                train_seconds=train_seconds, examples=examples, tokens=total_tokens,
+                examples_per_second=examples/train_seconds, tokens_per_second=total_tokens/train_seconds,
                 peak_allocated_bytes=torch.cuda.max_memory_allocated(device) if device.type == 'cuda' else None,
                 optimizer_steps=trainer.state.global_step,
                 trainable_parameters=sum(p.numel() for p in model.parameters() if p.requires_grad))
@@ -159,6 +177,7 @@ def _run(tasks, args, seed, metric):
             raise RuntimeError('Trainer did not complete the requested optimization budget')
         return score
     finally:
+        trainer.training_step = original_step
         del trainer, model
         gc.collect()
 

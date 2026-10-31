@@ -223,6 +223,11 @@ tokenization, not tasksource dataset loading. Peak allocated GPU memory is null
 on CPU. These measurements do not turn equal optimizer steps into equal compute;
 source sequence lengths and batch composition still affect runtime.
 
+Consumed `examples`, non-padding `tokens`, `examples_per_second`, and
+`tokens_per_second` are also recorded per arm. Counts come from executed training
+microbatches, including gradient accumulation, rather than prefetched batches.
+GPU token counts accumulate on device and synchronize only at the end.
+
 ```yaml
 # study.yaml
 sources: [glue/mrpc, glue/qqp]

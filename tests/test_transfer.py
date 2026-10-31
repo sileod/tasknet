@@ -121,6 +121,10 @@ def test_real_trainer_pair(tmp_path, monkeypatch, source_mc, target_mc):
         assert result.rows[0][arm + '_optimizer_steps'] == 2
         assert result.rows[0][arm + '_trainable_parameters'] > 0
         assert result.rows[0][arm + '_peak_allocated_bytes'] is None
+        assert result.rows[0][arm + '_examples'] > 0
+        assert result.rows[0][arm + '_tokens'] >= result.rows[0][arm + '_examples']
+    assert result.rows[0]['baseline_examples'] == (2 if target_mc else 4)
+    assert result.rows[0]['treatment_examples'] == (1 if target_mc else 2) + (1 if source_mc else 2)
 
     import torch
     assert initial_states[0].keys() == initial_states[1].keys()
