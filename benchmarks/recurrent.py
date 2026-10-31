@@ -253,10 +253,12 @@ def main():
         'trm-partial','trm-full','control'], default=['baseline','trm-frozen','control'])
     parser.add_argument('--seeds', nargs='+', type=int, default=[0,1])
     parser.add_argument('--steps', type=int, default=200)
+    parser.add_argument('--learning-rate', type=float, default=3e-5)
     parser.add_argument('--eval-only', action='store_true')
     parser.add_argument('--train-flops-budget', type=float)
     parser.add_argument('--train-seconds-budget', type=float)
     parser.add_argument('--nrows', type=int, default=256)
+    parser.add_argument('--eval-rows', type=int, help='Fixed held-out subset for screening; omit for full evaluation')
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--eval-batch-size', type=int, default=32)
     parser.add_argument('--max-length', type=int, default=128)
@@ -281,6 +283,8 @@ def main():
     args = parser.parse_args()
     if min(args.steps, args.nrows, args.latency_repeats, args.eval_every) < 1:
         parser.error('steps, nrows, latency-repeats and eval-every must be positive')
+    if args.learning_rate <= 0 or (args.eval_rows is not None and args.eval_rows < 1):
+        parser.error('learning-rate and eval-rows must be positive')
     if 'damped' in args.conditions and not args.initial_checkpoint:
         parser.error('B1/damped requires --initial-checkpoint from a trained classifier/MCQ model')
     if 'damped' in args.conditions and 'baseline' in args.conditions and not args.eval_only:
@@ -288,7 +292,7 @@ def main():
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)
-    task = AutoTask(args.task, tasksource_kwargs=dict(max_rows=args.nrows, seed=0, max_rows_eval=None))
+    task = AutoTask(args.task, tasksource_kwargs=dict(max_rows=args.nrows, seed=0, max_rows_eval=args.eval_rows))
     if task.task_type not in ('MultipleChoice', 'SequenceClassification'):
         parser.error('Only classification and MCQ tasks are supported')
     if 'validation' not in task.dataset:
@@ -302,7 +306,7 @@ def main():
             config = condition_config(condition, args)
             hparams = dict(model_name=args.initial_checkpoint or args.model, seed=seed, data_seed=seed,
                 max_steps=args.steps, per_device_train_batch_size=args.batch_size,
-                per_device_eval_batch_size=args.eval_batch_size, learning_rate=3e-5,
+                per_device_eval_batch_size=args.eval_batch_size, learning_rate=args.learning_rate,
                 bf16=args.precision == 'bf16', attn_implementation=args.attn,
                 trust_remote_code=args.trust_remote_code, revision=args.revision,
                 max_length=args.max_length, add_cls=False, add_cln=False, report_to=[],
