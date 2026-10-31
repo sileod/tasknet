@@ -24,6 +24,35 @@ def synchronize():
         torch.cuda.synchronize()
 
 
+def evaluate_predictions(trainer):
+    """Capture ordered predictions through the same evaluation loop, without an extra forward."""
+    from types import MappingProxyType
+    captured = {}
+    original = trainer.compute_metrics
+    if hasattr(trainer, 'processed_tasks'):
+        task = trainer.tasks[0]
+        dataset = MappingProxyType({task: trainer.processed_tasks[task]['validation']})
+        metrics = task.compute_metrics
+    else:
+        dataset = trainer.eval_dataset
+        metrics = original
+
+    def compute(evaluation):
+        logits = evaluation.predictions
+        if isinstance(logits, tuple):
+            logits = logits[0]
+        captured.update(labels=evaluation.label_ids.tolist(),
+                        predictions=logits.argmax(-1).tolist())
+        return metrics(evaluation) if metrics else {}
+
+    trainer.compute_metrics = compute
+    try:
+        scores = HFTrainer.evaluate(trainer, eval_dataset=dataset)
+    finally:
+        trainer.compute_metrics = original
+    return scores, captured
+
+
 def estimate_forward_flops(model, batch, length, choices, steps):
     """Analytic dense-linear + attention estimate; excludes kernels, norms and activations."""
     recurrent = getattr(model, 'recurrent', None)
@@ -259,6 +288,8 @@ def main():
     parser.add_argument('--train-seconds-budget', type=float)
     parser.add_argument('--nrows', type=int, default=256)
     parser.add_argument('--eval-rows', type=int, help='Fixed held-out subset for screening; omit for full evaluation')
+    parser.add_argument('--eval-split', choices=['validation', 'test'], default='validation')
+    parser.add_argument('--save-predictions', action='store_true', help='Save ordered evaluation predictions for paired audits')
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--eval-batch-size', type=int, default=32)
     parser.add_argument('--max-length', type=int, default=128)
@@ -295,8 +326,10 @@ def main():
     task = AutoTask(args.task, tasksource_kwargs=dict(max_rows=args.nrows, seed=0, max_rows_eval=args.eval_rows))
     if task.task_type not in ('MultipleChoice', 'SequenceClassification'):
         parser.error('Only classification and MCQ tasks are supported')
-    if 'validation' not in task.dataset:
-        parser.error('Benchmark requires a held-out validation split')
+    if args.eval_split not in task.dataset:
+        parser.error(f'Benchmark requires a held-out {args.eval_split} split')
+    if args.eval_split == 'test':
+        task.dataset['validation'] = task.dataset['test']
     task.dataset['test'] = task.dataset['validation']
     runs, cache = [], {}
     for seed in args.seeds:
@@ -310,7 +343,7 @@ def main():
                 bf16=args.precision == 'bf16', attn_implementation=args.attn,
                 trust_remote_code=args.trust_remote_code, revision=args.revision,
                 max_length=args.max_length, add_cls=False, add_cln=False, report_to=[],
-                eval_strategy='steps', eval_steps=args.eval_every, save_strategy='no',
+                eval_strategy='no' if args.eval_split == 'test' else 'steps', eval_steps=args.eval_every, save_strategy='no',
                 disable_tqdm=True, batched=True, _transfer_cache=cache,
                 _preprocess_splits={task.name:['train','validation']},
                 output_dir=str(root / condition / str(seed)))
@@ -332,7 +365,7 @@ def main():
             if args.train_flops_budget is not None and cache_flops >= args.train_flops_budget:
                 raise ValueError('The FLOPs budget is smaller than the mandatory feature-cache encoding cost')
             recorder.install(trainer)
-            initial = trainer.evaluate()
+            initial = None if args.eval_split == 'test' else trainer.evaluate()
             recorder.started = time.perf_counter()
             if torch.cuda.is_available():
                 torch.cuda.reset_peak_memory_stats()
@@ -349,7 +382,16 @@ def main():
             for n in (args.eval_iterations if config is not None else [0]):
                 if config is not None:
                     task_model.recurrent.steps = n
-                scores = trainer.evaluate()
+                if args.save_predictions:
+                    scores, predictions = evaluate_predictions(trainer)
+                    prediction_path = root / condition / str(seed) / f'predictions-{n}.json'
+                    prediction_path.parent.mkdir(parents=True, exist_ok=True)
+                    prediction_path.write_text(json.dumps(dict(
+                        schema_version=1, task=args.task, seed=seed, iterations=n,
+                        evaluation_split=args.eval_split,
+                        fingerprint=task.dataset['validation']._fingerprint, **predictions))+'\n')
+                else:
+                    scores = trainer.evaluate()
                 quality.append(dict(iterations=n, accuracy=float(scores['eval_accuracy'])))
             if config is not None:
                 task_model.recurrent.steps = original_steps
@@ -387,7 +429,7 @@ def main():
                 estimated_train_flops=recorder.estimated_train_flops,
                 training_iteration_histogram=dict(recorder.iterations),
                 optimizer_steps=trainer_steps, shuffled_choice_accuracy=shuffled_accuracy,
-                initial_accuracy=float(initial['eval_accuracy']), curve=recorder.curve,
+                initial_accuracy=float(initial['eval_accuracy']) if initial is not None else None, curve=recorder.curve,
                 quality=quality, latency=measured))
             grouped = defaultdict(list)
             baselines = {run['seed']:run['quality'][0]['accuracy'] for run in runs if run['condition']=='baseline'}

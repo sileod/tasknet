@@ -6,10 +6,11 @@ from statistics import mean, median, stdev
 
 
 def compare(small, large, iterations):
-    for key in ('task', 'nrows', 'eval_rows', 'steps', 'learning_rate', 'batch_size',
+    for key in ('task', 'nrows', 'eval_rows', 'eval_split', 'steps', 'learning_rate', 'batch_size',
                 'max_length', 'precision', 'attn', 'eval_every', 'eval_batch_size',
                 'train_seconds_budget', 'train_flops_budget'):
-        if small['config'].get(key) != large['config'].get(key):
+        default = 'validation' if key == 'eval_split' else None
+        if small['config'].get(key, default) != large['config'].get(key, default):
             raise ValueError(f'Incompatible screening configuration: {key}')
     if small['splits'] != large['splits']:
         raise ValueError('Cannot pair models with different dataset splits/fingerprints')
