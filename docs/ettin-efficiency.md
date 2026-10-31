@@ -238,3 +238,19 @@ tokens as their baselines, despite equal optimizer steps, and took longer.
 This tests joint mixing, not sequential FLD pretraining followed by FOLIO
 adaptation. Raw paired results, training times and consumed-token counts are in
 [the transfer artifacts](../benchmarks/results/fld-transfer/).
+
+The next screen is sequential transfer, reproducible with
+`python -m benchmarks.fld_sequential`. For each encoder size (68M, 150M) and
+paired seed (0, 1), compare 200 FOLIO adaptation steps from the native checkpoint
+against 200 steps from its already trained FLD B0 checkpoint. Both use learning
+rate 3e-5, batch size 16, BF16, full contexts up to 2,048 tokens, the same target
+training rows and validation examples. Classifier output rows are explicitly
+aligned by meaning: FLD DISPROVED/PROVED/UNKNOWN becomes FOLIO
+entailment/neutral/contradiction via permutation [1, 2, 0]. No new head is drawn.
+
+The screen saves predictions, measured latency and source-cost provenance.
+Total training time includes the earlier 1,000 FLD steps; target adaptation time
+alone cannot establish a training-efficiency gain. This tests whether source
+knowledge survives a separate target-adaptation stage, since joint mixing was
+negative. It is a validation screen, with no test-based depth or checkpoint
+selection and no claim of quality equivalence from two seeds and 101 examples.
