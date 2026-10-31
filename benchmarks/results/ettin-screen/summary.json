@@ -103,6 +103,108 @@
           ]
         }
       ]
+    },
+    {
+      "task": "glue-mnli",
+      "variant": "68m-trm",
+      "paired_seeds": 2,
+      "mean_accuracy_delta": -0.04052734375,
+      "paired_delta_std": 0.02140655294607712,
+      "median_training_speedup": 0.9339320968186904,
+      "pairs": [
+        {
+          "seed": 0,
+          "small_accuracy": 0.755859375,
+          "large_accuracy": 0.8115234375,
+          "accuracy_delta": -0.0556640625,
+          "training_speedup": 0.9811515310328945,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 1000,
+            "seconds": 79.81081735342741,
+            "accuracy": 0.8115234375,
+            "phase": "train",
+            "estimated_train_flops": 877759312815360.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 0.8625599922846802
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 1.2368986368442276
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 0.8437826957079918
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.227535254693463
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.759275635843354
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.7979405305768577
+            }
+          ]
+        },
+        {
+          "seed": 1,
+          "small_accuracy": 0.76953125,
+          "large_accuracy": 0.794921875,
+          "accuracy_delta": -0.025390625,
+          "training_speedup": 0.8867126626044862,
+          "large_latest_checkpoint_within_small_budget": {
+            "step": 1000,
+            "seconds": 73.4807776529342,
+            "accuracy": 0.794921875,
+            "phase": "train",
+            "estimated_train_flops": 874546757657856.0
+          },
+          "inference": [
+            {
+              "batch": 1,
+              "sequence_length": 128,
+              "inference_speedup": 1.261189665113628
+            },
+            {
+              "batch": 1,
+              "sequence_length": 256,
+              "inference_speedup": 1.2466023701483926
+            },
+            {
+              "batch": 8,
+              "sequence_length": 128,
+              "inference_speedup": 0.8609692803805583
+            },
+            {
+              "batch": 8,
+              "sequence_length": 256,
+              "inference_speedup": 1.2467954983449838
+            },
+            {
+              "batch": 32,
+              "sequence_length": 128,
+              "inference_speedup": 1.7729576588973415
+            },
+            {
+              "batch": 32,
+              "sequence_length": 256,
+              "inference_speedup": 1.8097499462445212
+            }
+          ]
+        }
+      ]
     }
   ]
 }

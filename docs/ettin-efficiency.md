@@ -66,6 +66,13 @@ The broader goal remains active until measured evidence supports the gains.
 Screening compatibility, smaller parameter counts, faster but less accurate
 models, and launching jobs do not establish success.
 
+The transfer phase uses `python -m benchmarks.ettin_transfer`: MNLI → FOLIO/RTE,
+68M and 150M, paired seeds 0/1, 1,000 steps per arm and source fraction 0.5.
+It is queued behind the classification screen so GPU measurements do not overlap.
+The existing transfer API now records synchronized training time, setup time,
+peak GPU allocation, trainable parameters and actual optimizer steps per arm.
+No transfer gain is claimed until those real-task runs are complete and audited.
+
 ## First screen evidence
 
 Two-seed MNLI baseline runs are complete (2,048 held-out screening rows):
@@ -83,6 +90,9 @@ parameter count and runtime do not establish an efficiency gain here.
 Raw paired [68M](../benchmarks/results/ettin-screen/glue-mnli/68m-baseline.json)
 and [150M](../benchmarks/results/ettin-screen/glue-mnli/150m-baseline.json) runs,
 plus the [screen comparison](../benchmarks/results/ettin-screen/summary.json),
-are committed. Refinement and the other tasks remain in progress. If this size
+are committed. The [paired refiner runs](../benchmarks/results/ettin-screen/glue-mnli/68m-trm.json)
+also finished: both seeds have identical accuracy at 0/1/2/4/8 iterations.
+The four-step refiner mean is 76.27%, with no gain from additional iterations.
+The other tasks remain in progress. If this size
 pair cannot close the quality gap, extend the ladder to 150M/400M and evaluate
 source+target transfer rather than weakening the quality requirement.
