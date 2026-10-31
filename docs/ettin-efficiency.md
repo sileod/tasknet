@@ -255,3 +255,14 @@ alone cannot establish a training-efficiency gain. This tests whether source
 knowledge survives a separate target-adaptation stage, since joint mixing was
 negative. It is a validation screen, with no test-based depth or checkpoint
 selection and no claim of quality equivalence from two seeds and 101 examples.
+
+A separate native-encoder time-budget screen is reproducible with
+`bash benchmarks/fld_equal_time.sh`. Each 68M seed receives its paired 150M FLD
+baseline's measured training-time budget (approximately 309 seconds), with a
+2,000-step ceiling, learning rate 3e-5 and linear decay over that ceiling. All
+other data/precision/batch settings match the initial FLD screen. The existing
+Trainer callback stops after a completed optimizer step when elapsed training
+time reaches the budget; evaluation overhead and any overshoot remain in the
+reported time. Setup is separate. Final predictions are evaluated without
+choosing a checkpoint from validation accuracy. This tests allocating more
+steps to the faster encoder, independently of the recurrent architectures.
