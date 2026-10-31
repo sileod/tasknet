@@ -320,3 +320,34 @@ hypothesis. The paper studies decoder-only models trained from scratch;
 its autoregressive parallel-loop mechanism does not directly apply to this
 bidirectional encoder setup. These observations do not establish encoder gains
 or justify replacing the current experimental protocol.
+
+The complete confirmation can be audited with
+`python -m benchmarks.fld_time_report runs/fld-time-confirm --output runs/fld-time-confirm/audit.json`.
+The report refuses incomplete studies before opening test predictions and checks
+the fixed configuration, example fingerprints, consumed optimizer steps, paired
+measured budgets and matching latency workloads. It reports seed/example quality
+uncertainty and seed-level latency intervals. It does not automatically declare a
+gain: independence of examples, actual time overshoot and workload scope still
+need review. Run the pinned data audit with `--full-eval` to check the complete
+evaluation inputs and exact context/pair overlap across splits.
+
+A separate, small preservation experiment is defined in
+`benchmarks/fld_preserved_depth.sh`: start from each trained B0 seed, freeze the
+head and outer blocks, and adapt only the middle block group for 200 steps at
+1e-5. The recurrent arm samples zero/one extra passes; its control always uses
+zero extra passes with the same trainable parameters. The primary recurrent
+evaluation uses one extra pass; zero and two are diagnostics. Both arms retain
+the fixed validation screen and include the original B0 training cost. They
+have equal optimizer steps, not equal compute. This does not use confirmation
+test scores for architecture selection or replace the nonrecurrent time-budget
+confirmation. Full joint-finetuning controls remain necessary before any broad
+claim about recurrence.
+
+The full pinned FLD confirmation data audit found 5,000 unique test contexts,
+zero exact test/train or test/validation context overlaps, and zero exact
+context–hypothesis pair overlaps across all splits. Every audited input fits
+within 2,048 tokens. Train/validation share one context with a different
+hypothesis; the test split shares none. Distinct contexts do not rule out shared
+logical templates or other dependence, so uncertainty is interpreted within
+this benchmark. The [audit summary](../benchmarks/results/fld-time-confirm/data-audit-summary.json)
+is recorded before reading the complete confirmation scores.

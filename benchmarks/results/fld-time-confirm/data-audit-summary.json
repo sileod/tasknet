@@ -1,0 +1,72 @@
+{
+  "dataset": "hitachi-nlp/FLD.v2",
+  "config": "default",
+  "revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "label_names": [
+    "DISPROVED",
+    "PROVED",
+    "UNKNOWN"
+  ],
+  "splits": {
+    "train": {
+      "rows": 8192,
+      "fingerprint": "8c9669731eed80ab",
+      "max_tokens": 782,
+      "truncated_at_256": 4811,
+      "truncated_at_512": 849,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "null": 2732,
+        "3": 1865,
+        "2": 1760,
+        "1": 1647,
+        "0": 188
+      }
+    },
+    "validation": {
+      "rows": 5000,
+      "fingerprint": "e516dcbc722bb9d8",
+      "max_tokens": 744,
+      "truncated_at_256": 2939,
+      "truncated_at_512": 471,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "3": 1100,
+        "2": 1084,
+        "null": 1655,
+        "1": 1034,
+        "0": 127
+      }
+    },
+    "test": {
+      "rows": 5000,
+      "fingerprint": "31be8d0abb32b704",
+      "max_tokens": 769,
+      "truncated_at_256": 2884,
+      "truncated_at_512": 504,
+      "truncated_at_2048": 0,
+      "proof_depth_counts": {
+        "null": 1663,
+        "1": 964,
+        "2": 1111,
+        "3": 1120,
+        "0": 142
+      }
+    }
+  },
+  "exact_pair_overlap": {
+    "train__validation": 0,
+    "test__train": 0,
+    "test__validation": 0
+  },
+  "context_overlap": {
+    "train__validation": 1,
+    "test__train": 0,
+    "test__validation": 0
+  },
+  "unique_context_counts": {
+    "train": 8191,
+    "validation": 5000,
+    "test": 5000
+  }
+}

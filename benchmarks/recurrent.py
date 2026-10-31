@@ -106,7 +106,15 @@ class Recorder(TrainerCallback):
         enc, ref = estimate_forward_flops(task_model, batch, length, choices, n)
         recurrent = getattr(task_model, 'recurrent', None)
         fraction = 1.0
-        if recurrent and recurrent.freeze_encoder:
+        if recurrent and recurrent.train_repeated_layers:
+            depth = task_model.encoder.config.num_hidden_layers
+            # Trainable middle blocks need weight/input gradients; the frozen
+            # suffix still propagates input gradients back to that middle group.
+            passes = 1 + n * (task_model.layer_end-task_model.layer_start) / depth
+            backward = (2 * (1+n) * (task_model.layer_end-task_model.layer_start)
+                        + depth-task_model.layer_end) / depth
+            fraction = backward / (2 * passes)
+        elif recurrent and recurrent.freeze_encoder:
             fraction = recurrent.unfreeze_last_n / task_model.encoder.config.num_hidden_layers
         self.estimated_train_flops += enc * (1 + 2 * fraction) + ref * 3
         if ((self.flops_budget is not None and self.estimated_train_flops + self.cache_flops >= self.flops_budget)

@@ -8,17 +8,21 @@ from tasknet import AutoTask
 from huggingface_hub import HfApi
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output',type=Path,default=Path('runs/fld-scaling/data-audit.json'))
+parser.add_argument('--full-eval',action='store_true',help='Audit full evaluation splits for confirmation')
 parser.add_argument('--revision',help='Pin the dataset commit recorded in a prior audit')
 args=parser.parse_args()
 revision=args.revision or HfApi().dataset_info('hitachi-nlp/FLD.v2').sha
 raw=load_dataset('hitachi-nlp/FLD.v2','default',revision=revision)
-task=AutoTask('FLD.v2/default',tasksource_kwargs=dict(max_rows=8192,max_rows_eval=2048,seed=0,revision=revision))
+task=AutoTask('FLD.v2/default',tasksource_kwargs=dict(max_rows=8192,max_rows_eval=None if args.full_eval else 2048,seed=0,revision=revision))
 tokenizer=AutoTokenizer.from_pretrained('jhu-clsp/ettin-encoder-68m')
 output=dict(dataset='hitachi-nlp/FLD.v2',config='default',revision=revision,label_names=task.get_labels(),splits={})
+pair_sets,context_sets={},{}
 for split,rows in task.dataset.items():
     index=collections.defaultdict(list)
     for i,row in enumerate(raw[split]):
         index[(row['context'],row['hypothesis'])].append((i,row))
+    pair_sets[split]={(r['sentence1'],r['sentence2']) for r in rows}
+    context_sets[split]={r['sentence1'] for r in rows}
     annotations=[]
     for row in rows:
         matches=index[(row['sentence1'],row['sentence2'])]
@@ -35,6 +39,11 @@ for split,rows in task.dataset.items():
     output['splits'][split]=dict(rows=len(rows),fingerprint=rows._fingerprint,max_tokens=max(lengths),
         truncated_at_256=sum(n>256 for n in lengths),truncated_at_512=sum(n>512 for n in lengths),truncated_at_2048=sum(n>2048 for n in lengths),
         proof_depth_counts=dict(collections.Counter(a['depth'] for a in annotations)),annotations=annotations)
+output['exact_pair_overlap']={f'{left}__{right}':len(pair_sets[left]&pair_sets[right])
+    for left in pair_sets for right in pair_sets if left<right}
+output['context_overlap']={f'{left}__{right}':len(context_sets[left]&context_sets[right])
+    for left in context_sets for right in context_sets if left<right}
+output['unique_context_counts']={split:len(values) for split,values in context_sets.items()}
 args.output.parent.mkdir(parents=True,exist_ok=True)
 args.output.write_text(json.dumps(output,indent=2)+'\n')
 print({s:{k:v for k,v in row.items() if k!='annotations'} for s,row in output['splits'].items()},flush=True)
