@@ -178,3 +178,10 @@ The copied `backbone-training-results.json` records the required earlier B0 cost
 Any total training-cost comparison must add B0 finetuning, cache construction and
 head training; a pretrained local checkpoint is not free. FLD → FOLIO transfer
 runs afterward. None of these queued trials is counted as a gain.
+
+
+The joint-finetuned 68M compact refiner finished both FLD seeds. Its four-step
+mean is 59.86%, versus 59.91% with zero refinement on that same trained model;
+more iterations do not establish a benefit. The shared encoder-depth experiment
+is still live. These negative results motivate the trained-checkpoint frozen-head
+trial, not a claim that recurrence improves reasoning.
