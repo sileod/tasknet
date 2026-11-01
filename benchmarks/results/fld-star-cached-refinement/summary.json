@@ -1,0 +1,247 @@
+{
+  "screen_only": true,
+  "promotion_passed": false,
+  "confirmed_efficiency_gain": false,
+  "rows": [
+    {
+      "condition": "trm-frozen",
+      "iterations": 0,
+      "mean_accuracy": 0.54638671875,
+      "mean_total_train_and_cache_seconds": 412.76499924529344,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51220703125,
+          "stage_train_seconds": 190.1546366456896,
+          "cache_seconds": 55.591506600379944,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 420.56995449215174
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.58056640625,
+          "stage_train_seconds": 174.09384894371033,
+          "cache_seconds": 54.600830771028996,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 404.96004399843514
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 1,
+      "mean_accuracy": 0.558837890625,
+      "mean_total_train_and_cache_seconds": 412.76499924529344,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.50732421875,
+          "stage_train_seconds": 190.1546366456896,
+          "cache_seconds": 55.591506600379944,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 420.56995449215174
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6103515625,
+          "stage_train_seconds": 174.09384894371033,
+          "cache_seconds": 54.600830771028996,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 404.96004399843514
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 2,
+      "mean_accuracy": 0.5576171875,
+      "mean_total_train_and_cache_seconds": 412.76499924529344,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.5107421875,
+          "stage_train_seconds": 190.1546366456896,
+          "cache_seconds": 55.591506600379944,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 420.56995449215174
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6044921875,
+          "stage_train_seconds": 174.09384894371033,
+          "cache_seconds": 54.600830771028996,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 404.96004399843514
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 4,
+      "mean_accuracy": 0.55517578125,
+      "mean_total_train_and_cache_seconds": 412.76499924529344,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.515625,
+          "stage_train_seconds": 190.1546366456896,
+          "cache_seconds": 55.591506600379944,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 420.56995449215174
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5947265625,
+          "stage_train_seconds": 174.09384894371033,
+          "cache_seconds": 54.600830771028996,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 404.96004399843514
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 8,
+      "mean_accuracy": 0.556640625,
+      "mean_total_train_and_cache_seconds": 412.76499924529344,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51806640625,
+          "stage_train_seconds": 190.1546366456896,
+          "cache_seconds": 55.591506600379944,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 420.56995449215174
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.59521484375,
+          "stage_train_seconds": 174.09384894371033,
+          "cache_seconds": 54.600830771028996,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 404.96004399843514
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 0,
+      "mean_accuracy": 0.54638671875,
+      "mean_total_train_and_cache_seconds": 383.9556213580072,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51220703125,
+          "stage_train_seconds": 155.3793853521347,
+          "cache_seconds": 54.778310272842646,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 384.98150687105954
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.58056640625,
+          "stage_train_seconds": 152.4125453773886,
+          "cache_seconds": 54.251826183870435,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 382.92973584495485
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 1,
+      "mean_accuracy": 0.556396484375,
+      "mean_total_train_and_cache_seconds": 383.9556213580072,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51025390625,
+          "stage_train_seconds": 155.3793853521347,
+          "cache_seconds": 54.778310272842646,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 384.98150687105954
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6025390625,
+          "stage_train_seconds": 152.4125453773886,
+          "cache_seconds": 54.251826183870435,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 382.92973584495485
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 2,
+      "mean_accuracy": 0.556396484375,
+      "mean_total_train_and_cache_seconds": 383.9556213580072,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51025390625,
+          "stage_train_seconds": 155.3793853521347,
+          "cache_seconds": 54.778310272842646,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 384.98150687105954
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6025390625,
+          "stage_train_seconds": 152.4125453773886,
+          "cache_seconds": 54.251826183870435,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 382.92973584495485
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 4,
+      "mean_accuracy": 0.556396484375,
+      "mean_total_train_and_cache_seconds": 383.9556213580072,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51025390625,
+          "stage_train_seconds": 155.3793853521347,
+          "cache_seconds": 54.778310272842646,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 384.98150687105954
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6025390625,
+          "stage_train_seconds": 152.4125453773886,
+          "cache_seconds": 54.251826183870435,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 382.92973584495485
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 8,
+      "mean_accuracy": 0.556396484375,
+      "mean_total_train_and_cache_seconds": 383.9556213580072,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.51025390625,
+          "stage_train_seconds": 155.3793853521347,
+          "cache_seconds": 54.778310272842646,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 384.98150687105954
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6025390625,
+          "stage_train_seconds": 152.4125453773886,
+          "cache_seconds": 54.251826183870435,
+          "cache_tensor_host_bytes": 17642844160,
+          "total_train_and_cache_seconds": 382.92973584495485
+        }
+      ]
+    }
+  ]
+}

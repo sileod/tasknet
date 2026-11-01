@@ -793,3 +793,17 @@ evaluation. Learning rate is 3e-4 with 100 warmup steps. Seed zero runs first;
 seed one is run only if four passes beat zero, one and the matched reset-state
 control. This gate is fixed before scoring, and a failed pilot is archived
 without a paired mean. No test/private reserve is scored.
+
+The longer cached pilot completed both seeds because seed zero passed its
+gate: four-step 51.56%, one-step 50.73%, reset-state 51.03%. Seed one failed:
+four-step 59.47%, one-step 61.04%, reset-state 60.25%. Paired four-step accuracy
+is therefore 55.52%, versus 55.64% for the control and 55.88% for one step.
+Source-inclusive encoding/training time is 412.76s for recurrence and 383.96s
+for control. The original cache retained FP32 residual token states and held
+17,642,844,160 bytes of tensors per candidate; that storage is not peak host RAM.
+Results, gates and every proof-depth group are archived under
+`benchmarks/results/fld-star-cached-refinement`. More updates alone did not
+establish useful extra computation. A separate read-only 128-input audit finds
+that hypothesis tokens occupy 7.11% of input tokens on average; this motivates
+testing a question-specific anchor rather than claiming the whole-input anchor
+has been proven to cause the failure.

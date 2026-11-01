@@ -1,0 +1,6 @@
+{
+  "rows": 128,
+  "mean_hypothesis_token_fraction": 0.07110141707430605,
+  "median_hypothesis_tokens": 15.0,
+  "note": "Read-only input structure diagnostic, not a model accuracy result."
+}
