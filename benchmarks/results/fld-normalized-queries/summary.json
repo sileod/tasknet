@@ -1,0 +1,188 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "primary_iterations": 4,
+  "summary": [
+    {
+      "variant": "",
+      "condition": "trm-frozen",
+      "iterations": 0,
+      "mean_accuracy": 0.59765625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55419921875,
+          "train_seconds": 96.53237927146256
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.64111328125,
+          "train_seconds": 94.94783740118146
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "trm-frozen",
+      "iterations": 1,
+      "mean_accuracy": 0.597900390625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55078125,
+          "train_seconds": 96.53237927146256
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.64501953125,
+          "train_seconds": 94.94783740118146
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "trm-frozen",
+      "iterations": 2,
+      "mean_accuracy": 0.59765625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.54833984375,
+          "train_seconds": 96.53237927146256
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.64697265625,
+          "train_seconds": 94.94783740118146
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "trm-frozen",
+      "iterations": 4,
+      "mean_accuracy": 0.6025390625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55224609375,
+          "train_seconds": 96.53237927146256
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.65283203125,
+          "train_seconds": 94.94783740118146
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "trm-frozen",
+      "iterations": 8,
+      "mean_accuracy": 0.6044921875,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55224609375,
+          "train_seconds": 96.53237927146256
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.65673828125,
+          "train_seconds": 94.94783740118146
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "control",
+      "iterations": 0,
+      "mean_accuracy": 0.59765625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55419921875,
+          "train_seconds": 97.3521666880697
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.64111328125,
+          "train_seconds": 95.67999537102878
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "control",
+      "iterations": 1,
+      "mean_accuracy": 0.59716796875,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55078125,
+          "train_seconds": 97.3521666880697
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6435546875,
+          "train_seconds": 95.67999537102878
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "control",
+      "iterations": 2,
+      "mean_accuracy": 0.59814453125,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.548828125,
+          "train_seconds": 97.3521666880697
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6474609375,
+          "train_seconds": 95.67999537102878
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "control",
+      "iterations": 4,
+      "mean_accuracy": 0.60302734375,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.55224609375,
+          "train_seconds": 97.3521666880697
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.65380859375,
+          "train_seconds": 95.67999537102878
+        }
+      ]
+    },
+    {
+      "variant": "",
+      "condition": "control",
+      "iterations": 8,
+      "mean_accuracy": 0.603515625,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.552734375,
+          "train_seconds": 97.3521666880697
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.654296875,
+          "train_seconds": 95.67999537102878
+        }
+      ]
+    }
+  ],
+  "note": "Frozen FLD head train_seconds exclude source training; source results are archived separately. MCQ joint costs include encoder training."
+}

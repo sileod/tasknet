@@ -11,8 +11,8 @@ from tasknet.recurrent import RecurrentModel
 
 @torch.no_grad()
 def diagnose(model, inputs, steps):
-    if model.refiner is None or model.refiner.class_embeddings is None:
-        raise ValueError('This diagnostic requires classification answer refinement')
+    if model.refiner is None:
+        raise ValueError('This diagnostic requires answer refinement')
     model.eval()
     encoded = model.encode(**inputs)
     refiner = model.refiner
@@ -40,13 +40,15 @@ def diagnose(model, inputs, steps):
     initial_states = torch.nn.functional.normalize(x.float(), dim=-1)
     return dict(rows=rows, projected_anchor_rms=rms(projected),
         repeated_input_rms=rms(x),
-        class_queries_rms=rms(refiner.class_embeddings),
+        class_queries_rms=rms(refiner.class_embeddings) if refiner.class_embeddings is not None else None,
         initial_class_state_cosine=(initial_states @ initial_states.transpose(-1, -2))[
             :, off_diagonal].mean().item())
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--task', default='FLD.v2/default')
+    parser.add_argument('--max-length', type=int, default=2048)
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--dataset-revision', required=True)
     parser.add_argument('--output', type=Path, required=True)
@@ -58,13 +60,21 @@ def main():
     torch.set_num_threads(1)
     model = RecurrentModel.from_pretrained(args.checkpoint).float().cpu().eval()
     tokenizer = AutoTokenizer.from_pretrained(args.checkpoint)
-    task = AutoTask('FLD.v2/default', tasksource_kwargs=dict(max_rows=8192,
+    task = AutoTask(args.task, tasksource_kwargs=dict(max_rows=8192,
         max_rows_eval=2048, seed=0, revision=args.dataset_revision))
     data = task.dataset['validation'][:args.examples]
-    inputs = tokenizer(data[task.s1], data[task.s2], padding=True, truncation=True,
-        max_length=2048, return_tensors='pt')
+    if task.task_type == 'MultipleChoice':
+        count = len(task.choices)
+        first = [question for question in data[task.s1] for _ in task.choices]
+        second = [data[choice][i] for i in range(len(data[task.s1])) for choice in task.choices]
+        inputs = tokenizer(first, second, padding=True, truncation=True,
+            max_length=args.max_length, return_tensors='pt')
+        inputs = {key: value.reshape(-1, count, value.shape[-1]) for key, value in inputs.items()}
+    else:
+        inputs = tokenizer(data[task.s1], data[task.s2], padding=True, truncation=True,
+            max_length=args.max_length, return_tensors='pt')
     output = dict(checkpoint=str(args.checkpoint), examples=len(data[task.s1]),
-        device='cpu', precision='float32', dataset_revision=args.dataset_revision,
+        device='cpu', precision='float32', task=args.task, dataset_revision=args.dataset_revision,
         fingerprint=task.dataset['validation']._fingerprint,
         **diagnose(model, inputs, args.steps))
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -526,3 +526,35 @@ There is no established recurrent advantage. [All runs, ordered predictions,
 source-inclusive training times and depth breakdowns](../benchmarks/results/fld-class-queries/)
 are archived. The anchor-normalization experiment is now running; the MCQ
 comparison remains queued behind it. No reserved-set predictions were computed.
+
+
+Both queued screens have completed. Anchor-normalized frozen FLD refinement
+reaches 60.25% at four iterations versus 60.30% for its matched control;
+the 150M fresh-data reference remains 61.99%. Normalization has not established
+a recurrence benefit. [Full results and proof-depth breakdowns](../benchmarks/results/fld-normalized-queries/)
+are archived with the original source-training costs.
+
+On the Tasksource four-option CommonsenseQA recast, native 68M averages 62.79%
+and native 150M 69.75%. Joint 68M TRM reaches 63.52% at four iterations, versus
+63.61% with zero refinement on that same trained model; iterations 1, 2, 4 and
+8 yield identical mean accuracy. Its matched nonrecurrent control scores
+61.64% at four iterations. The larger model remains substantially stronger;
+the TRM training times (153.55s/179.28s) do not improve on the larger native
+model's measured times (159.19s/155.83s). The native 68M times are
+140.79s/119.33s. These runs establish neither useful inference-time refinement
+nor a quality-matched training efficiency gain. [All scores, timing details,
+answer-order checks and ordered predictions](../benchmarks/results/csqa-recurrent/)
+are preserved. The separate test partition remains unscored.
+
+
+The CPU FP32 diagnostic on the first 16 MCQ validation examples finds another
+candidate-state collapse: initial candidate cosine 0.99285 rises to 0.99960
+by four iterations. At that step, class-centered update RMS is 0.01170 versus
+0.63065 total update RMS (over 99.9% of squared update magnitude is common
+across candidates and cancels under softmax). These measurements describe one
+trained seed/sample, not a population accuracy estimate. The
+[diagnostic evidence](../benchmarks/results/csqa-recurrent/state-diagnostic-seed-0.json)
+can be reproduced using `benchmarks.refiner_diagnostic --task commonsense_qa
+--max-length 256` with the archived checkpoint path and dataset revision.
+This supports investigating collapse rather than treating additional iterations
+as an established reasoning mechanism.

@@ -1,0 +1,224 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "primary_iterations": 4,
+  "summary": [
+    {
+      "variant": "150m-baseline",
+      "condition": "baseline",
+      "iterations": 0,
+      "mean_accuracy": 0.6975409836065574,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.7,
+          "train_seconds": 159.1914738677442
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6950819672131148,
+          "train_seconds": 155.83418113924563
+        }
+      ]
+    },
+    {
+      "variant": "68m-baseline",
+      "condition": "baseline",
+      "iterations": 0,
+      "mean_accuracy": 0.6278688524590164,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6278688524590164,
+          "train_seconds": 140.7899523228407
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6278688524590164,
+          "train_seconds": 119.32657426595688
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "trm-full",
+      "iterations": 0,
+      "mean_accuracy": 0.6360655737704918,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6360655737704918,
+          "train_seconds": 153.5519915688783
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6360655737704918,
+          "train_seconds": 179.27658655121922
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "trm-full",
+      "iterations": 1,
+      "mean_accuracy": 0.6352459016393442,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6327868852459017,
+          "train_seconds": 153.5519915688783
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6377049180327868,
+          "train_seconds": 179.27658655121922
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "trm-full",
+      "iterations": 2,
+      "mean_accuracy": 0.6352459016393442,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6327868852459017,
+          "train_seconds": 153.5519915688783
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6377049180327868,
+          "train_seconds": 179.27658655121922
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "trm-full",
+      "iterations": 4,
+      "mean_accuracy": 0.6352459016393442,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6327868852459017,
+          "train_seconds": 153.5519915688783
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6377049180327868,
+          "train_seconds": 179.27658655121922
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "trm-full",
+      "iterations": 8,
+      "mean_accuracy": 0.6352459016393442,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6327868852459017,
+          "train_seconds": 153.5519915688783
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6377049180327868,
+          "train_seconds": 179.27658655121922
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "control-full",
+      "iterations": 0,
+      "mean_accuracy": 0.6155737704918033,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6180327868852459,
+          "train_seconds": 161.3534395173192
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6131147540983607,
+          "train_seconds": 167.6745783612132
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "control-full",
+      "iterations": 1,
+      "mean_accuracy": 0.6147540983606556,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6180327868852459,
+          "train_seconds": 161.3534395173192
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6114754098360655,
+          "train_seconds": 167.6745783612132
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "control-full",
+      "iterations": 2,
+      "mean_accuracy": 0.6155737704918032,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6196721311475409,
+          "train_seconds": 161.3534395173192
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6114754098360655,
+          "train_seconds": 167.6745783612132
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "control-full",
+      "iterations": 4,
+      "mean_accuracy": 0.6163934426229508,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6213114754098361,
+          "train_seconds": 161.3534395173192
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6114754098360655,
+          "train_seconds": 167.6745783612132
+        }
+      ]
+    },
+    {
+      "variant": "68m-joint",
+      "condition": "control-full",
+      "iterations": 8,
+      "mean_accuracy": 0.6147540983606556,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6196721311475409,
+          "train_seconds": 161.3534395173192
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6098360655737705,
+          "train_seconds": 167.6745783612132
+        }
+      ]
+    }
+  ],
+  "note": "Frozen FLD head train_seconds exclude source training; source results are archived separately. MCQ joint costs include encoder training."
+}

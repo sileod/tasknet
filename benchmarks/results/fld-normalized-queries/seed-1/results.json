@@ -1,0 +1,886 @@
+{
+  "schema_version": 1,
+  "summary": [
+    {
+      "condition": "trm-frozen",
+      "iterations": 0,
+      "seeds": 1,
+      "mean_accuracy": 0.64111328125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 1,
+      "seeds": 1,
+      "mean_accuracy": 0.64501953125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 2,
+      "seeds": 1,
+      "mean_accuracy": 0.64697265625,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 4,
+      "seeds": 1,
+      "mean_accuracy": 0.65283203125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 8,
+      "seeds": 1,
+      "mean_accuracy": 0.65673828125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "control",
+      "iterations": 0,
+      "seeds": 1,
+      "mean_accuracy": 0.64111328125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "control",
+      "iterations": 1,
+      "seeds": 1,
+      "mean_accuracy": 0.6435546875,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "control",
+      "iterations": 2,
+      "seeds": 1,
+      "mean_accuracy": 0.6474609375,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "control",
+      "iterations": 4,
+      "seeds": 1,
+      "mean_accuracy": 0.65380859375,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "control",
+      "iterations": 8,
+      "seeds": 1,
+      "mean_accuracy": 0.654296875,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    }
+  ],
+  "config": {
+    "model": "jhu-clsp/ettin-encoder-68m",
+    "task": "FLD.v2/default",
+    "conditions": [
+      "trm-frozen",
+      "control"
+    ],
+    "seeds": [
+      1
+    ],
+    "steps": 1000,
+    "learning_rate": 0.001,
+    "warmup_steps": 0,
+    "refiner_learning_rate": null,
+    "neutral_head": false,
+    "eval_only": false,
+    "train_flops_budget": null,
+    "train_seconds_budget": null,
+    "nrows": 8192,
+    "exclude_training_rows": 8192,
+    "eval_rows": 2048,
+    "eval_split": "validation",
+    "save_predictions": true,
+    "group_by_length": false,
+    "batch_size": 16,
+    "eval_batch_size": 32,
+    "max_length": 2048,
+    "iterations": 4,
+    "train_iterations": [
+      1,
+      2,
+      4
+    ],
+    "eval_iterations": [
+      0,
+      1,
+      2,
+      4,
+      8
+    ],
+    "intermediate_loss_weight": 1.0,
+    "final_loss_weight": 2.0,
+    "hidden_size": 256,
+    "layers": 2,
+    "unfreeze_last_n": 2,
+    "eval_every": 200,
+    "latency_batches": [
+      1,
+      32
+    ],
+    "latency_lengths": [
+      128,
+      512
+    ],
+    "latency_repeats": 20,
+    "precision": "bf16",
+    "attn": "sdpa",
+    "trust_remote_code": false,
+    "revision": null,
+    "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+    "normalize_anchor": true,
+    "class_query_init": "classifier",
+    "token_memory": true,
+    "cache_representations": false,
+    "train_repeated_layers": false,
+    "initial_checkpoint": "runs/fld-scaling/68m-baseline/baseline/1/checkpoint",
+    "output": "runs/fld-normalized-queries/seed-1"
+  },
+  "runs": [
+    {
+      "condition": "trm-frozen",
+      "seed": 1,
+      "setup_seconds": 2.6031545158475637,
+      "model_revision": null,
+      "train_seconds": 94.94783740118146,
+      "peak_allocated_bytes": 787704832,
+      "cached_training": false,
+      "cache_seconds": 0.0,
+      "cache_estimated_forward_flops": 0,
+      "estimated_train_flops_including_cache": 980729103677184.0,
+      "trainable_parameters": 1583105,
+      "total_parameters": 69992452,
+      "examples_per_second": 168.5135800660259,
+      "tokens_per_second": 50737.616904795934,
+      "estimated_train_flops": 980729103677184.0,
+      "training_iteration_histogram": {
+        "1": 326,
+        "2": 328,
+        "4": 346
+      },
+      "optimizer_steps": 1000,
+      "shuffled_choice_accuracy": null,
+      "initial_accuracy": 0.640625,
+      "curve": [
+        {
+          "step": 0,
+          "seconds": 7.24311576038599,
+          "accuracy": 0.640625,
+          "phase": "initial",
+          "estimated_train_flops": 0
+        },
+        {
+          "step": 200,
+          "seconds": 19.358292635530233,
+          "accuracy": 0.64501953125,
+          "phase": "train",
+          "estimated_train_flops": 198587084491520.0
+        },
+        {
+          "step": 400,
+          "seconds": 38.06810510903597,
+          "accuracy": 0.64599609375,
+          "phase": "train",
+          "estimated_train_flops": 392239342966272.0
+        },
+        {
+          "step": 600,
+          "seconds": 56.98614213615656,
+          "accuracy": 0.65673828125,
+          "phase": "train",
+          "estimated_train_flops": 588519448289536.0
+        },
+        {
+          "step": 800,
+          "seconds": 76.00947550497949,
+          "accuracy": 0.65087890625,
+          "phase": "train",
+          "estimated_train_flops": 785129093049344.0
+        },
+        {
+          "step": 1000,
+          "seconds": 94.94494911655784,
+          "accuracy": 0.65283203125,
+          "phase": "train",
+          "estimated_train_flops": 980729103677184.0
+        },
+        {
+          "step": 1000,
+          "seconds": 101.6861008182168,
+          "accuracy": 0.64111328125,
+          "phase": "evaluation",
+          "estimated_train_flops": 980729103677184.0
+        },
+        {
+          "step": 1000,
+          "seconds": 108.58077989146113,
+          "accuracy": 0.64501953125,
+          "phase": "evaluation",
+          "estimated_train_flops": 980729103677184.0
+        },
+        {
+          "step": 1000,
+          "seconds": 115.45025411061943,
+          "accuracy": 0.64697265625,
+          "phase": "evaluation",
+          "estimated_train_flops": 980729103677184.0
+        },
+        {
+          "step": 1000,
+          "seconds": 122.37420616671443,
+          "accuracy": 0.65283203125,
+          "phase": "evaluation",
+          "estimated_train_flops": 980729103677184.0
+        },
+        {
+          "step": 1000,
+          "seconds": 129.38957954756916,
+          "accuracy": 0.65673828125,
+          "phase": "evaluation",
+          "estimated_train_flops": 980729103677184.0
+        }
+      ],
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.64501953125
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.64697265625
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.65283203125
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.65673828125
+        }
+      ],
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.01104891300201416,
+          "p95_seconds": 0.011073222383856773,
+          "examples_per_second": 90.50664077250903,
+          "peak_allocated_bytes": 305287168,
+          "estimated_forward_flops": 11476144134
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.01218132022768259,
+          "p95_seconds": 0.012246411293745041,
+          "examples_per_second": 82.09290793681424,
+          "peak_allocated_bytes": 308445184,
+          "estimated_forward_flops": 11551004678
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.013052749447524548,
+          "p95_seconds": 0.013334019109606743,
+          "examples_per_second": 76.61221139808593,
+          "peak_allocated_bytes": 308445184,
+          "estimated_forward_flops": 11558494214
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.014898202382028103,
+          "p95_seconds": 0.014927750453352928,
+          "examples_per_second": 67.12219195023911,
+          "peak_allocated_bytes": 308445184,
+          "estimated_forward_flops": 11573473286
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.018479215912520885,
+          "p95_seconds": 0.018515102565288544,
+          "examples_per_second": 54.114850150240095,
+          "peak_allocated_bytes": 308445184,
+          "estimated_forward_flops": 11603431430
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.01101718284189701,
+          "p95_seconds": 0.011045495048165321,
+          "examples_per_second": 90.76730543103281,
+          "peak_allocated_bytes": 312095744,
+          "estimated_forward_flops": 53553401862
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.01223365031182766,
+          "p95_seconds": 0.01227487437427044,
+          "examples_per_second": 81.74175119532282,
+          "peak_allocated_bytes": 315253760,
+          "estimated_forward_flops": 53830768646
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.013181421905755997,
+          "p95_seconds": 0.013228552415966988,
+          "examples_per_second": 75.86434962402083,
+          "peak_allocated_bytes": 315253760,
+          "estimated_forward_flops": 53839437830
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.014996584504842758,
+          "p95_seconds": 0.015038756653666496,
+          "examples_per_second": 66.68185010240671,
+          "peak_allocated_bytes": 315253760,
+          "estimated_forward_flops": 53856776198
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.018628532998263836,
+          "p95_seconds": 0.01922854222357273,
+          "examples_per_second": 53.68109233793123,
+          "peak_allocated_bytes": 315253760,
+          "estimated_forward_flops": 53891452934
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.0186191750690341,
+          "p95_seconds": 0.019111450761556625,
+          "examples_per_second": 1718.6583122696882,
+          "peak_allocated_bytes": 378079232,
+          "estimated_forward_flops": 367236612288
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.01902221329510212,
+          "p95_seconds": 0.01914399489760399,
+          "examples_per_second": 1682.2437801304345,
+          "peak_allocated_bytes": 381237248,
+          "estimated_forward_flops": 369632149696
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.019384687766432762,
+          "p95_seconds": 0.01960555464029312,
+          "examples_per_second": 1650.7874867818286,
+          "peak_allocated_bytes": 381237248,
+          "estimated_forward_flops": 369871814848
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.019816535525023937,
+          "p95_seconds": 0.01983587257564068,
+          "examples_per_second": 1614.8130413407036,
+          "peak_allocated_bytes": 381237248,
+          "estimated_forward_flops": 370351145152
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.020672897808253765,
+          "p95_seconds": 0.020852841436862946,
+          "examples_per_second": 1547.9203881723745,
+          "peak_allocated_bytes": 381237248,
+          "estimated_forward_flops": 371309805760
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.07302018348127604,
+          "p95_seconds": 0.07348714210093021,
+          "examples_per_second": 438.2349985220935,
+          "peak_allocated_bytes": 613028864,
+          "estimated_forward_flops": 1713708859584
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.07364165876060724,
+          "p95_seconds": 0.07412266172468662,
+          "examples_per_second": 434.53665409717246,
+          "peak_allocated_bytes": 616186880,
+          "estimated_forward_flops": 1722584596672
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.07391422986984253,
+          "p95_seconds": 0.07438008859753609,
+          "examples_per_second": 432.9342273652803,
+          "peak_allocated_bytes": 616186880,
+          "estimated_forward_flops": 1722862010560
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.07462735194712877,
+          "p95_seconds": 0.07513769157230854,
+          "examples_per_second": 428.79720591816033,
+          "peak_allocated_bytes": 616186880,
+          "estimated_forward_flops": 1723416838336
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.07576894666999578,
+          "p95_seconds": 0.07620189152657986,
+          "examples_per_second": 422.33660894578435,
+          "peak_allocated_bytes": 616186880,
+          "estimated_forward_flops": 1724526493888
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "seed": 1,
+      "setup_seconds": 1.130150493234396,
+      "model_revision": null,
+      "train_seconds": 95.67999537102878,
+      "peak_allocated_bytes": 787050496,
+      "cached_training": false,
+      "cache_seconds": 0.0,
+      "cache_estimated_forward_flops": 0,
+      "estimated_train_flops_including_cache": 980728599082752.0,
+      "trainable_parameters": 1583105,
+      "total_parameters": 69992452,
+      "examples_per_second": 167.2240883578124,
+      "tokens_per_second": 50349.36489408195,
+      "estimated_train_flops": 980728599082752.0,
+      "training_iteration_histogram": {
+        "1": 326,
+        "4": 346,
+        "2": 328
+      },
+      "optimizer_steps": 1000,
+      "shuffled_choice_accuracy": null,
+      "initial_accuracy": 0.64111328125,
+      "curve": [
+        {
+          "step": 0,
+          "seconds": 6.907188948243856,
+          "accuracy": 0.64111328125,
+          "phase": "initial",
+          "estimated_train_flops": 0
+        },
+        {
+          "step": 200,
+          "seconds": 19.411978596821427,
+          "accuracy": 0.64013671875,
+          "phase": "train",
+          "estimated_train_flops": 198587917028096.0
+        },
+        {
+          "step": 400,
+          "seconds": 38.311177188530564,
+          "accuracy": 0.6484375,
+          "phase": "train",
+          "estimated_train_flops": 392238660982272.0
+        },
+        {
+          "step": 600,
+          "seconds": 57.36347649991512,
+          "accuracy": 0.6572265625,
+          "phase": "train",
+          "estimated_train_flops": 588518296805632.0
+        },
+        {
+          "step": 800,
+          "seconds": 76.51975718513131,
+          "accuracy": 0.65576171875,
+          "phase": "train",
+          "estimated_train_flops": 785127273884672.0
+        },
+        {
+          "step": 1000,
+          "seconds": 95.67649189196527,
+          "accuracy": 0.65380859375,
+          "phase": "train",
+          "estimated_train_flops": 980728599082752.0
+        },
+        {
+          "step": 1000,
+          "seconds": 102.44568570330739,
+          "accuracy": 0.64111328125,
+          "phase": "evaluation",
+          "estimated_train_flops": 980728599082752.0
+        },
+        {
+          "step": 1000,
+          "seconds": 109.32803899236023,
+          "accuracy": 0.6435546875,
+          "phase": "evaluation",
+          "estimated_train_flops": 980728599082752.0
+        },
+        {
+          "step": 1000,
+          "seconds": 116.24183437973261,
+          "accuracy": 0.6474609375,
+          "phase": "evaluation",
+          "estimated_train_flops": 980728599082752.0
+        },
+        {
+          "step": 1000,
+          "seconds": 123.25386412069201,
+          "accuracy": 0.65380859375,
+          "phase": "evaluation",
+          "estimated_train_flops": 980728599082752.0
+        },
+        {
+          "step": 1000,
+          "seconds": 130.3656235728413,
+          "accuracy": 0.654296875,
+          "phase": "evaluation",
+          "estimated_train_flops": 980728599082752.0
+        }
+      ],
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.6435546875
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.6474609375
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.65380859375
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.654296875
+        }
+      ],
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.011196395382285118,
+          "p95_seconds": 0.011229021474719048,
+          "examples_per_second": 89.31445932877604,
+          "peak_allocated_bytes": 304631808,
+          "estimated_forward_flops": 11476144134
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.012493228539824486,
+          "p95_seconds": 0.012532031163573265,
+          "examples_per_second": 80.04336083441636,
+          "peak_allocated_bytes": 307789824,
+          "estimated_forward_flops": 11551004678
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.013445349410176277,
+          "p95_seconds": 0.013472780585289001,
+          "examples_per_second": 74.37515898568897,
+          "peak_allocated_bytes": 307789824,
+          "estimated_forward_flops": 11558494214
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.015428065322339535,
+          "p95_seconds": 0.015479641035199165,
+          "examples_per_second": 64.81694101670801,
+          "peak_allocated_bytes": 307789824,
+          "estimated_forward_flops": 11573473286
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.019278163090348244,
+          "p95_seconds": 0.019324732944369316,
+          "examples_per_second": 51.87216205783929,
+          "peak_allocated_bytes": 307789824,
+          "estimated_forward_flops": 11603431430
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.011257432401180267,
+          "p95_seconds": 0.01129787229001522,
+          "examples_per_second": 88.83020251537612,
+          "peak_allocated_bytes": 311440384,
+          "estimated_forward_flops": 53553401862
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.012602672912180424,
+          "p95_seconds": 0.01264139637351036,
+          "examples_per_second": 79.34824675434564,
+          "peak_allocated_bytes": 314598400,
+          "estimated_forward_flops": 53830768646
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.013576402328908443,
+          "p95_seconds": 0.013612430542707443,
+          "examples_per_second": 73.6572160851984,
+          "peak_allocated_bytes": 314598400,
+          "estimated_forward_flops": 53839437830
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.015419241040945053,
+          "p95_seconds": 0.015445493161678314,
+          "examples_per_second": 64.85403512044128,
+          "peak_allocated_bytes": 314598400,
+          "estimated_forward_flops": 53856776198
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.01925872452557087,
+          "p95_seconds": 0.01929648406803608,
+          "examples_per_second": 51.92451860829334,
+          "peak_allocated_bytes": 314598400,
+          "estimated_forward_flops": 53891452934
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.01864407304674387,
+          "p95_seconds": 0.018689684569835663,
+          "examples_per_second": 1716.3631530390674,
+          "peak_allocated_bytes": 377423872,
+          "estimated_forward_flops": 367236612288
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.019091221503913403,
+          "p95_seconds": 0.019136013463139534,
+          "examples_per_second": 1676.1630466358845,
+          "peak_allocated_bytes": 380581888,
+          "estimated_forward_flops": 369632149696
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.019473735243082047,
+          "p95_seconds": 0.019518842920660973,
+          "examples_per_second": 1643.2389369865675,
+          "peak_allocated_bytes": 380581888,
+          "estimated_forward_flops": 369871814848
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.019766884855926037,
+          "p95_seconds": 0.019893677905201912,
+          "examples_per_second": 1618.869145706918,
+          "peak_allocated_bytes": 380581888,
+          "estimated_forward_flops": 370351145152
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.020859792828559875,
+          "p95_seconds": 0.021187756210565567,
+          "examples_per_second": 1534.0516688251896,
+          "peak_allocated_bytes": 380581888,
+          "estimated_forward_flops": 371309805760
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.073020881973207,
+          "p95_seconds": 0.07380945794284344,
+          "examples_per_second": 438.2308065210924,
+          "peak_allocated_bytes": 612373504,
+          "estimated_forward_flops": 1713708859584
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.07354913465678692,
+          "p95_seconds": 0.07442771270871162,
+          "examples_per_second": 435.0832970275759,
+          "peak_allocated_bytes": 615531520,
+          "estimated_forward_flops": 1722584596672
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.07414522208273411,
+          "p95_seconds": 0.07463351637125015,
+          "examples_per_second": 431.58546297552607,
+          "peak_allocated_bytes": 615531520,
+          "estimated_forward_flops": 1722862010560
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.07451445050537586,
+          "p95_seconds": 0.07518588751554489,
+          "examples_per_second": 429.44690302307674,
+          "peak_allocated_bytes": 615531520,
+          "estimated_forward_flops": 1723416838336
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.07592729944735765,
+          "p95_seconds": 0.07647275365889072,
+          "examples_per_second": 421.4557903799334,
+          "peak_allocated_bytes": 615531520,
+          "estimated_forward_flops": 1724526493888
+        }
+      ]
+    }
+  ],
+  "data_prepare_seconds": 5.968866059556603,
+  "environment": {
+    "torch": "2.9.1+cu126",
+    "transformers": "5.20.0",
+    "datasets": "5.0.1",
+    "tasksource": "0.0.47.dev1+gb443e9598.d20251209",
+    "tasknet": "1.61.dev11+g732dcfd09",
+    "python": "3.12.9",
+    "device": "NVIDIA A30"
+  },
+  "splits": {
+    "train": {
+      "rows": 8192,
+      "fingerprint": "9df46ab6c8fafaf1"
+    },
+    "validation": {
+      "rows": 2048,
+      "fingerprint": "b10a65facd0b3d7e"
+    },
+    "test": {
+      "rows": 2048,
+      "fingerprint": "b10a65facd0b3d7e"
+    }
+  },
+  "flops_method": "Analytic 2*linear_weights*tokens + dense attention; backward ~2x trainable fraction; excludes norms/activations and local-window savings"
+}

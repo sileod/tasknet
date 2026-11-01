@@ -1,0 +1,79 @@
+{
+  "checkpoint": "runs/csqa-recurrent/68m-joint/seed-0/trm-full/0/checkpoint",
+  "examples": 16,
+  "device": "cpu",
+  "precision": "float32",
+  "task": "commonsense_qa",
+  "dataset_revision": "94630fe30dad47192a8546eb75f094926d47e155",
+  "fingerprint": "f35d36391d6c3e37",
+  "rows": [
+    {
+      "step": 1,
+      "mean_class_state_cosine": 0.9995962977409363,
+      "centered_delta_rms": 0.011002281680703163,
+      "total_delta_rms": 0.6458833813667297,
+      "centered_cumulative_delta_rms": 0.011002273298799992,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 2,
+      "mean_class_state_cosine": 0.9995743632316589,
+      "centered_delta_rms": 0.011840042658150196,
+      "total_delta_rms": 0.6420577764511108,
+      "centered_cumulative_delta_rms": 0.022836970165371895,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 3,
+      "mean_class_state_cosine": 0.9995843768119812,
+      "centered_delta_rms": 0.011783146299421787,
+      "total_delta_rms": 0.6363571882247925,
+      "centered_cumulative_delta_rms": 0.03461818769574165,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 4,
+      "mean_class_state_cosine": 0.9995948672294617,
+      "centered_delta_rms": 0.011700296774506569,
+      "total_delta_rms": 0.6306496262550354,
+      "centered_cumulative_delta_rms": 0.04631747677922249,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 5,
+      "mean_class_state_cosine": 0.9996053576469421,
+      "centered_delta_rms": 0.011614581570029259,
+      "total_delta_rms": 0.624968409538269,
+      "centered_cumulative_delta_rms": 0.05793137103319168,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 6,
+      "mean_class_state_cosine": 0.999615490436554,
+      "centered_delta_rms": 0.01152725238353014,
+      "total_delta_rms": 0.6193154454231262,
+      "centered_cumulative_delta_rms": 0.06945812702178955,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 7,
+      "mean_class_state_cosine": 0.9996254444122314,
+      "centered_delta_rms": 0.011437869630753994,
+      "total_delta_rms": 0.6136921048164368,
+      "centered_cumulative_delta_rms": 0.08089559525251389,
+      "original_centered_logits_rms": 1.4356614351272583
+    },
+    {
+      "step": 8,
+      "mean_class_state_cosine": 0.9996351599693298,
+      "centered_delta_rms": 0.011346418410539627,
+      "total_delta_rms": 0.6080999374389648,
+      "centered_cumulative_delta_rms": 0.09224165230989456,
+      "original_centered_logits_rms": 1.4356614351272583
+    }
+  ],
+  "projected_anchor_rms": 2.7662923336029053,
+  "repeated_input_rms": 0.9999992847442627,
+  "class_queries_rms": null,
+  "initial_class_state_cosine": 0.9928513169288635
+}
