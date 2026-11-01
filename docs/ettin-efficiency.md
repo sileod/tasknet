@@ -425,3 +425,17 @@ accepted as progress. [All six runs and predictions](../benchmarks/results/fld-s
 are archived. Neutral-readout initialization is the next separate stability
 test; token-memory refinement and its matched control are running independently
 from the original trained B0 checkpoints.
+
+Frozen token-memory refinement completed both seeds. Four-step accuracy is
+59.77%, exactly the original B0 mean, versus 60.13% for its same-sized
+nonrecurrent control. At proof depth 3, recurrent accuracy remains 39.18%,
+matching zero refinement, while the nonrecurrent control reaches 41.06%.
+This is not a useful looping gain. [All depths, predictions and source-inclusive
+costs](../benchmarks/results/fld-token-memory/) are preserved.
+
+The next loop comparison is joint training from the pretrained encoder,
+`bash benchmarks/fld_joint_memory.sh`, with a faster rate only for refiner
+parameters and a jointly trained matched control. This tests whether the token
+memory needs task-adapted encoder features, rather than assuming a frozen
+finetuned representation will be sufficient. Native head initialization stays
+unchanged in this comparison; the neutral-initialization screen is independent.

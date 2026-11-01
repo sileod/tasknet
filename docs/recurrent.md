@@ -252,3 +252,21 @@ is used. Report both improvement over the original B0 and improvement over the
 same-sized control, plus whether extra iterations improve over one. Include
 B0 training in total cost; encoder-once inference alone is not an efficiency
 claim. Proof-depth breakdowns check whether gains occur on deeper proofs.
+
+For joint training, `--refiner-learning-rate` splits the existing HF optimizer's
+parameter groups, preserving its weight-decay rules and scheduler. It lets a
+newly initialized refiner learn faster without increasing the backbone rate.
+`control-full` is the corresponding jointly trained nonrecurrent control.
+These remain standard Trainer runs; no separate training loop is introduced.
+The explicit `--neutral-head` experiment can also initialize fresh joint runs,
+but is rejected for existing finetuned checkpoints.
+
+`bash benchmarks/fld_joint_memory.sh` is the follow-up to the frozen-memory
+screen. It starts both conditions from the same pretrained encoder and native
+head initialization, uses 3e-5 for the backbone/native head and 1e-3 for refiner
+parameters, and compares four iterations with the matched control at four.
+Zero/one/two/eight are reported as diagnostics. It uses the same 8,192 training
+rows, 2,048 validation rows and 1,000 optimizer steps as the native baselines.
+No previous task finetuning is required, so there is no uncounted B0 preparation
+cost. Actual time and latency still determine whether any quality gain is an
+efficiency gain. The neutral-readout stability study remains separate.

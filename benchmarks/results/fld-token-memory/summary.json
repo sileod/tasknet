@@ -1,0 +1,118 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "rows": [
+    {
+      "seed": 0,
+      "condition": "trm-frozen",
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.55419921875
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.54931640625
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.55224609375
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.54833984375
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.54833984375
+        }
+      ],
+      "head_train_seconds": 95.95073723047972,
+      "total_train_seconds": 270.7745484765619
+    },
+    {
+      "seed": 0,
+      "condition": "control",
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.55419921875
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.55078125
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.55029296875
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.54931640625
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.55126953125
+        }
+      ],
+      "head_train_seconds": 98.12691135704517,
+      "total_train_seconds": 272.95072260312736
+    },
+    {
+      "seed": 1,
+      "condition": "trm-frozen",
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.6435546875
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.64404296875
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.64697265625
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.6484375
+        }
+      ],
+      "head_train_seconds": 97.38150265812874,
+      "total_train_seconds": 273.64686694182456
+    },
+    {
+      "seed": 1,
+      "condition": "control",
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.64111328125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.64501953125
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.64794921875
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.6533203125
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.65771484375
+        }
+      ],
+      "head_train_seconds": 97.66253428719938,
+      "total_train_seconds": 273.9278985708952
+    }
+  ]
+}

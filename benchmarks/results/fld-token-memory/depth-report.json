@@ -1,0 +1,982 @@
+[
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/control/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5275938189845475,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5273556231003039,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/control/0/predictions-1.json",
+    "seed": 0,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55078125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5121412803532008,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3818984547461369,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5486322188449848,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7729357798165137,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/control/0/predictions-2.json",
+    "seed": 0,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55029296875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5033112582781457,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37527593818984545,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5592705167173252,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7706422018348624,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/control/0/predictions-4.json",
+    "seed": 0,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54931640625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4966887417218543,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3686534216335541,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5729483282674772,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7591743119266054,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/control/0/predictions-8.json",
+    "seed": 0,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55126953125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4922737306843267,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3620309050772627,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5866261398176292,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7591743119266054,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/trm-frozen/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5275938189845475,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5273556231003039,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/trm-frozen/0/predictions-1.json",
+    "seed": 0,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54931640625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5121412803532008,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3818984547461369,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5455927051671733,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7706422018348624,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/trm-frozen/0/predictions-2.json",
+    "seed": 0,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55224609375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5055187637969095,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.560790273556231,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7706422018348624,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/trm-frozen/0/predictions-4.json",
+    "seed": 0,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54833984375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5011037527593819,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3598233995584989,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5699088145896657,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7637614678899083,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-0/trm-frozen/0/predictions-8.json",
+    "seed": 0,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54833984375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.4878587196467991,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.35320088300220753,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5866261398176292,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7591743119266054,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/control/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5960264900662252,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/control/1/predictions-1.json",
+    "seed": 1,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64501953125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6070640176600441,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40618101545253865,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6990881458966566,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8325688073394495,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/control/1/predictions-2.json",
+    "seed": 1,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64794921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6136865342163356,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.4260485651214128,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.682370820668693,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8440366972477065,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/control/1/predictions-4.json",
+    "seed": 1,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.6533203125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6401766004415012,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.45253863134657835,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6565349544072948,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8532110091743119,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/control/1/predictions-8.json",
+    "seed": 1,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.65771484375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6644591611479028,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.4900662251655629,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6124620060790273,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8738532110091743,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8333333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/trm-frozen/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5960264900662252,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/trm-frozen/1/predictions-1.json",
+    "seed": 1,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.6435546875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6026490066225165,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.39514348785871967,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7051671732522796,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8325688073394495,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/trm-frozen/1/predictions-2.json",
+    "seed": 1,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64404296875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6048565121412803,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40176600441501104,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7006079027355623,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8325688073394495,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/trm-frozen/1/predictions-4.json",
+    "seed": 1,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64697265625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6070640176600441,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.423841059602649,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6869300911854104,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.841743119266055,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-token-memory/seed-1/trm-frozen/1/predictions-8.json",
+    "seed": 1,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.6484375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6203090507726269,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.4392935982339956,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.668693009118541,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8463302752293578,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  }
+]

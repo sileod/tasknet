@@ -79,7 +79,8 @@ def test_token_memory_bfloat16_checkpoint_and_trainable_encoder_gradient(tmp_pat
     torch.testing.assert_close(actual,expected,rtol=0,atol=0)
 
 
-def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_path,monkeypatch):
+@pytest.mark.parametrize('joint',[False,True])
+def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_path,monkeypatch,joint):
     import json,sys
     from datasets import Dataset,DatasetDict
     from transformers import BertTokenizerFast
@@ -93,17 +94,21 @@ def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_pa
     task=Classification(DatasetDict(train=rows,validation=rows,test=rows),name='memory')
     monkeypatch.setattr(benchmark,'AutoTask',lambda *a,**kw:task)
     output=tmp_path/'results'
-    monkeypatch.setattr(sys,'argv',['benchmark','--model',str(checkpoint),'--task','memory',
-        '--conditions','trm-frozen','control','--token-memory','--steps','2','--seeds','0',
+    conditions=['trm-full','control-full'] if joint else ['trm-frozen','control']
+    arguments=['benchmark','--model',str(checkpoint),'--task','memory',
+        '--conditions',*conditions,'--token-memory','--steps','2','--seeds','0',
         '--train-iterations','1','2','--eval-iterations','0','2','--max-length','8',
         '--hidden-size','16','--layers','1','--batch-size','2','--eval-every','2',
         '--attn','eager','--latency-batches','1','--latency-lengths','8','--latency-repeats','1',
-        '--save-predictions','--output',str(output)])
+        '--save-predictions','--output',str(output)]
+    if joint:
+        arguments+=['--neutral-head','--refiner-learning-rate','0.001']
+    monkeypatch.setattr(sys,'argv',arguments)
     benchmark.main()
     payload=json.loads((output/'results.json').read_text())
     assert payload['config']['token_memory']
     assert len(payload['runs'])==2
     assert all(run['optimizer_steps']==2 for run in payload['runs'])
     assert payload['runs'][0]['trainable_parameters']==payload['runs'][1]['trainable_parameters']
-    for condition in ['trm-frozen','control']:
+    for condition in conditions:
         assert (output/condition/'0'/'predictions-2.json').exists()

@@ -284,11 +284,31 @@ def initialize_neutral_head(model):
             model.classifier.bias.zero_()
 
 
+def set_refiner_learning_rate(trainer, rate):
+    """Split the standard HF optimizer groups, retaining its decay/bias rules."""
+    task_model = trainer.model.task_models_list[0]
+    if task_model.refiner is None:
+        raise ValueError('A separate refiner rate requires a recurrent answer head')
+    refiner_ids = {id(p) for p in task_model.refiner.parameters() if p.requires_grad}
+    trainer.create_optimizer()
+    if trainer.optimizer.state:
+        raise ValueError('Set refiner learning rate before optimizer training starts')
+    groups = []
+    for group in trainer.optimizer.param_groups:
+        ordinary = [p for p in group['params'] if id(p) not in refiner_ids]
+        recursive = [p for p in group['params'] if id(p) in refiner_ids]
+        if ordinary:
+            groups.append({**group, 'params': ordinary})
+        if recursive:
+            groups.append({**group, 'params': recursive, 'lr': rate})
+    trainer.optimizer.param_groups = groups
+
+
 def condition_config(name, args):
     if name == 'baseline':
         return None
     method = dict(damped='damped', depth='depth', **{'trm-frozen': 'trm', 'trm-partial': 'trm',
-                  'trm-full': 'trm', 'control': 'control'})[name]
+                  'trm-full': 'trm', 'control': 'control', 'control-full': 'control'})[name]
     if method in ('damped', 'depth'):
         return dict(method=method, steps=args.iterations, train_steps=tuple(args.train_iterations),
                     train_repeated_layers=args.train_repeated_layers)
@@ -303,11 +323,13 @@ def main():
     parser.add_argument('--model', default='answerdotai/ModernBERT-base')
     parser.add_argument('--task', default='glue/rte')
     parser.add_argument('--conditions', nargs='+', choices=['baseline','damped','depth','trm-frozen',
-        'trm-partial','trm-full','control'], default=['baseline','trm-frozen','control'])
+        'trm-partial','trm-full','control','control-full'], default=['baseline','trm-frozen','control'])
     parser.add_argument('--seeds', nargs='+', type=int, default=[0,1])
     parser.add_argument('--steps', type=int, default=200)
     parser.add_argument('--learning-rate', type=float, default=3e-5)
     parser.add_argument('--warmup-steps', type=int, default=0)
+    parser.add_argument('--refiner-learning-rate', type=float,
+                        help='Separate learning rate for newly initialized answer-refinement parameters')
     parser.add_argument('--neutral-head', action='store_true',
                         help='Initialize a new native task readout at uniform logits')
     parser.add_argument('--eval-only', action='store_true')
@@ -357,10 +379,14 @@ def main():
     if args.train_repeated_layers and set(args.conditions) != {'depth'}:
         parser.error('--train-repeated-layers requires only --conditions depth')
     if args.token_memory and (args.cache_representations or
-            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control'}):
+            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('--token-memory requires refinement conditions without --cache-representations')
-    if args.neutral_head and (args.initial_checkpoint or args.conditions != ['baseline']):
-        parser.error('--neutral-head is only for native pretrained baselines, without --initial-checkpoint')
+    if args.neutral_head and (args.initial_checkpoint or
+            not set(args.conditions) <= {'baseline', 'trm-full', 'control-full'}):
+        parser.error('--neutral-head requires a fresh native or joint-refinement run without --initial-checkpoint')
+    if args.refiner_learning_rate is not None and (args.cache_representations or args.refiner_learning_rate <= 0 or
+            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
+        parser.error('--refiner-learning-rate requires a positive rate, answer-refinement conditions and no feature cache')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)
@@ -395,6 +421,8 @@ def main():
             model, trainer = Model_Trainer([copy.deepcopy(task)], hparams)
             if args.neutral_head:
                 initialize_neutral_head(model.task_models_list[0])
+            if args.refiner_learning_rate is not None:
+                set_refiner_learning_rate(trainer, args.refiner_learning_rate)
             setup_seconds = time.perf_counter()-start
             cache_seconds, cache_flops = 0.0, 0
             cached_training = args.cache_representations and condition in ('trm-frozen', 'control')
