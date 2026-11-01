@@ -748,3 +748,24 @@ primary, scale remains one without a sweep, and promotion requires an advantage
 over one-pass replay and ordinary LoRA on both seeds. Fixed optimization steps
 are not equal compute: replay costs more, and source-inclusive times must be
 retained. No official test or private reserve is scored.
+
+Star replay adaptation failed promotion: four passes score 56.08%, two passes
+56.15%, and ordinary LoRA 57.54%. Source-inclusive training runtimes are 370.58s
+for replay versus 277.73s for ordinary adaptation. Seed one reaches 61.18% at
+four passes versus 60.01% at one pass, but ordinary LoRA reaches 61.47%; seed
+zero reaches only 50.98% versus its 53.61% ordinary control. The positive depth
+effect in one seed is therefore insufficient. Full results and proof-depth
+groups are in `benchmarks/results/fld-star-replay`.
+
+The next R2 screen, `benchmarks/fld_star_joint_refinement.sh`, updates both
+encoder and pooled answer refiner on the same audited Star rows. Encoder
+learning rate is 1e-5 and refiner rate 1e-3, with 500 updates and 50 warmup steps.
+It trains at two/four passes with final-only supervision, allowing multiple
+updates before an answer is required; one/eight passes test unseen depths.
+Four passes remain primary. The reset-state control has identical parameters,
+labels and optimizer budget, with both models fully finetuned. Their own
+zero-loop predictions may change during finetuning. Promotion requires beating
+zero/one-step predictions and the control on both seeds. Actual time is primary:
+the dense FLOP approximation overestimates control backward work when only the
+last reset-state update receives supervision. No architecture code changes
+during the paired study, and no test/private reserve is scored.

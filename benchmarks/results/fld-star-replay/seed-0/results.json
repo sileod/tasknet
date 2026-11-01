@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "summary": [
+    {
+      "condition": "replay-lora",
+      "iterations": 0,
+      "seeds": 1,
+      "mean_accuracy": 0.51220703125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "replay-lora",
+      "iterations": 1,
+      "seeds": 1,
+      "mean_accuracy": 0.51025390625,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "replay-lora",
+      "iterations": 2,
+      "seeds": 1,
+      "mean_accuracy": 0.51220703125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "replay-lora",
+      "iterations": 4,
+      "seeds": 1,
+      "mean_accuracy": 0.509765625,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "replay-lora",
+      "iterations": 8,
+      "seeds": 1,
+      "mean_accuracy": 0.50341796875,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    },
+    {
+      "condition": "adapter",
+      "iterations": 0,
+      "seeds": 1,
+      "mean_accuracy": 0.5361328125,
+      "accuracy_std": null,
+      "paired_delta_vs_baseline": null,
+      "paired_delta_std": null
+    }
+  ],
+  "config": {
+    "model": "jhu-clsp/ettin-encoder-68m",
+    "task": "FLD.v2/star",
+    "conditions": [
+      "replay-lora",
+      "adapter"
+    ],
+    "seeds": [
+      0
+    ],
+    "steps": 500,
+    "learning_rate": 0.001,
+    "warmup_steps": 50,
+    "refiner_learning_rate": null,
+    "neutral_head": false,
+    "eval_only": false,
+    "train_flops_budget": null,
+    "train_seconds_budget": null,
+    "nrows": 8192,
+    "exclude_training_rows": 0,
+    "eval_rows": 2048,
+    "eval_split": "validation",
+    "save_predictions": true,
+    "group_by_length": false,
+    "batch_size": 16,
+    "eval_batch_size": 32,
+    "max_length": 2048,
+    "iterations": 4,
+    "train_iterations": [
+      1,
+      2,
+      4
+    ],
+    "eval_iterations": [
+      0,
+      1,
+      2,
+      4,
+      8
+    ],
+    "intermediate_loss_weight": 1.0,
+    "final_loss_weight": 2.0,
+    "hidden_size": 256,
+    "layers": 2,
+    "unfreeze_last_n": 2,
+    "eval_every": 100,
+    "latency_batches": [
+      1
+    ],
+    "latency_lengths": [
+      128
+    ],
+    "latency_repeats": 5,
+    "precision": "bf16",
+    "adapter_rank": 8,
+    "replay_damping": 0.1,
+    "attn": "sdpa",
+    "trust_remote_code": false,
+    "revision": null,
+    "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+    "classification_state": "classes",
+    "logit_update": "cumulative",
+    "candidate_memory": false,
+    "contrastive_states": false,
+    "normalize_anchor": false,
+    "class_query_init": "zero",
+    "token_memory": false,
+    "cache_representations": false,
+    "train_repeated_layers": false,
+    "initial_checkpoint": "runs/fld-scaling/68m-baseline/baseline/0/checkpoint",
+    "output": "runs/fld-star-replay/seed-0"
+  },
+  "runs": [
+    {
+      "condition": "replay-lora",
+      "seed": 0,
+      "setup_seconds": 5.444713125005364,
+      "model_revision": null,
+      "train_seconds": 194.92206378281116,
+      "peak_allocated_bytes": 10010409472,
+      "cached_training": false,
+      "cache_seconds": 0.0,
+      "cache_estimated_forward_flops": 0,
+      "estimated_train_flops_including_cache": 1509307779866788.2,
+      "trainable_parameters": 307200,
+      "total_parameters": 68716547,
+      "examples_per_second": 41.04204441891131,
+      "tokens_per_second": 13919.070767807316,
+      "estimated_train_flops": 1509307779866788.2,
+      "training_iteration_histogram": {
+        "2": 158,
+        "1": 175,
+        "4": 167
+      },
+      "optimizer_steps": 500,
+      "shuffled_choice_accuracy": null,
+      "initial_accuracy": 0.50439453125,
+      "curve": [
+        {
+          "step": 0,
+          "seconds": 18.22957201488316,
+          "accuracy": 0.50439453125,
+          "phase": "initial",
+          "estimated_train_flops": 0
+        },
+        {
+          "step": 100,
+          "seconds": 39.73247963935137,
+          "accuracy": 0.509765625,
+          "phase": "train",
+          "estimated_train_flops": 310368375068870.5
+        },
+        {
+          "step": 200,
+          "seconds": 78.33390622772276,
+          "accuracy": 0.5185546875,
+          "phase": "train",
+          "estimated_train_flops": 609873179508151.6
+        },
+        {
+          "step": 300,
+          "seconds": 118.25265837647021,
+          "accuracy": 0.5078125,
+          "phase": "train",
+          "estimated_train_flops": 925390372702414.6
+        },
+        {
+          "step": 400,
+          "seconds": 156.73038007691503,
+          "accuracy": 0.5078125,
+          "phase": "train",
+          "estimated_train_flops": 1220510574424883.8
+        },
+        {
+          "step": 500,
+          "seconds": 194.91918810643256,
+          "accuracy": 0.509765625,
+          "phase": "train",
+          "estimated_train_flops": 1509307779866788.2
+        },
+        {
+          "step": 500,
+          "seconds": 202.3917370289564,
+          "accuracy": 0.51220703125,
+          "phase": "evaluation",
+          "estimated_train_flops": 1509307779866788.2
+        },
+        {
+          "step": 500,
+          "seconds": 212.63040299713612,
+          "accuracy": 0.51025390625,
+          "phase": "evaluation",
+          "estimated_train_flops": 1509307779866788.2
+        },
+        {
+          "step": 500,
+          "seconds": 225.52693540230393,
+          "accuracy": 0.51220703125,
+          "phase": "evaluation",
+          "estimated_train_flops": 1509307779866788.2
+        },
+        {
+          "step": 500,
+          "seconds": 243.76624875888228,
+          "accuracy": 0.509765625,
+          "phase": "evaluation",
+          "estimated_train_flops": 1509307779866788.2
+        },
+        {
+          "step": 500,
+          "seconds": 272.6629013326019,
+          "accuracy": 0.50341796875,
+          "phase": "evaluation",
+          "estimated_train_flops": 1509307779866788.2
+        }
+      ],
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.51220703125
+        },
+        {
+          "iterations": 1,
+          "accuracy": 0.51025390625
+        },
+        {
+          "iterations": 2,
+          "accuracy": 0.51220703125
+        },
+        {
+          "iterations": 4,
+          "accuracy": 0.509765625
+        },
+        {
+          "iterations": 8,
+          "accuracy": 0.50341796875
+        }
+      ],
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.010982586070895195,
+          "p95_seconds": 0.011010836809873581,
+          "examples_per_second": 91.05323587220379,
+          "peak_allocated_bytes": 300183040,
+          "estimated_forward_flops": 11476144134.0
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 1,
+          "median_seconds": 0.016082551330327988,
+          "p95_seconds": 0.016086969524621964,
+          "examples_per_second": 62.17918907643903,
+          "peak_allocated_bytes": 302632448,
+          "estimated_forward_flops": 15178665990.000002
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 2,
+          "median_seconds": 0.020694894716143608,
+          "p95_seconds": 0.020705703645944595,
+          "examples_per_second": 48.32109627597782,
+          "peak_allocated_bytes": 302894592,
+          "estimated_forward_flops": 18881187846.0
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 4,
+          "median_seconds": 0.029720816761255264,
+          "p95_seconds": 0.02981252782046795,
+          "examples_per_second": 33.64645083723348,
+          "peak_allocated_bytes": 302894592,
+          "estimated_forward_flops": 26286231558.0
+        },
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 8,
+          "median_seconds": 0.04782676696777344,
+          "p95_seconds": 0.04852399230003357,
+          "examples_per_second": 20.90879361914257,
+          "peak_allocated_bytes": 302894592,
+          "estimated_forward_flops": 41096318982.0
+        }
+      ]
+    },
+    {
+      "condition": "adapter",
+      "seed": 0,
+      "setup_seconds": 0.9269792549312115,
+      "model_revision": null,
+      "train_seconds": 102.12731473334134,
+      "peak_allocated_bytes": 3958007808,
+      "cached_training": false,
+      "cache_seconds": 0.0,
+      "cache_estimated_forward_flops": 0,
+      "estimated_train_flops_including_cache": 897129887617024.0,
+      "trainable_parameters": 307200,
+      "total_parameters": 68716547,
+      "examples_per_second": 78.33359783216011,
+      "tokens_per_second": 26566.193452594984,
+      "estimated_train_flops": 897129887617024.0,
+      "training_iteration_histogram": {
+        "0": 500
+      },
+      "optimizer_steps": 500,
+      "shuffled_choice_accuracy": null,
+      "initial_accuracy": 0.51220703125,
+      "curve": [
+        {
+          "step": 0,
+          "seconds": 7.956288596615195,
+          "accuracy": 0.51220703125,
+          "phase": "initial",
+          "estimated_train_flops": 0
+        },
+        {
+          "step": 100,
+          "seconds": 20.528670072555542,
+          "accuracy": 0.52392578125,
+          "phase": "train",
+          "estimated_train_flops": 179934774595584.0
+        },
+        {
+          "step": 200,
+          "seconds": 41.09113816730678,
+          "accuracy": 0.50634765625,
+          "phase": "train",
+          "estimated_train_flops": 360129698668544.0
+        },
+        {
+          "step": 300,
+          "seconds": 61.44780518114567,
+          "accuracy": 0.52734375,
+          "phase": "train",
+          "estimated_train_flops": 539565518073856.0
+        },
+        {
+          "step": 400,
+          "seconds": 81.73603278584778,
+          "accuracy": 0.52001953125,
+          "phase": "train",
+          "estimated_train_flops": 717546752196608.0
+        },
+        {
+          "step": 500,
+          "seconds": 102.1241798568517,
+          "accuracy": 0.5361328125,
+          "phase": "train",
+          "estimated_train_flops": 897129887617024.0
+        },
+        {
+          "step": 500,
+          "seconds": 110.09257798083127,
+          "accuracy": 0.5361328125,
+          "phase": "evaluation",
+          "estimated_train_flops": 897129887617024.0
+        }
+      ],
+      "quality": [
+        {
+          "iterations": 0,
+          "accuracy": 0.5361328125
+        }
+      ],
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.012257341295480728,
+          "p95_seconds": 0.01230013556778431,
+          "examples_per_second": 81.5837607759767,
+          "peak_allocated_bytes": 299994624,
+          "estimated_forward_flops": 11554787334.0
+        }
+      ]
+    }
+  ],
+  "data_prepare_seconds": 2.3122308775782585,
+  "environment": {
+    "torch": "2.9.1+cu126",
+    "transformers": "5.20.0",
+    "datasets": "5.0.1",
+    "tasksource": "0.0.47.dev1+gb443e9598.d20251209",
+    "tasknet": "1.61.dev11+g732dcfd09",
+    "python": "3.12.9",
+    "device": "NVIDIA A30"
+  },
+  "splits": {
+    "train": {
+      "rows": 8192,
+      "fingerprint": "6b95e0aa72537ad7"
+    },
+    "validation": {
+      "rows": 2048,
+      "fingerprint": "7800681f11c0a37b"
+    },
+    "test": {
+      "rows": 2048,
+      "fingerprint": "7800681f11c0a37b"
+    }
+  },
+  "flops_method": "Analytic 2*linear_weights*tokens + dense attention; backward ~2x trainable fraction; excludes norms/activations and local-window savings"
+}
