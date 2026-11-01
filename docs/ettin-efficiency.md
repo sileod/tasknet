@@ -698,3 +698,34 @@ paired seeds, 1,000 steps at 1e-4 with 100 warmup steps, and training depths 1/2
 Primary depth remains 4. The control has the same new parameters but resets
 its state every step. This is an exploratory architectural correction; accuracy
 against zero/one-step and the matched control must improve before promotion.
+
+The pooled-state screen completed without a recurrence advantage: four-step
+accuracy is 60.67%, versus 60.84% for the reset-state control (two seeds).
+One-step refinement reaches 61.04%; additional steps do not improve it.
+Completed artifacts, ordered predictions and source-inclusive cost summaries
+are archived under `benchmarks/results/fld-pooled-refinement` and the matching
+directories for cached, anchored-memory and replay-adapter experiments.
+The candidate-local MCQ experiment changed conditioning geometry between seeds;
+its archive explicitly labels the variants and does not aggregate them.
+
+Merging the selected ordinary LoRA updates into native encoder weights gives
+63.67% validation accuracy after BF16 reevaluation, versus 61.99% for the 150M
+fresh-data reference. The two small-model seeds score 59.33% and 68.02%, so this
+selected validation mean is not confirmation. The exported checkpoints live in
+`runs/fld-merged-adapter/seed-{0,1}/checkpoint`; merging replay-only adapters is
+rejected because it would change the original encoder pass. Native inference
+removes ordinary adapter overhead but does not demonstrate useful recurrence.
+
+The next fixed diagnostic evaluates already-trained default-split checkpoints
+on `FLD.v2/star`, without fitting or selecting parameters on star. The audited
+2,048-row validation cohort contains proof depths through eight, no fitting
+context/pair overlap, and a maximum token length of 793. All inputs therefore
+fit the existing 2,048-token cap. Before scoring, the protocol fixes seeds 0/1,
+replay update scales 0/2 and depths 0/1/2/4/8, with depth one primary; native
+68M, native 150M fresh-data and merged ordinary LoRA are comparators. Scale two
+was selected on default validation. Every proof-depth group, including unknown
+proof depth, must be reported. This is an exploratory out-of-distribution
+diagnostic; the default private reserve and star official test remain unscored.
+Run `python -m benchmarks.fld_star_audit`, then
+`python -m benchmarks.fld_star_zero_shot`. The immutable protocol is in
+`benchmarks/results/fld-star-zero-shot/protocol.json`.

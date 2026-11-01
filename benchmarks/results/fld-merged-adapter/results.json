@@ -1,0 +1,113 @@
+{
+  "rows": [
+    {
+      "seed": 0,
+      "accuracy": 0.59326171875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint",
+      "scale": 2,
+      "checkpoint": "runs/fld-merged-adapter/seed-0/checkpoint",
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.009934655390679836,
+          "p95_seconds": 0.010179691016674042,
+          "examples_per_second": 100.65774409630218,
+          "peak_allocated_bytes": 375243776,
+          "estimated_forward_flops": 11476144134
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.010112288407981396,
+          "p95_seconds": 0.011683939024806023,
+          "examples_per_second": 98.8895845979554,
+          "peak_allocated_bytes": 382969856,
+          "estimated_forward_flops": 53553401862
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.017526662908494473,
+          "p95_seconds": 0.017546584829688072,
+          "examples_per_second": 1825.7896649847062,
+          "peak_allocated_bytes": 454720512,
+          "estimated_forward_flops": 367236612288
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.07030344847589731,
+          "p95_seconds": 0.07062865979969501,
+          "examples_per_second": 455.1697063760793,
+          "peak_allocated_bytes": 691767296,
+          "estimated_forward_flops": 1713708859584
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "accuracy": 0.68017578125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint",
+      "scale": 2,
+      "checkpoint": "runs/fld-merged-adapter/seed-1/checkpoint",
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.010078312829136848,
+          "p95_seconds": 0.01031450368463993,
+          "examples_per_second": 99.22295695257203,
+          "peak_allocated_bytes": 375243776,
+          "estimated_forward_flops": 11476144134
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.010132632218301296,
+          "p95_seconds": 0.01028619147837162,
+          "examples_per_second": 98.69103885896757,
+          "peak_allocated_bytes": 382969856,
+          "estimated_forward_flops": 53553401862
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.01751339342445135,
+          "p95_seconds": 0.01759045384824276,
+          "examples_per_second": 1827.1730226378145,
+          "peak_allocated_bytes": 456293376,
+          "estimated_forward_flops": 367236612288
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "choices": 1,
+          "iterations": 0,
+          "median_seconds": 0.07030948624014854,
+          "p95_seconds": 0.07034776359796524,
+          "examples_per_second": 455.13061908461464,
+          "peak_allocated_bytes": 692291584,
+          "estimated_forward_flops": 1713708859584
+        }
+      ]
+    }
+  ],
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "note": "BF16 quality re-evaluated after FP32 adapter merging."
+}

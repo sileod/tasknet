@@ -1,0 +1,188 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "source_cost_reference": "benchmarks/results/fld-scaling (source fitting must be included)",
+  "rows": [
+    {
+      "condition": "trm-frozen",
+      "iterations": 0,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 97.36869699321687,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 96.7977739199996,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 1,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6229508196721312,
+          "stage_train_seconds": 97.36869699321687,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 96.7977739199996,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 2,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6180327868852459,
+          "stage_train_seconds": 97.36869699321687,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6262295081967213,
+          "stage_train_seconds": 96.7977739199996,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 4,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6213114754098361,
+          "stage_train_seconds": 97.36869699321687,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 96.7977739199996,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "trm-frozen",
+      "iterations": 8,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6213114754098361,
+          "stage_train_seconds": 97.36869699321687,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6262295081967213,
+          "stage_train_seconds": 96.7977739199996,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 0,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 98.24603097699583,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6278688524590164,
+          "stage_train_seconds": 105.65198312886059,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 1,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6180327868852459,
+          "stage_train_seconds": 98.24603097699583,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6147540983606558,
+          "stage_train_seconds": 105.65198312886059,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 2,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.6196721311475409,
+          "stage_train_seconds": 98.24603097699583,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6114754098360655,
+          "stage_train_seconds": 105.65198312886059,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 4,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.601639344262295,
+          "stage_train_seconds": 98.24603097699583,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6081967213114754,
+          "stage_train_seconds": 105.65198312886059,
+          "cache_seconds": 0.0
+        }
+      ]
+    },
+    {
+      "condition": "control",
+      "iterations": 8,
+      "seeds": [
+        {
+          "seed": 0,
+          "accuracy": 0.5918032786885246,
+          "stage_train_seconds": 98.24603097699583,
+          "cache_seconds": 0.0
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6049180327868853,
+          "stage_train_seconds": 105.65198312886059,
+          "cache_seconds": 0.0
+        }
+      ]
+    }
+  ],
+  "warning": "Architecture changed between seeds: seed 0 legacy centered conditioning anchor; seed 1 retains full anchor. No paired aggregate is valid."
+}

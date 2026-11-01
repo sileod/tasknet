@@ -1,0 +1,281 @@
+{
+  "protocol": {
+    "study": "Exploratory low-rank update-scale diagnostic",
+    "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+    "seeds": [
+      0,
+      1
+    ],
+    "scales": [
+      0,
+      1,
+      2,
+      4,
+      8,
+      10
+    ],
+    "split": "validation",
+    "rows": 2048,
+    "replay_iterations": 1,
+    "ordinary_adapter_iterations": 0,
+    "note": "Scale up matrices only. Native pretrained weights remain unchanged. Scale one must reproduce saved predictions exactly. Scale zero is the intervention without learned updates. Both replay and ordinary-adapter controls receive every scale. Hyperparameter selection uses these validation results; no reserved/test data are scored. Source training costs remain mandatory."
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 0,
+      "accuracy": 0.55322265625,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 1,
+      "accuracy": 0.5595703125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 2,
+      "accuracy": 0.56103515625,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 4,
+      "accuracy": 0.548828125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 8,
+      "accuracy": 0.50927734375,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 10,
+      "accuracy": 0.5009765625,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/replay-lora/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 0,
+      "accuracy": 0.55419921875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 1,
+      "accuracy": 0.5849609375,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 2,
+      "accuracy": 0.591796875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 4,
+      "accuracy": 0.4892578125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 8,
+      "accuracy": 0.3623046875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 0,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 10,
+      "accuracy": 0.3583984375,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-0/adapter/0/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 0,
+      "accuracy": 0.63623046875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 1,
+      "accuracy": 0.65576171875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 2,
+      "accuracy": 0.66748046875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 4,
+      "accuracy": 0.671875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 8,
+      "accuracy": 0.63232421875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "replay-lora",
+      "iterations": 1,
+      "scale": 10,
+      "accuracy": 0.62158203125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/replay-lora/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 0,
+      "accuracy": 0.64111328125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 1,
+      "accuracy": 0.669921875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 2,
+      "accuracy": 0.6787109375,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 4,
+      "accuracy": 0.623046875,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 8,
+      "accuracy": 0.44189453125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    },
+    {
+      "seed": 1,
+      "condition": "adapter",
+      "iterations": 0,
+      "scale": 10,
+      "accuracy": 0.4033203125,
+      "source_checkpoint": "runs/fld-replay-adapters/seed-1/adapter/1/checkpoint"
+    }
+  ],
+  "summary": [
+    {
+      "condition": "replay-lora",
+      "scale": 0,
+      "mean_accuracy": 0.5947265625
+    },
+    {
+      "condition": "replay-lora",
+      "scale": 1,
+      "mean_accuracy": 0.607666015625
+    },
+    {
+      "condition": "replay-lora",
+      "scale": 2,
+      "mean_accuracy": 0.6142578125
+    },
+    {
+      "condition": "replay-lora",
+      "scale": 4,
+      "mean_accuracy": 0.6103515625
+    },
+    {
+      "condition": "replay-lora",
+      "scale": 8,
+      "mean_accuracy": 0.57080078125
+    },
+    {
+      "condition": "replay-lora",
+      "scale": 10,
+      "mean_accuracy": 0.561279296875
+    },
+    {
+      "condition": "adapter",
+      "scale": 0,
+      "mean_accuracy": 0.59765625
+    },
+    {
+      "condition": "adapter",
+      "scale": 1,
+      "mean_accuracy": 0.62744140625
+    },
+    {
+      "condition": "adapter",
+      "scale": 2,
+      "mean_accuracy": 0.63525390625
+    },
+    {
+      "condition": "adapter",
+      "scale": 4,
+      "mean_accuracy": 0.55615234375
+    },
+    {
+      "condition": "adapter",
+      "scale": 8,
+      "mean_accuracy": 0.402099609375
+    },
+    {
+      "condition": "adapter",
+      "scale": 10,
+      "mean_accuracy": 0.380859375
+    }
+  ],
+  "confirmed_efficiency_gain": false,
+  "screen_only": true
+}
