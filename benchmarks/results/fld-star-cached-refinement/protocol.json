@@ -1,0 +1,23 @@
+{
+  "task": "FLD.v2/star",
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "seed_order": [0, 1],
+  "gate": "Run seed 0 first. Continue to seed 1 only if final four-pass accuracy strictly exceeds zero-pass, one-pass and matched reset-state control. Archive failure without a cross-seed mean. Additional-seed confirmation remains necessary after any positive screen.",
+  "fitting_rows": 8192,
+  "validation_rows": 2048,
+  "split_seed": 0,
+  "cohort_audit": "benchmarks/results/fld-star-replay/fitting-audit.json",
+  "initial_checkpoints": "Original paired default-trained 68M B0; backbone fully frozen",
+  "conditions": ["trm-frozen", "control"],
+  "optimizer_steps": 5000,
+  "learning_rate": 0.0003,
+  "warmup_steps": 100,
+  "train_depths": [2, 4],
+  "eval_depths": [0, 1, 2, 4, 8],
+  "primary_depth": 4,
+  "intermediate_loss_weight": 0,
+  "final_loss_weight": 1,
+  "state": "Existing pooled-state/token-memory/anchored-logit architecture, no new model options",
+  "costs": "Include original source training, mandatory token encoding and head training; record CPU tensor cache bytes and cache-inclusive GPU peak.",
+  "interpretation": "Longer-training exploratory pilot enabled by token caching. No test/private reserve scoring; no architecture changes during the study."
+}

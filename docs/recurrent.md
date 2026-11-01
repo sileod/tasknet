@@ -117,7 +117,7 @@ output.loss.backward()
 
 The caller owns storage and data provenance. Cached refinement rejects a
 partially or fully unfrozen base model, preventing stale encoder gradients.
-The benchmark's `--cache-representations` uses ordinary HF datasets and the same
+The benchmark's `--cache-representations` uses ordinary HF/PyTorch datasets and the same
 HF Trainer/optimizer on these features; it preserves the task's effective batch
 size and records encoding time/estimated compute separately.
 
@@ -205,7 +205,9 @@ budgets include mandatory feature encoding when caching is enabled.
 iteration counts and analytic estimated FLOPs; parameter counts; measured training
 examples/s and non-padding tokens/s; allocated GPU memory; and measured inference
 median/P95 latency and throughput. Cache encoding is separate and included in a
-combined compute total. Cached training processes no tokens, so tokens/s is null.
+combined compute total. Pooled cached training processes no tokens, so tokens/s is
+null. With token-memory caches it counts tokens read by the refiner, not repeated
+encoder computation.
 Training wall time includes scheduled evaluation; modeled training FLOPs exclude
 that evaluation. The analytic model counts dense linear and attention operations,
 approximates backward cost, and excludes norms, activations and local-window
@@ -239,10 +241,14 @@ memory, without adding answer-position embeddings. Padding is masked.
 Zero-step predictions preserve the original head, and checkpoint save/reload
 includes the memory projections. The default pooled path is unchanged.
 
-The benchmark flag is `--token-memory`. Its compact feature-cache mode is not
-supported with this flag; full token-memory caching can be supplied through
-`encode()` and the model's cached forward interface when the backbone is fully
-frozen, but the benchmark does not materialize these larger caches.
+The benchmark flag is `--token-memory`. Combine it with `--cache-representations`
+for fully frozen TRM/control models. CPU tensors retain encoded token states and
+masks, padding candidates separately and trimming each collated batch. This uses
+substantial host memory: `cache_tensor_host_bytes` records tensor storage, and
+`cache_peak_allocated_bytes` records GPU encoding memory. The reported GPU peak
+includes mandatory encoding. Classification and both MCQ memory modes retain
+their normal training, output and answer-permutation behavior. Partial/full
+encoder finetuning cannot use frozen caches.
 
 `bash benchmarks/fld_token_memory.sh` compares frozen refinement and its
 nonrecurrent control from each paired trained 68M FLD checkpoint. The study

@@ -96,6 +96,7 @@ class Recorder(TrainerCallback):
         self.iterations = Counter()
         self.trainer = None
         self.phase = 'initial'
+        self.cached_training = False
         self.flops_budget = None
         self.seconds_budget = None
         self.cache_flops = 0
@@ -115,6 +116,8 @@ class Recorder(TrainerCallback):
         self.examples += batch
         self.tokens += tokens
         enc, ref = estimate_forward_flops(task_model, batch, length, choices, n)
+        if self.cached_training:
+            enc = 0
         recurrent = getattr(task_model, 'recurrent', None)
         fraction = 1.0
         if recurrent and recurrent.adapter_rank:
@@ -143,6 +146,7 @@ class Recorder(TrainerCallback):
     def install(self, trainer):
         self.trainer = trainer
         if not hasattr(trainer, 'get_single_train_dataloader'):
+            self.cached_training = True
             original_collate = trainer.data_collator
             original_eval = trainer.get_eval_dataloader
 
@@ -150,7 +154,10 @@ class Recorder(TrainerCallback):
                 batch = original_collate(features)
                 n = len(features)
                 choices = batch['representations'].shape[1] if batch['representations'].ndim == 3 else 1
-                self.batches.append((n, 0, choices, 0))
+                mask = batch.get('token_mask')
+                length = mask.shape[-1] // choices if mask is not None else 0
+                tokens = int(mask.sum()) if mask is not None else 0
+                self.batches.append((n, length, choices, tokens))
                 return batch
 
             def evaluation(*args, **kwargs):
@@ -241,7 +248,11 @@ def shuffled_choice_accuracy(trainer, task):
         output['labels'] = permutation.index(int(row['labels']))
         return output
 
-    shuffled = data.with_format(None).map(shuffle, with_indices=True, load_from_cache_file=False)
+    if cached and isinstance(data, torch.utils.data.StackDataset):
+        from .token_cache import shuffle_candidates
+        shuffled = shuffle_candidates(data, choices)
+    else:
+        shuffled = data.with_format(None).map(shuffle, with_indices=True, load_from_cache_file=False)
     if not cached:
         shuffled.set_format(type='torch', columns=['input_ids','attention_mask','labels','task'])
     trainer.eval_dataset = shuffled if cached else MappingProxyType({trainer.tasks[0]:shuffled})
@@ -261,8 +272,11 @@ def cache_representations(trainer, task_model, dtype):
     flops = 0
     synchronize()
     start = time.perf_counter()
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
     for split in ['train', 'validation']:
         chunks = dict(representations=[], initial_logits=[], labels=[])
+        token_chunks = []
         loader = trainer.get_eval_dataloader(MappingProxyType({task: trainer.processed_tasks[task][split]}))
         with torch.no_grad(), torch.autocast(device_type=device.type, dtype=dtype,
                                             enabled=dtype != torch.float32):
@@ -272,20 +286,34 @@ def cache_representations(trainer, task_model, dtype):
                 inputs = {key: value[..., :length].to(device) for key, value in batch.items()
                           if key in ('input_ids', 'attention_mask')}
                 encoded = task_model.encode(**inputs)
-                for key, value in encoded.items():
-                    chunks[key].append(value.float().cpu())
-                chunks['labels'].append(batch['labels'].cpu())
+                if task_model.recurrent.token_memory:
+                    token_chunks.append({**{key: value.detach().cpu() for key, value in encoded.items()},
+                                         'labels': batch['labels'].cpu()})
+                else:
+                    for key, value in encoded.items():
+                        chunks[key].append(value.float().cpu())
+                    chunks['labels'].append(batch['labels'].cpu())
                 flops += estimate_forward_flops(task_model, len(batch['labels']), length, choices, 0)[0]
-        cached[split] = datasets.Dataset.from_dict({key: torch.cat(values).numpy()
-                                                   for key, values in chunks.items()})
+        if token_chunks:
+            from .token_cache import stack_chunks
+            cached[split] = stack_chunks(token_chunks, choices)
+        else:
+            cached[split] = datasets.Dataset.from_dict({key: torch.cat(values).numpy()
+                                                       for key, values in chunks.items()})
     synchronize()
     seconds = time.perf_counter() - start
+    cache_peak = torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None
+    host_bytes = sum(value.numel()*value.element_size() for data in cached.values()
+                     if isinstance(data, torch.utils.data.StackDataset) for value in data.datasets.values())
     args = copy.deepcopy(trainer.args)
     args.per_device_train_batch_size = trainer.task_batch_size(task)
     args.per_device_eval_batch_size = trainer.task_batch_size(task, evaluation=True)
+    from .token_cache import collate_tokens
     trainer = HFTrainer(model=task_model, args=args, train_dataset=cached['train'],
-        eval_dataset=cached['validation'], data_collator=DefaultDataCollator(),
+        eval_dataset=cached['validation'], data_collator=collate_tokens if task_model.recurrent.token_memory else DefaultDataCollator(),
         compute_metrics=task.compute_metrics)
+    trainer.cache_peak_allocated_bytes = cache_peak
+    trainer.cache_tensor_host_bytes = host_bytes
     return trainer, seconds, flops
 
 
@@ -431,9 +459,8 @@ def main():
         parser.error('Compare B1 to the same trained B0 checkpoint using --eval-only')
     if args.train_repeated_layers and set(args.conditions) != {'depth'}:
         parser.error('--train-repeated-layers requires only --conditions depth')
-    if args.token_memory and (args.cache_representations or
-            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
-        parser.error('--token-memory requires refinement conditions without --cache-representations')
+    if args.token_memory and not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
+        parser.error('--token-memory requires refinement conditions')
     if args.neutral_head and (args.initial_checkpoint or
             not set(args.conditions) <= {'baseline', 'trm-full', 'control-full'}):
         parser.error('--neutral-head requires a fresh native or joint-refinement run without --initial-checkpoint')
@@ -532,6 +559,10 @@ def main():
             synchronize()
             train_seconds = time.perf_counter()-recorder.started
             peak = torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None
+            cache_peak = getattr(trainer, 'cache_peak_allocated_bytes', None)
+            cache_host_bytes = getattr(trainer, 'cache_tensor_host_bytes', 0)
+            if peak is not None and cache_peak is not None:
+                peak = max(peak, cache_peak)
             recorder.phase = 'evaluation'
             quality = []
             task_model = model.task_models_list[0]
@@ -578,6 +609,7 @@ def main():
                 model_revision=getattr(task_model.config, '_commit_hash', None),
                 train_seconds=train_seconds, peak_allocated_bytes=peak,
                 cached_training=cached_training, cache_seconds=cache_seconds,
+                cache_peak_allocated_bytes=cache_peak, cache_tensor_host_bytes=cache_host_bytes,
                 cache_estimated_forward_flops=cache_flops,
                 estimated_train_flops_including_cache=recorder.estimated_train_flops + cache_flops,
                 **counts,
