@@ -274,6 +274,16 @@ def cache_representations(trainer, task_model, dtype):
     return trainer, seconds, flops
 
 
+def initialize_neutral_head(model):
+    """Start a new task readout at uniform logits without changing pretrained features."""
+    if not isinstance(model.classifier, torch.nn.Linear):
+        raise ValueError('Neutral initialization requires a linear classification head')
+    with torch.no_grad():
+        model.classifier.weight.zero_()
+        if model.classifier.bias is not None:
+            model.classifier.bias.zero_()
+
+
 def condition_config(name, args):
     if name == 'baseline':
         return None
@@ -298,6 +308,8 @@ def main():
     parser.add_argument('--steps', type=int, default=200)
     parser.add_argument('--learning-rate', type=float, default=3e-5)
     parser.add_argument('--warmup-steps', type=int, default=0)
+    parser.add_argument('--neutral-head', action='store_true',
+                        help='Initialize a new native task readout at uniform logits')
     parser.add_argument('--eval-only', action='store_true')
     parser.add_argument('--train-flops-budget', type=float)
     parser.add_argument('--train-seconds-budget', type=float)
@@ -347,6 +359,8 @@ def main():
     if args.token_memory and (args.cache_representations or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control'}):
         parser.error('--token-memory requires refinement conditions without --cache-representations')
+    if args.neutral_head and (args.initial_checkpoint or args.conditions != ['baseline']):
+        parser.error('--neutral-head is only for native pretrained baselines, without --initial-checkpoint')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)
@@ -379,6 +393,8 @@ def main():
             if config is not None:
                 hparams['recurrent'] = config
             model, trainer = Model_Trainer([copy.deepcopy(task)], hparams)
+            if args.neutral_head:
+                initialize_neutral_head(model.task_models_list[0])
             setup_seconds = time.perf_counter()-start
             cache_seconds, cache_flops = 0.0, 0
             cached_training = args.cache_representations and condition in ('trm-frozen', 'control')

@@ -1,0 +1,28 @@
+{
+  "screen_only": true,
+  "baseline_mean_accuracy": 0.59765625,
+  "baseline_minimum_accuracy": 0.55419921875,
+  "recipes": [
+    {
+      "recipe": "lr1e5-warm0",
+      "mean_accuracy": 0.54736328125,
+      "minimum_accuracy": 0.5224609375,
+      "seed_std": 0.03521723226612688,
+      "promoted": false
+    },
+    {
+      "recipe": "lr1e5-warm100",
+      "mean_accuracy": 0.5439453125,
+      "minimum_accuracy": 0.53466796875,
+      "seed_std": 0.013120145354047269,
+      "promoted": false
+    },
+    {
+      "recipe": "lr3e5-warm100",
+      "mean_accuracy": 0.5966796875,
+      "minimum_accuracy": 0.55712890625,
+      "seed_std": 0.055933251246201514,
+      "promoted": false
+    }
+  ]
+}

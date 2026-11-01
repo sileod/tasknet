@@ -405,3 +405,23 @@ test scores do not select recipes or checkpoints. Promote a recipe only if
 both its mean and worst-seed validation accuracy exceed the baseline; then
 check additional seeds and proof-depth breakdowns before combining it with
 length grouping or recurrence. This screening rule is not an efficiency claim.
+
+A further stability hypothesis isolates the newly initialized classifier from
+the pretrained encoder/prediction head. `--neutral-head` initializes only the
+native linear task readout to zero, producing uniform initial logits and zero
+encoder gradient on the first step while allowing the readout to learn. It is
+restricted to native baselines without `--initial-checkpoint`; the default
+initialization and all pretrained parameters remain unchanged. A two-seed FLD
+validation comparison uses the original 3e-5 learning rate, zero warmup and
+1,000 steps. This tests initialization rather than adding another learning-rate
+sweep. Do not apply the option when preserving an existing finetuned task head.
+The original confirmation audit rejects this altered recipe.
+
+The learning-rate/warmup screen is complete and none of its three recipes met
+the predeclared promotion rule. Means were 59.67% (3e-5, warmup 100), 54.74%
+(1e-5, no warmup), and 54.39% (1e-5, warmup 100), versus the original 59.77%.
+The lower-rate recipes reduced seed spread by underperforming, which is not
+accepted as progress. [All six runs and predictions](../benchmarks/results/fld-stability/)
+are archived. Neutral-readout initialization is the next separate stability
+test; token-memory refinement and its matched control are running independently
+from the original trained B0 checkpoints.

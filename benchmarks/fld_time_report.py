@@ -35,6 +35,8 @@ def report(root):
             for key, value in expected.items():
                 if config.get(key) != value:
                     raise ValueError(f'Protocol mismatch: {size}/{seed}/{key}')
+            if config.get('neutral_head', False) or config.get('warmup_steps', 0):
+                raise ValueError('Confirmation protocol uses the default readout initialization without warmup')
             if config.get('group_by_length', False):
                 raise ValueError('Confirmation protocol uses random batching')
             if len(data['runs']) != 1:
