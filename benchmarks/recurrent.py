@@ -351,7 +351,7 @@ def condition_config(name, args):
         token_memory=args.token_memory, intermediate_loss_weight=args.intermediate_loss_weight,
         final_loss_weight=args.final_loss_weight, class_query_init=args.class_query_init,
         normalize_anchor=args.normalize_anchor, contrastive_states=args.contrastive_states,
-        candidate_memory=args.candidate_memory)
+        candidate_memory=args.candidate_memory, logit_update=args.logit_update)
 
 
 def main():
@@ -400,6 +400,7 @@ def main():
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
     parser.add_argument('--dataset-revision', help='Pin tasksource dataset loading independently of model revision')
+    parser.add_argument('--logit-update', choices=['cumulative','anchored'], default='cumulative')
     parser.add_argument('--candidate-memory', action='store_true')
     parser.add_argument('--contrastive-states', action='store_true')
     parser.add_argument('--normalize-anchor', action='store_true')
@@ -436,6 +437,9 @@ def main():
     if args.refiner_learning_rate is not None and (args.cache_representations or args.refiner_learning_rate <= 0 or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('--refiner-learning-rate requires a positive rate, answer-refinement conditions and no feature cache')
+    if args.logit_update == 'anchored' and not set(args.conditions) <= {
+            'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
+        parser.error('Anchored logit updates require answer-refinement conditions')
     if args.candidate_memory and not args.token_memory:
         parser.error('--candidate-memory requires --token-memory')
     if args.contrastive_states and not set(args.conditions) <= {

@@ -648,3 +648,30 @@ native pretrained weights. The earlier B0 training cost is mandatory in total
 costs, and inference profiling remains a small smoke measurement until quality
 improves. The reserved examples remain untouched. This is a new hypothesis,
 not an established gain.
+
+
+Replay-only adapters completed at 60.77% for one extra pass versus 59.77% at
+zero and 62.74% for ordinary LoRA adaptation. Source weights remain unchanged
+and both seeds improve slightly with one extra pass, but the ordinary-adapter
+control is stronger. The validation-only weight-scale sweep selects scale 2
+for both: 61.43% replay versus 63.53% ordinary adaptation, against the 61.99%
+150M reference. Scale-one predictions reproduced saved source predictions
+exactly. These are selected validation scores, not confirmed quality or
+recurrence advantages.
+
+`python -m benchmarks.fld_adapter_profile` profiles native 68M/150M and both
+scale-two adapter candidates together at B1/B32 and L128/L512, BF16/SDPA,
+30 repeats. It follows the quality screen and includes no training. Source
+training costs still come from the original source/stage artifacts.
+
+A separate refinement experiment, `benchmarks/fld_anchored_memory.sh`, predicts
+a correction relative to the original logits at each step, rather than adding
+all earlier corrections. This removes cumulative confidence drift as a source
+of apparent depth gains; its nonrecurrent control has depth-invariant outputs.
+It retains the full input anchor, class queries and token memory, freezes B0,
+and fits on the audited fresh rows. Seeds 0/1 receive 1,000 head updates at 1e-4
+with 100 warmup steps and training depths 1/2/4; primary evaluation depth remains
+4. The lower rate and fixed-anchor correction are a new exploratory recipe,
+not a claim that any one change has independently improved accuracy. Source
+costs and actual training time must be reported. Reserved/test scores remain
+unused. Package code is fixed through both seeds once launched.

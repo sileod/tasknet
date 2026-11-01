@@ -41,6 +41,7 @@ class RecurrentConfig:
     contrastive_anchor: bool = False
     adapter_rank: int = 0
     adapter_scope: str = 'replay'
+    logit_update: str = 'cumulative'
 
     @classmethod
     def parse(cls, config):
@@ -74,6 +75,10 @@ class RecurrentConfig:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
         if not isinstance(result.adapter_rank, int) or result.adapter_rank < 0:
             raise ValueError('adapter_rank must be a nonnegative integer')
+        if result.logit_update not in ('cumulative', 'anchored'):
+            raise ValueError('logit_update must be cumulative or anchored')
+        if result.logit_update != 'cumulative' and result.method not in ('trm', 'control'):
+            raise ValueError('Anchored logit updates require answer refinement')
         if result.adapter_scope not in ('replay', 'base'):
             raise ValueError('adapter_scope must be replay or base')
         if result.adapter_rank:
@@ -168,7 +173,8 @@ class RecurrentModel(PreTrainedModel):
                 c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
                 memory_size=base.config.hidden_size if c.token_memory else None,
                 normalize_anchor=c.normalize_anchor, contrastive_states=c.contrastive_states,
-                candidate_memory=c.candidate_memory, contrastive_anchor=c.contrastive_anchor).to(
+                candidate_memory=c.candidate_memory, contrastive_anchor=c.contrastive_anchor,
+                logit_update=c.logit_update).to(
                     device=self.classifier.weight.device, dtype=self.classifier.weight.dtype)
             if c.class_query_init == 'classifier':
                 if not classes:

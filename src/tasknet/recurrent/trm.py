@@ -5,12 +5,13 @@ from torch import nn
 
 class AnswerRefiner(nn.Module):
     def __init__(self, input_size, num_classes, hidden_size=256, layers=2, heads=4,
-                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False, candidate_memory=False, contrastive_anchor=False):
+                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False, candidate_memory=False, contrastive_anchor=False, logit_update='cumulative'):
         super().__init__()
         self.normalize_anchor = normalize_anchor
         self.contrastive_states = contrastive_states
         self.candidate_memory = candidate_memory
         self.contrastive_anchor = contrastive_anchor
+        self.logit_update = logit_update
         self.anchor = nn.Linear(input_size, hidden_size)
         self.answer = nn.Linear(1, hidden_size)
         self.class_embeddings = nn.Parameter(torch.zeros(num_classes, hidden_size)) if num_classes else None
@@ -105,11 +106,14 @@ class AnswerRefiner(nn.Module):
             with torch.set_grad_enabled(differentiable):
                 if control:
                     _, delta = self.step(initial_z, x, initial_logits, memory)
-                    deltas.append(delta)
-                    y = initial_logits + torch.stack(deltas).sum(0)
+                    if self.logit_update == 'anchored':
+                        y = initial_logits + delta
+                    else:
+                        deltas.append(delta)
+                        y = initial_logits + torch.stack(deltas).sum(0)
                 else:
                     z, delta = self.step(z, x, y, memory)
-                    y = y + delta
+                    y = (initial_logits if self.logit_update == 'anchored' else y) + delta
             if index + 1 == early:
                 z, y = z.detach(), y.detach()
             if index >= early:

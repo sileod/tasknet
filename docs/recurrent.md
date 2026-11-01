@@ -377,3 +377,13 @@ recurrent mechanisms and gradient checkpointing are not wrapped by this path.
 Checkpoints store native encoder weights separately from `adapters.safetensors`.
 The benchmark conditions are `replay-lora` and `adapter`, with `--adapter-rank`
 and `--replay-damping`; the ordinary-adapter control is evaluated at zero depth.
+
+
+`logit_update="anchored"` changes answer refinement to
+`y[t+1] = original_logits + update(z[t+1])`, instead of accumulating every
+past update. State recurrence and prediction feedback remain trainable, and
+zero-loop output remains native. The nonrecurrent control then has identical
+predictions at every positive evaluation depth; repeating a constant correction
+cannot change its confidence. This is a useful control for depth-dependent
+calibration. The default `"cumulative"` preserves earlier checkpoint behavior.
+The benchmark flag is `--logit-update anchored`.
