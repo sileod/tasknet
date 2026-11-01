@@ -270,3 +270,36 @@ rows, 2,048 validation rows and 1,000 optimizer steps as the native baselines.
 No previous task finetuning is required, so there is no uncounted B0 preparation
 cost. Actual time and latency still determine whether any quality gain is an
 efficiency gain. The neutral-readout stability study remains separate.
+
+### Supervision and fresh refinement examples
+
+`intermediate_loss_weight` defaults to 1 and `final_loss_weight` to 2.
+Setting the former to zero removes direct early-answer supervision while
+retaining gradients through all recurrent steps. The default depth schedule
+1/2/4 places about 51% of its normalized supervised loss weight on the first
+answer. `bash benchmarks/fld_joint_memory.sh runs/fld-joint-final final` instead
+trains depths 2/4 with final-answer-only supervision. Both recurrent and matched
+nonrecurrent conditions receive this same objective. Four steps remain primary;
+unseen-depth scores are diagnostics, not automatic evidence of reasoning.
+
+`bash benchmarks/fld_fresh_refinement.sh` tests a separate hypothesis: a
+post-training refiner should learn to correct errors on examples the original
+checkpoint did not fit. It freezes each B0 trained on 8,192 rows and trains the
+refiner/control on 8,192 explicitly disjoint rows. Tasksource caps are not
+prefix slices, so `--exclude-training-rows` loads and excludes the actual earlier
+sample rather than assuming an index offset. The dataset revision and held-out
+splits stay fixed. Data preparation time is reported separately.
+
+The pinned [split audit](../benchmarks/results/fld-fresh-refinement/split-audit.json)
+verifies zero example and context overlap between the two stages. It also
+reserves 9,997 unique-context examples, excluding both fitted stages and all
+full official evaluation contexts. No predictions or selection scores have
+been computed on this reserve. This supplies a genuinely unused evaluation
+pool after the earlier official test was inspected; it is not the official
+FLD test split and does not rule out shared logical templates.
+
+The larger native 150M reference receives the union's 16,384 available training
+examples. Small staged training uses 2,000 total optimizer steps, versus 1,000
+for the larger reference: compare measured total training time and inference
+latency, not equal steps, and include the earlier B0 fit. This experiment does
+not change `tn.transfer`'s equal-step source/target protocol.

@@ -23,6 +23,13 @@
       "minimum_accuracy": 0.55712890625,
       "seed_std": 0.055933251246201514,
       "promoted": false
+    },
+    {
+      "recipe": "neutral",
+      "mean_accuracy": 0.517578125,
+      "minimum_accuracy": 0.5068359375,
+      "seed_std": 0.015191747252054731,
+      "promoted": false
     }
   ]
 }

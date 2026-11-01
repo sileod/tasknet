@@ -1,0 +1,38 @@
+{
+  "dataset": "hitachi-nlp/FLD.v2",
+  "config": "default",
+  "revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "seed": 0,
+  "source_rows": 8192,
+  "source_fingerprint": "8c9669731eed80ab",
+  "candidate_cap": 16384,
+  "refinement_rows": 8192,
+  "refinement_fingerprint": "9df46ab6c8fafaf1",
+  "pair_overlap": 0,
+  "context_overlap": 0,
+  "reserve_parent_cap": 26384,
+  "reserve_parent_fingerprint": "0d0b18f61d8f0b34",
+  "reserved_index_ranges": [
+    [
+      0,
+      3783
+    ],
+    [
+      3784,
+      5776
+    ],
+    [
+      5777,
+      8967
+    ],
+    [
+      8968,
+      10000
+    ]
+  ],
+  "reserved_rows": 9997,
+  "refinement_pair_sha256": "a144a50e40cfd5c5c84643d94cf09ed325a86c6a10dc1c57655c08b278b97b62",
+  "reserved_pair_sha256": "ef7350334fb51aacdf089100fbdbaf8ed6a97fc0d965758b104d8fc2b5b159d9",
+  "index_convention": "Half-open [start, stop) ranges in the pinned, standardized reserve parent training sample.",
+  "note": "Tasksource caps are not prefix slices. Explicit exclusion is verified. Reserve contexts exclude both fitting stages and full official evaluation splits. The reserve was fixed before predictions or scoring on it."
+}

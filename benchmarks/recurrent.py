@@ -274,6 +274,20 @@ def cache_representations(trainer, task_model, dtype):
     return trainer, seconds, flops
 
 
+def exclude_training_examples(task, reference, nrows):
+    """Fit refinement on examples absent from the checkpoint's training sample."""
+    if reference is None:
+        return task
+    import json
+    identity = lambda row: json.dumps(row, sort_keys=True, ensure_ascii=False)
+    excluded = {identity(row) for row in reference.dataset['train']}
+    selected = [i for i,row in enumerate(task.dataset['train']) if identity(row) not in excluded]
+    if len(selected) < nrows:
+        raise ValueError('Not enough fresh training examples after excluding the fitted sample')
+    task.dataset['train'] = task.dataset['train'].select(selected[:nrows])
+    return task
+
+
 def initialize_neutral_head(model):
     """Start a new task readout at uniform logits without changing pretrained features."""
     if not isinstance(model.classifier, torch.nn.Linear):
@@ -315,7 +329,8 @@ def condition_config(name, args):
     return dict(method=method, steps=args.iterations, hidden_size=args.hidden_size, layers=args.layers,
         heads=4, train_steps=tuple(args.train_iterations), freeze_encoder=name in ('trm-frozen', 'trm-partial', 'control'),
         unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0,
-        token_memory=args.token_memory)
+        token_memory=args.token_memory, intermediate_loss_weight=args.intermediate_loss_weight,
+        final_loss_weight=args.final_loss_weight)
 
 
 def main():
@@ -336,6 +351,8 @@ def main():
     parser.add_argument('--train-flops-budget', type=float)
     parser.add_argument('--train-seconds-budget', type=float)
     parser.add_argument('--nrows', type=int, default=256)
+    parser.add_argument('--exclude-training-rows', type=int, default=0,
+                        help='Exclude a smaller tasksource training sample already used by the checkpoint')
     parser.add_argument('--eval-rows', type=int, help='Fixed held-out subset for screening; omit for full evaluation')
     parser.add_argument('--eval-split', choices=['validation', 'test'], default='validation')
     parser.add_argument('--save-predictions', action='store_true', help='Save ordered evaluation predictions for paired audits')
@@ -346,6 +363,8 @@ def main():
     parser.add_argument('--iterations', type=int, default=4)
     parser.add_argument('--train-iterations', nargs='+', type=int, default=[1,2,4])
     parser.add_argument('--eval-iterations', nargs='+', type=int, default=[0,1,2,4,8])
+    parser.add_argument('--intermediate-loss-weight', type=float, default=1.0)
+    parser.add_argument('--final-loss-weight', type=float, default=2.0)
     parser.add_argument('--hidden-size', type=int, default=256)
     parser.add_argument('--layers', type=int, default=2)
     parser.add_argument('--unfreeze-last-n', type=int, default=2)
@@ -357,6 +376,7 @@ def main():
     parser.add_argument('--attn', default='sdpa')
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
+    parser.add_argument('--dataset-revision', help='Pin tasksource dataset loading independently of model revision')
     parser.add_argument('--token-memory', action='store_true',
                         help='Refine compact answers by attending to fixed encoder token states')
     parser.add_argument('--cache-representations', action='store_true',
@@ -368,6 +388,8 @@ def main():
     args = parser.parse_args()
     if min(args.steps, args.nrows, args.latency_repeats, args.eval_every) < 1:
         parser.error('steps, nrows, latency-repeats and eval-every must be positive')
+    if args.exclude_training_rows < 0:
+        parser.error('exclude-training-rows must be nonnegative')
     if args.warmup_steps < 0 or args.warmup_steps >= args.steps:
         parser.error('warmup-steps must be nonnegative and smaller than steps')
     if args.learning_rate <= 0 or (args.eval_rows is not None and args.eval_rows < 1):
@@ -390,7 +412,17 @@ def main():
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)
-    task = AutoTask(args.task, tasksource_kwargs=dict(max_rows=args.nrows, seed=0, max_rows_eval=args.eval_rows))
+    data_started = time.perf_counter()
+    tasksource_options = dict(max_rows=args.nrows+args.exclude_training_rows, seed=0, max_rows_eval=args.eval_rows)
+    if args.dataset_revision:
+        tasksource_options['revision'] = args.dataset_revision
+    task = AutoTask(args.task, tasksource_kwargs=tasksource_options)
+    reference = None
+    if args.exclude_training_rows:
+        reference = AutoTask(args.task, tasksource_kwargs={**tasksource_options,
+            'max_rows': args.exclude_training_rows})
+    task = exclude_training_examples(task, reference, args.nrows)
+    data_prepare_seconds = time.perf_counter()-data_started
     if task.task_type not in ('MultipleChoice', 'SequenceClassification'):
         parser.error('Only classification and MCQ tasks are supported')
     if args.eval_split not in task.dataset:
@@ -519,6 +551,7 @@ def main():
                     paired_delta_vs_baseline=statistics.mean(deltas) if deltas else None,
                     paired_delta_std=statistics.stdev(deltas) if len(deltas)>1 else None))
             payload = dict(schema_version=1, summary=summary, config=vars(args), runs=runs,
+                data_prepare_seconds=data_prepare_seconds,
                 environment=dict(torch=torch.__version__, transformers=transformers.__version__,
                     datasets=datasets.__version__, tasksource=version('tasksource'),
                     tasknet=version('tasknet'), python=platform.python_version(),

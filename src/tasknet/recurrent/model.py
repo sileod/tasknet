@@ -28,6 +28,7 @@ class RecurrentConfig:
     unfreeze_last_n: int = 0
     backprop_steps: int = None
     final_loss_weight: float = 2.0
+    intermediate_loss_weight: float = 1.0
     layer_start: int = None
     layer_end: int = None
     damping: float = 0.1
@@ -53,7 +54,8 @@ class RecurrentConfig:
             raise ValueError('train_steps must contain nonnegative integers')
         if result.backprop_steps is not None and (not isinstance(result.backprop_steps, int) or result.backprop_steps < 1):
             raise ValueError('backprop_steps must be a positive integer or None')
-        if result.final_loss_weight <= 0 or not 0 <= result.dropout < 1 or result.init_scale < 0:
+        if (result.final_loss_weight <= 0 or result.intermediate_loss_weight < 0
+                or not 0 <= result.dropout < 1 or result.init_scale < 0):
             raise ValueError('Invalid loss weight, dropout or initialization scale')
         if result.hidden_size < 1 or result.layers < 1 or result.heads < 1 or result.hidden_size % result.heads:
             raise ValueError('hidden_size must be positive and divisible by heads; layers must be positive')
@@ -235,10 +237,10 @@ class RecurrentModel(PreTrainedModel):
         loss = None
         if labels is not None:
             supervised = predictions or [y]
-            weights = [1.0] * len(supervised)
+            weights = [c.intermediate_loss_weight] * len(supervised)
             weights[-1] = c.final_loss_weight
             loss = sum(weight * nn.functional.cross_entropy(logits, labels)
-                       for weight, logits in zip(weights, supervised)) / sum(weights)
+                       for weight, logits in zip(weights, supervised) if weight) / sum(weights)
         output_type = MultipleChoiceModelOutput if self.task_type == 'MultipleChoice' else SequenceClassifierOutput
         output = output_type(loss=loss, logits=y)
         if return_intermediate:

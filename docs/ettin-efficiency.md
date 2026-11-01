@@ -439,3 +439,23 @@ parameters and a jointly trained matched control. This tests whether the token
 memory needs task-adapted encoder features, rather than assuming a frozen
 finetuned representation will be sufficient. Native head initialization stays
 unchanged in this comparison; the neutral-initialization screen is independent.
+
+Neutral-readout initialization also failed the fixed-budget screen: 51.76%
+mean accuracy versus 59.77% for the native baseline. Its smaller seed spread
+came with lower quality, so it is not promoted. The [stability archive](../benchmarks/results/fld-stability/)
+now includes this result.
+
+Joint token-memory training with a separate refiner rate completed at 59.03%
+mean accuracy, versus 55.13% for its jointly trained matched control. The native
+baseline remains better (59.77%), and changing the recurrent inference count
+barely changes predictions. [All joint results and depth diagnostics](../benchmarks/results/fld-joint-memory/)
+are retained. A better score than a weak control alone is not an efficiency gain.
+
+The next two studies are final-only joint supervision and fresh-data frozen
+refinement, as specified in [the recurrent guide](recurrent.md). Neither uses
+previously inspected official test scores to select checkpoints. The fresh
+fit/reference samples and unused reserve can be reconstructed with
+`python -m benchmarks.fld_fresh_split`; the script refuses to silently replace
+a different reserved split. Actual Tasksource caps are checked by row identity,
+not assumed to be prefix slices. The larger fresh-data reference receives the
+same 16,384 available examples as the small staged recipe.
