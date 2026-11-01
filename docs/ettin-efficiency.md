@@ -517,3 +517,12 @@ recorded. Evaluation includes a deterministic per-example answer permutation.
 This is a small validation screen, not a quality-equivalence or efficiency
 confirmation; any apparent benefit requires additional seeds and comparison
 against the measured larger-model cost. It is queued after the FLD ablations.
+
+
+The unnormalized classifier-query screen is complete: at primary depth 4,
+TRM averages 60.21% versus 60.50% for its nonrecurrent control and 61.99% for
+the 150M fresh-data reference. Depth 8 gives 60.42% for both head conditions.
+There is no established recurrent advantage. [All runs, ordered predictions,
+source-inclusive training times and depth breakdowns](../benchmarks/results/fld-class-queries/)
+are archived. The anchor-normalization experiment is now running; the MCQ
+comparison remains queued behind it. No reserved-set predictions were computed.
