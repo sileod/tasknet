@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "quality": {
+    "schema_version": 1,
+    "seeds": 5,
+    "examples": 5000,
+    "mean_accuracy_delta": -0.00024,
+    "margin": 0.01,
+    "hierarchical_bootstrap_95": [
+      -0.058885,
+      0.04120099999999999
+    ],
+    "fixed_trained_models_conservative_95": [
+      -0.028532501966026986,
+      0.02805289083270358
+    ],
+    "quality_margin_supported": false,
+    "uncertainty_note": "Bootstrap resamples training seeds and common examples. Conservative bounds condition on the trained model set and use Bonferroni Clopper-Pearson gain/harm intervals. Neither measures latency or establishes an efficiency gain."
+  },
+  "rows": [
+    {
+      "seed": 2,
+      "small_accuracy": 0.6844,
+      "large_accuracy": 0.643,
+      "small_train_seconds": 251.10462925955653,
+      "large_train_seconds": 251.0927398968488,
+      "small_steps": 1738,
+      "small_setup_seconds": 6.898257568478584,
+      "large_setup_seconds": 7.397187747061253,
+      "train_time_ratio": 1.00004735048378,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "median_speedup": 1.6066387792690373,
+          "p95_speedup": 1.6099624343452146
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "median_speedup": 1.6139922613670634,
+          "p95_speedup": 1.6071562790093907
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "median_speedup": 1.8349342088563918,
+          "p95_speedup": 1.8838988606599907
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "median_speedup": 1.8395349596399009,
+          "p95_speedup": 1.826667334139852
+        }
+      ]
+    },
+    {
+      "seed": 3,
+      "small_accuracy": 0.6702,
+      "large_accuracy": 0.6468,
+      "small_train_seconds": 249.5619822330773,
+      "large_train_seconds": 249.47975290566683,
+      "small_steps": 1739,
+      "small_setup_seconds": 3.7498133797198534,
+      "large_setup_seconds": 4.088079243898392,
+      "train_time_ratio": 1.0003296032100912,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "median_speedup": 1.6810761775370429,
+          "p95_speedup": 1.6850754618074126
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "median_speedup": 1.6795008945635048,
+          "p95_speedup": 1.6879231481329922
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "median_speedup": 1.8412755413939579,
+          "p95_speedup": 1.88934167175202
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "median_speedup": 1.8392844044326715,
+          "p95_speedup": 1.827067826863608
+        }
+      ]
+    },
+    {
+      "seed": 4,
+      "small_accuracy": 0.52,
+      "large_accuracy": 0.6336,
+      "small_train_seconds": 251.3757826834917,
+      "large_train_seconds": 251.3610162883997,
+      "small_steps": 1734,
+      "small_setup_seconds": 3.545138530433178,
+      "large_setup_seconds": 4.0856549721211195,
+      "train_time_ratio": 1.000058745764598,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "median_speedup": 1.1391954612587056,
+          "p95_speedup": 1.1600892871367576
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "median_speedup": 1.6262487735050832,
+          "p95_speedup": 1.1429925631386242
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "median_speedup": 1.8459515620075966,
+          "p95_speedup": 1.8608137755629537
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "median_speedup": 1.8419398813190622,
+          "p95_speedup": 1.8233804771447002
+        }
+      ]
+    },
+    {
+      "seed": 5,
+      "small_accuracy": 0.5684,
+      "large_accuracy": 0.5662,
+      "small_train_seconds": 252.28122359141707,
+      "large_train_seconds": 252.22667916864157,
+      "small_steps": 1753,
+      "small_setup_seconds": 3.8805648870766163,
+      "large_setup_seconds": 4.188335198909044,
+      "train_time_ratio": 1.000216251599376,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "median_speedup": 1.6552968689521224,
+          "p95_speedup": 1.6317081187884417
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "median_speedup": 1.6529124677957823,
+          "p95_speedup": 1.653858579313589
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "median_speedup": 1.8421592371532034,
+          "p95_speedup": 1.8800907487446026
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "median_speedup": 1.840360684153206,
+          "p95_speedup": 1.831801514644518
+        }
+      ]
+    },
+    {
+      "seed": 6,
+      "small_accuracy": 0.6268,
+      "large_accuracy": 0.5814,
+      "small_train_seconds": 252.0077735092491,
+      "large_train_seconds": 251.93385412171483,
+      "small_steps": 1759,
+      "small_setup_seconds": 3.0860578287392855,
+      "large_setup_seconds": 4.002849297598004,
+      "train_time_ratio": 1.000293407917693,
+      "latency": [
+        {
+          "batch": 1,
+          "sequence_length": 128,
+          "median_speedup": 1.6218830506708795,
+          "p95_speedup": 1.6349893979829113
+        },
+        {
+          "batch": 1,
+          "sequence_length": 512,
+          "median_speedup": 1.6330911004936748,
+          "p95_speedup": 1.6133994044298856
+        },
+        {
+          "batch": 32,
+          "sequence_length": 128,
+          "median_speedup": 1.8381522483761588,
+          "p95_speedup": 1.8857366470585912
+        },
+        {
+          "batch": 32,
+          "sequence_length": 512,
+          "median_speedup": 1.844145697899722,
+          "p95_speedup": 1.820129009930934
+        }
+      ]
+    }
+  ],
+  "latency": [
+    {
+      "batch": 1,
+      "sequence_length": 128,
+      "median_speedup": 1.6218830506708795,
+      "seed_bootstrap_95": [
+        1.1391954612587056,
+        1.6810761775370429
+      ],
+      "all_seeds_above_1_2": false
+    },
+    {
+      "batch": 1,
+      "sequence_length": 512,
+      "median_speedup": 1.6330911004936748,
+      "seed_bootstrap_95": [
+        1.6139922613670634,
+        1.6795008945635048
+      ],
+      "all_seeds_above_1_2": true
+    },
+    {
+      "batch": 32,
+      "sequence_length": 128,
+      "median_speedup": 1.8412755413939579,
+      "seed_bootstrap_95": [
+        1.8349342088563918,
+        1.8459515620075966
+      ],
+      "all_seeds_above_1_2": true
+    },
+    {
+      "batch": 32,
+      "sequence_length": 512,
+      "median_speedup": 1.840360684153206,
+      "seed_bootstrap_95": [
+        1.8392844044326715,
+        1.844145697899722
+      ],
+      "all_seeds_above_1_2": true
+    }
+  ],
+  "mean_small_accuracy": 0.6139600000000001,
+  "mean_large_accuracy": 0.6142000000000001,
+  "confirmed_efficiency_gain": false,
+  "note": "Quality audit and synthetic fixed-shape latency evidence only. Review data independence, paired time overshoot and workload scope before declaring gains. Latency intervals resample model seeds, not within-run timing samples."
+}

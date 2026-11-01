@@ -292,6 +292,7 @@ def main():
     parser.add_argument('--seeds', nargs='+', type=int, default=[0,1])
     parser.add_argument('--steps', type=int, default=200)
     parser.add_argument('--learning-rate', type=float, default=3e-5)
+    parser.add_argument('--warmup-steps', type=int, default=0)
     parser.add_argument('--eval-only', action='store_true')
     parser.add_argument('--train-flops-budget', type=float)
     parser.add_argument('--train-seconds-budget', type=float)
@@ -326,6 +327,8 @@ def main():
     args = parser.parse_args()
     if min(args.steps, args.nrows, args.latency_repeats, args.eval_every) < 1:
         parser.error('steps, nrows, latency-repeats and eval-every must be positive')
+    if args.warmup_steps < 0 or args.warmup_steps >= args.steps:
+        parser.error('warmup-steps must be nonnegative and smaller than steps')
     if args.learning_rate <= 0 or (args.eval_rows is not None and args.eval_rows < 1):
         parser.error('learning-rate and eval-rows must be positive')
     if 'damped' in args.conditions and not args.initial_checkpoint:
@@ -355,6 +358,7 @@ def main():
                 max_steps=args.steps, per_device_train_batch_size=args.batch_size,
                 group_by_length=args.group_by_length,
                 per_device_eval_batch_size=args.eval_batch_size, learning_rate=args.learning_rate,
+                warmup_steps=args.warmup_steps,
                 bf16=args.precision == 'bf16', attn_implementation=args.attn,
                 trust_remote_code=args.trust_remote_code, revision=args.revision,
                 max_length=args.max_length, add_cls=False, add_cln=False, report_to=[],

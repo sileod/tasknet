@@ -373,3 +373,35 @@ references, then compare sizes under the same sampler. Length grouping changes
 training order and may affect optimization, so padding estimates alone cannot
 establish equivalent quality or an efficiency gain. The original untouched-test
 confirmation stays on random batching; its audit rejects grouped runs.
+
+All queued studies completed. The five-new-seed full-test time-budget audit
+finds nearly equal means (68M 61.396%, 150M 61.420%) and approximately 1.84×
+batch-32 inference speedup, but quality remains unconfirmed: the hierarchical
+95% interval on the paired difference is [−5.89, +4.12] points. Seed 4's small
+model scored 52.00% versus 63.36% for its paired large model. Mean agreement
+conceals a substantial stability problem. The [complete audit and predictions](../benchmarks/results/fld-time-confirm/)
+are preserved; the already inspected test set cannot serve as a fresh untouched
+confirmation for subsequent recipe selection.
+
+Length grouping measurably accelerates both sizes at 1,000 steps: 68M training
+falls from 175.54s to 117.86s (1.49×), and 150M from 308.69s to 200.43s (1.54×).
+Their two-seed validation means change from 59.77% to 55.76% for 68M and from
+63.43% to 64.33% for 150M. This supports a practical throughput improvement;
+it does not establish quality preservation for 68M. The [grouped results](../benchmarks/results/fld-grouped/)
+include the failed quality comparison.
+
+The preserved-middle study also completed. Its one-extra-pass validation mean
+is 59.84%, versus 60.03% at zero extra passes on that same depth-trained
+checkpoint and 60.47% for the zero-pass adaptation control. Thus no benefit
+from extra recurrent computation is established. [Raw results](../benchmarks/results/fld-preserved-depth/)
+include all tested depths and the mandatory earlier B0 cost.
+
+The next validation-only stability screen is
+`bash benchmarks/fld_stability.sh`: native 68M, 1,000 steps, seeds 0/1,
+learning-rate/warmup pairs (3e-5, 100), (1e-5, 0), (1e-5, 100), compared with
+the existing (3e-5, 0) baseline. Random batching is retained to isolate recipe
+changes from grouping. Full final-checkpoint predictions and curves are saved;
+test scores do not select recipes or checkpoints. Promote a recipe only if
+both its mean and worst-seed validation accuracy exceed the baseline; then
+check additional seeds and proof-depth breakdowns before combining it with
+length grouping or recurrence. This screening rule is not an efficiency claim.
