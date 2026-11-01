@@ -52,3 +52,19 @@ def test_bfloat16_checkpoint_without_autocast_preserves_dtype_and_logits(tmp_pat
     with torch.no_grad():
         actual = restored(**data, steps=2).logits
     torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize('mc', [False, True])
+def test_ultrabert_bfloat16_nonpersistent_rotary_buffers_roundtrip(tmp_path, mc):
+    model = make_recurrent_model(base_model(mc, 'ultrabert').bfloat16(),
+        'MultipleChoice' if mc else 'Classification', options(token_memory=True)).eval()
+    data = inputs(mc)
+    with torch.no_grad():
+        expected = model(**data, steps=4).logits
+    model.save_pretrained(tmp_path)
+    restored = RecurrentModel.from_pretrained(tmp_path).eval()
+    before = dict(model.base.named_buffers())
+    for name, value in restored.base.named_buffers():
+        torch.testing.assert_close(value, before[name], rtol=0, atol=0)
+    with torch.no_grad():
+        torch.testing.assert_close(restored(**data, steps=4).logits, expected, rtol=0, atol=0)

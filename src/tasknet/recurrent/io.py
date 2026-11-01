@@ -18,6 +18,17 @@ def save_recurrent(model, directory, **kwargs):
     updates = adapter_parameters(model.encoder)
     with native_linears(model.encoder):
         model.base.save_pretrained(directory / 'base', **kwargs)
+    # HF reconstructs nonpersistent rotary buffers instead of saving them.
+    # Explicit model.to(BF16) can round these differently from from_pretrained.
+    persistent = set(model.base.state_dict())
+    buffers = {key: value.detach().cpu().clone().contiguous()
+               for key, value in model.base.named_buffers(remove_duplicate=False)
+               if key not in persistent}
+    buffer_path = directory / 'buffers.safetensors'
+    if buffers:
+        save_file(buffers, str(buffer_path))
+    else:
+        buffer_path.unlink(missing_ok=True)
     if updates:
         save_file({key: value.detach().cpu().contiguous() for key, value in updates.items()},
                   str(directory / 'adapters.safetensors'))
@@ -47,6 +58,14 @@ def load_recurrent(directory, **loading_kwargs):
     # Early contrastive checkpoints also centered the conditioning anchor.
     recurrent.setdefault('contrastive_anchor', bool(recurrent.get('contrastive_states', False)))
     model = make_recurrent_model(directory / 'base', payload['task_type'], recurrent, **loading_kwargs)
+    if (directory / 'buffers.safetensors').exists():
+        registered = dict(model.base.named_buffers(remove_duplicate=False))
+        for name, buffer in load_file(str(directory / 'buffers.safetensors')).items():
+            if name not in registered:
+                raise ValueError(f'Unknown nonpersistent checkpoint buffer: {name}')
+            parent, _, attribute = name.rpartition('.')
+            model.base.get_submodule(parent).register_buffer(attribute,
+                buffer.to(device=registered[name].device), persistent=False)
     if model.refiner is not None:
         model.refiner.load_state_dict(load_file(str(directory / 'refiner.safetensors')), strict=True)
     if model.recurrent.adapter_rank:
