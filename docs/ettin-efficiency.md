@@ -572,3 +572,22 @@ selection and primary evaluation depth 4 are retained. Native baselines are
 reused from the earlier MCQ screen. The separate 611-example test partition
 remains unscored. Distinct states are a structural property here; only actual
 held-out improvements count as success. No gain has yet been demonstrated.
+
+
+Two follow-ups keep the already-fitted native encoder and task head frozen.
+`benchmarks/fld_contrastive.sh` reuses the audited disjoint-row FLD protocol,
+changing only the state formulation from the normalized classifier-query
+screen. It retains 1,000 refiner steps and the paired nonrecurrent control.
+`benchmarks/csqa_candidate_memory.sh` fits the contrastive head and matched
+control for 2,000 steps on top of the existing 68M MCQ checkpoint. Each candidate
+retrieves only from its own encoded question/answer tokens, while candidate
+states continue to interact jointly through the small Transformer blocks.
+This tests whether preserving token-to-candidate association helps.
+
+Both studies retain primary depth 4, evaluate 0/1/2/4/8, save ordered validation
+predictions and reuse seeds 0/1. Original backbone-training results are copied
+alongside each trial; source costs must be added to refinement costs. In
+particular, the MCQ frozen refinement has an additional training stage and must
+not be presented as a matched-budget improvement merely by omitting that stage.
+These validation screens follow the joint contrastive MCQ run serially on the
+GPU. Reserved/test predictions remain uncomputed.

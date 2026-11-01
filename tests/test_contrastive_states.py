@@ -29,7 +29,7 @@ def test_contrastive_wrapper_keeps_zero_loops_and_reloads(tmp_path, mc, dtype):
     data = inputs(mc)
     with torch.no_grad(): expected = base(**data).logits
     model = make_recurrent_model(base, 'MultipleChoice' if mc else 'Classification',
-        options(contrastive_states=True, token_memory=True, freeze_encoder=True)).eval()
+        options(contrastive_states=True, token_memory=True, freeze_encoder=True,candidate_memory=mc)).eval()
     with torch.no_grad():
         torch.testing.assert_close(model(**data, steps=0).logits, expected, rtol=0, atol=0)
         refined = model(**data, steps=4).logits
@@ -51,3 +51,21 @@ def test_identical_choices_remain_equal_and_classification_requires_conditioning
     torch.testing.assert_close(logits, logits[:, :1].expand_as(logits))
     with pytest.raises(ValueError, match='input conditioning'):
         make_recurrent_model(base_model(), 'Classification', options(contrastive_states=True))
+
+
+def test_candidate_memory_preserves_token_association_before_joint_attention():
+    torch.manual_seed(0)
+    refiner = AnswerRefiner(12,0,hidden_size=16,layers=1,heads=4,
+        memory_size=12,candidate_memory=True).eval()
+    states = torch.randn(2,12,12)
+    mask = torch.ones(2,12)
+    x,z,y = refiner.prepare(torch.randn(2,3,12),torch.randn(2,3))
+    captured = []
+    handle = refiner.memory_output.register_forward_pre_hook(lambda module,args:captured.append(args[0].clone()))
+    with torch.no_grad():
+        refiner.step(z,x,y,refiner.prepare_memory(states,mask,candidates=3))
+        states[:,8:] = torch.randn_like(states[:,8:])*10
+        refiner.step(z,x,y,refiner.prepare_memory(states,mask,candidates=3))
+    handle.remove()
+    torch.testing.assert_close(captured[0][:,:2],captured[1][:,:2],rtol=0,atol=0)
+    assert not torch.allclose(captured[0][:,2],captured[1][:,2])

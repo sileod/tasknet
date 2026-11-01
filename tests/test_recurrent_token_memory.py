@@ -34,8 +34,9 @@ def test_memory_preserves_zero_loops_encoder_once_gradients_and_reload(tmp_path,
     torch.testing.assert_close(actual,live,rtol=0,atol=0)
 
 
-def test_masked_memory_tokens_do_not_affect_logits_and_mcq_is_equivariant():
-    model=make_recurrent_model(base_model(True),'MultipleChoice',options(token_memory=True,freeze_encoder=True)).eval()
+@pytest.mark.parametrize('candidate_memory',[False,True])
+def test_masked_memory_tokens_do_not_affect_logits_and_mcq_is_equivariant(candidate_memory):
+    model=make_recurrent_model(base_model(True),'MultipleChoice',options(token_memory=True,freeze_encoder=True,candidate_memory=candidate_memory)).eval()
     data=inputs(True)
     with torch.no_grad():
         encoded=model.encode(input_ids=data['input_ids'],attention_mask=data['attention_mask'])

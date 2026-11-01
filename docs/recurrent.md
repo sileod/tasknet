@@ -337,3 +337,13 @@ The benchmark flag is `--contrastive-states`. State separation is imposed by
 this operation and is **not evidence of improved reasoning**. Assess held-out
 accuracy against zero refinement, the nonrecurrent control with the same state
 formulation, and the larger native encoder before claiming a benefit.
+
+
+For MCQ, `candidate_memory=True` restricts each candidate's token cross-attention
+to its own encoded question/answer token block. Candidate representations still
+interact through the shared Transformer blocks. It requires `token_memory=True`
+and rejects classification tasks. Candidate order is preserved only through
+matching representations and token blocks; no choice-position embeddings are
+introduced. The benchmark flag is `--candidate-memory`. Shared token memory
+remains the default for existing checkpoints. The analytic FLOP estimate counts
+the shorter cross-attention length; actual speed must be measured.

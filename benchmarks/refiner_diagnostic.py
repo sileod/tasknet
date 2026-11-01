@@ -18,7 +18,7 @@ def diagnose(model, inputs, steps):
     refiner = model.refiner
     initial = encoded['initial_logits'].float()
     x, z, y = refiner.prepare(encoded['representations'], initial)
-    memory = refiner.prepare_memory(encoded.get('token_states'), encoded.get('token_mask'))
+    memory = refiner.prepare_memory(encoded.get('token_states'), encoded.get('token_mask'), candidates=x.shape[1])
     center = lambda values: values - values.mean(-1, keepdim=True)
     rms = lambda values: values.float().square().mean().sqrt().item()
     off_diagonal = ~torch.eye(x.shape[1], dtype=torch.bool, device=x.device)

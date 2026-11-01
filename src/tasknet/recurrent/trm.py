@@ -5,10 +5,11 @@ from torch import nn
 
 class AnswerRefiner(nn.Module):
     def __init__(self, input_size, num_classes, hidden_size=256, layers=2, heads=4,
-                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False):
+                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False, candidate_memory=False):
         super().__init__()
         self.normalize_anchor = normalize_anchor
         self.contrastive_states = contrastive_states
+        self.candidate_memory = candidate_memory
         self.anchor = nn.Linear(input_size, hidden_size)
         self.answer = nn.Linear(1, hidden_size)
         self.class_embeddings = nn.Parameter(torch.zeros(num_classes, hidden_size)) if num_classes else None
@@ -29,7 +30,7 @@ class AnswerRefiner(nn.Module):
             self.memory_output = nn.Linear(hidden_size, hidden_size)
             self.memory_heads, self.memory_dropout = heads, dropout
 
-    def prepare_memory(self, states, mask):
+    def prepare_memory(self, states, mask, candidates=None):
         if self.memory_projection is None:
             if states is not None or mask is not None:
                 raise ValueError('Token memory is not enabled')
@@ -40,7 +41,16 @@ class AnswerRefiner(nn.Module):
         keys, values = self.memory_kv(memory).chunk(2, dim=-1)
         def heads(tensor):
             return tensor.reshape(tensor.shape[0], tensor.shape[1], self.memory_heads, -1).transpose(1, 2)
-        return heads(keys), heads(values), mask[:, None, None, :].bool()
+        keys, values = heads(keys), heads(values)
+        if self.candidate_memory:
+            if not candidates or states.shape[1] % candidates:
+                raise ValueError('Candidate memory requires a candidate count and equally sized token blocks')
+            batch, attention_heads, tokens, width = keys.shape
+            def local(tensor):
+                return tensor.reshape(batch, attention_heads, candidates, tokens // candidates, width).transpose(
+                    1, 2).reshape(batch * candidates, attention_heads, tokens // candidates, width)
+            return local(keys), local(values), mask.reshape(batch * candidates, 1, 1, -1).bool()
+        return keys, values, mask[:, None, None, :].bool()
 
     @staticmethod
     def contrast(states):
@@ -66,9 +76,12 @@ class AnswerRefiner(nn.Module):
             keys, values, mask = memory
             queries = self.memory_query(self.memory_query_norm(h))
             queries = queries.reshape(h.shape[0], h.shape[1], self.memory_heads, -1).transpose(1, 2)
+            if self.candidate_memory:
+                queries = queries.transpose(1, 2).reshape(-1, self.memory_heads, 1, queries.shape[-1])
             attended = nn.functional.scaled_dot_product_attention(queries, keys, values,
                 attn_mask=mask, dropout_p=self.memory_dropout if self.training else 0.0)
-            h = h + self.memory_output(attended.transpose(1, 2).reshape_as(h))
+            attended = attended.reshape_as(h) if self.candidate_memory else attended.transpose(1, 2).reshape_as(h)
+            h = h + self.memory_output(attended)
         for block in self.blocks:
             h = block(h)
         z = self.norm(h)
@@ -82,7 +95,7 @@ class AnswerRefiner(nn.Module):
         # identical arithmetic for cached FP32 logits and live reduced-precision logits.
         initial_logits = initial_logits.float()
         x, z, y = self.prepare(representations, initial_logits)
-        memory = self.prepare_memory(token_states, token_mask)
+        memory = self.prepare_memory(token_states, token_mask, candidates=x.shape[1])
         predictions = []
         early = max(0, steps - backprop_steps) if backprop_steps is not None else 0
         deltas = []

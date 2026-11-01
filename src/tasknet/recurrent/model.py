@@ -37,6 +37,7 @@ class RecurrentConfig:
     class_query_init: str = 'zero'
     normalize_anchor: bool = False
     contrastive_states: bool = False
+    candidate_memory: bool = False
 
     @classmethod
     def parse(cls, config):
@@ -68,6 +69,8 @@ class RecurrentConfig:
             raise ValueError('layer_start/layer_end only apply to depth methods')
         if result.method in ('damped', 'depth') and result.backprop_steps is not None:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
+        if result.candidate_memory and not result.token_memory:
+            raise ValueError('Candidate memory requires token_memory=True')
         if result.contrastive_states and result.method not in ('trm', 'control'):
             raise ValueError('Contrastive states require answer refinement')
         if result.normalize_anchor and result.method not in ('trm', 'control'):
@@ -135,13 +138,16 @@ class RecurrentModel(PreTrainedModel):
                 block.requires_grad_(True)
         self.refiner = None
         if c.method in ('trm', 'control'):
+            if c.candidate_memory and task_type != 'MultipleChoice':
+                raise ValueError('Candidate memory only applies to multiple-choice tasks')
             if c.contrastive_states and task_type == 'SequenceClassification' and not c.token_memory:
                 raise ValueError('Classification contrastive states require token_memory for input conditioning')
             classes = self.classifier.out_features if task_type == 'SequenceClassification' else 0
             self.refiner = AnswerRefiner(self.classifier.in_features, classes,
                 c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
                 memory_size=base.config.hidden_size if c.token_memory else None,
-                normalize_anchor=c.normalize_anchor, contrastive_states=c.contrastive_states).to(
+                normalize_anchor=c.normalize_anchor, contrastive_states=c.contrastive_states,
+                candidate_memory=c.candidate_memory).to(
                     device=self.classifier.weight.device, dtype=self.classifier.weight.dtype)
             if c.class_query_init == 'classifier':
                 if not classes:
