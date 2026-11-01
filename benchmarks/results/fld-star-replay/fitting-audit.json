@@ -1,0 +1,7 @@
+{
+  "default_star_fit_pair_overlap": 0,
+  "star_fit_validation_pair_overlap": 0,
+  "star_fit_validation_context_overlap": 0,
+  "training_fingerprint": "6b95e0aa72537ad7",
+  "validation_fingerprint": "7800681f11c0a37b"
+}

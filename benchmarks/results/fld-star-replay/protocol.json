@@ -1,0 +1,21 @@
+{
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "task": "FLD.v2/star",
+  "seeds": [0, 1],
+  "fitting_rows": 8192,
+  "validation_rows": 2048,
+  "data_seed": 0,
+  "conditions": ["replay-lora", "adapter"],
+  "initial_checkpoints": "Fixed original default-trained 68M B0, paired by seed",
+  "optimizer_steps": 500,
+  "learning_rate": 0.001,
+  "warmup_steps": 50,
+  "rank": 8,
+  "damping": 0.1,
+  "train_depths": [1, 2, 4],
+  "eval_depths": [0, 1, 2, 4, 8],
+  "primary_depth": 4,
+  "update_scale": 1,
+  "promotion": "Four passes must improve over one pass and ordinary LoRA on both seeds; report all proof-depth groups and actual source-inclusive cost. A positive screen still requires additional-seed confirmation.",
+  "interpretation": "Exploratory supervised deeper-proof adaptation, proposed after observing initial default-to-star zero-shot results. Fixed steps do not equal fixed training compute; replay is more expensive. No test/reserve scoring."
+}
