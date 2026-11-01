@@ -729,3 +729,22 @@ diagnostic; the default private reserve and star official test remain unscored.
 Run `python -m benchmarks.fld_star_audit`, then
 `python -m benchmarks.fld_star_zero_shot`. The immutable protocol is in
 `benchmarks/results/fld-star-zero-shot/protocol.json`.
+
+The fixed zero-shot study completed at 54.64% for native 68M, 58.40% for native
+150M and 57.03% for merged ordinary LoRA. Learned replay reaches 55.79% after
+one pass and 56.18% after two; four/eight passes fall to 54.10%/50.78%.
+Untrained repetition reaches 54.76%/54.49%/53.59%/51.44%. Extra depth therefore
+does not close the larger-model gap. Seed one's higher-depth predictions improve
+on provable cases while unknown-case accuracy collapses; ordered predictions
+and every depth group are preserved rather than selecting the favorable group.
+
+`benchmarks/fld_star_replay.sh` is the subsequent exploratory adaptation screen:
+the original paired default-trained B0 checkpoints receive 500 Star updates at
+1e-3, with 50 warmup steps and replay training depths 1/2/4. Ordinary LoRA uses
+the same fitting rows and optimization steps. The Star fitting cap is 8,192,
+has no pair overlap with Default fitting data, no pair/context overlap with
+Star validation, and no token truncation (maximum 848). Four-pass evaluation is
+primary, scale remains one without a sweep, and promotion requires an advantage
+over one-pass replay and ordinary LoRA on both seeds. Fixed optimization steps
+are not equal compute: replay costs more, and source-inclusive times must be
+retained. No official test or private reserve is scored.
