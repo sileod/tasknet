@@ -78,6 +78,11 @@ def estimate_forward_flops(model, batch, length, choices, steps):
             attended_tokens = length if recurrent.candidate_memory else tokens
             refiner_flops += batch * (2 * tokens * hidden * r + 4 * tokens * r * r
                 + steps * (4 * candidates * r * r + 4 * candidates * attended_tokens * r))
+    if recurrent and recurrent.adapter_rank:
+        from tasknet.recurrent.adapters import adapter_parameters
+        passes = steps if recurrent.adapter_scope == 'replay' else 1 + steps
+        refiner_flops += 2 * batch * choices * length * passes * sum(
+            p.numel() for p in adapter_parameters(encoder).values())
     return (encoder_flops + head_flops if length else 0), refiner_flops
 
 
@@ -111,7 +116,15 @@ class Recorder(TrainerCallback):
         enc, ref = estimate_forward_flops(task_model, batch, length, choices, n)
         recurrent = getattr(task_model, 'recurrent', None)
         fraction = 1.0
-        if recurrent and recurrent.train_repeated_layers:
+        if recurrent and recurrent.adapter_rank:
+            depth = task_model.encoder.config.num_hidden_layers
+            span = task_model.layer_end - task_model.layer_start
+            passes = depth + n * span
+            active = n * span + depth - task_model.layer_end
+            if recurrent.adapter_scope == 'base':
+                active += span
+            fraction = active / (2 * passes)
+        elif recurrent and recurrent.train_repeated_layers:
             depth = task_model.encoder.config.num_hidden_layers
             # Trainable middle blocks need weight/input gradients; the frozen
             # suffix still propagates input gradients back to that middle group.
@@ -322,6 +335,11 @@ def set_refiner_learning_rate(trainer, rate):
 def condition_config(name, args):
     if name == 'baseline':
         return None
+    if name in ('replay-lora', 'adapter'):
+        return dict(method='depth', steps=args.iterations if name == 'replay-lora' else 0,
+            train_steps=tuple(args.train_iterations) if name == 'replay-lora' else (0,),
+            freeze_encoder=True, adapter_rank=args.adapter_rank,
+            adapter_scope='replay' if name == 'replay-lora' else 'base', damping=args.replay_damping)
     method = dict(damped='damped', depth='depth', **{'trm-frozen': 'trm', 'trm-partial': 'trm',
                   'trm-full': 'trm', 'control': 'control', 'control-full': 'control'})[name]
     if method in ('damped', 'depth'):
@@ -341,7 +359,7 @@ def main():
     parser.add_argument('--model', default='answerdotai/ModernBERT-base')
     parser.add_argument('--task', default='glue/rte')
     parser.add_argument('--conditions', nargs='+', choices=['baseline','damped','depth','trm-frozen',
-        'trm-partial','trm-full','control','control-full'], default=['baseline','trm-frozen','control'])
+        'trm-partial','trm-full','control','control-full','replay-lora','adapter'], default=['baseline','trm-frozen','control'])
     parser.add_argument('--seeds', nargs='+', type=int, default=[0,1])
     parser.add_argument('--steps', type=int, default=200)
     parser.add_argument('--learning-rate', type=float, default=3e-5)
@@ -376,6 +394,8 @@ def main():
     parser.add_argument('--latency-lengths', nargs='+', type=int, default=[128,512,2048])
     parser.add_argument('--latency-repeats', type=int, default=10)
     parser.add_argument('--precision', choices=['fp32','bf16'], default='fp32')
+    parser.add_argument('--adapter-rank', type=int, default=8)
+    parser.add_argument('--replay-damping', type=float, default=0.1)
     parser.add_argument('--attn', default='sdpa')
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
@@ -427,6 +447,10 @@ def main():
     if args.class_query_init != 'zero' and (args.neutral_head or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('Classifier queries require refinement conditions without --neutral-head')
+    if args.adapter_rank < 1 or not 0 <= args.replay_damping <= 1:
+        parser.error('adapter-rank must be positive and replay-damping must be in [0,1]')
+    if 'replay-lora' in args.conditions and any(n < 1 for n in args.train_iterations):
+        parser.error('Replay-only adapters require positive train-iterations')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)
@@ -502,7 +526,7 @@ def main():
             quality = []
             task_model = model.task_models_list[0]
             original_steps = task_model.recurrent.steps if config is not None else None
-            for n in (args.eval_iterations if config is not None else [0]):
+            for n in (args.eval_iterations if config is not None and condition != 'adapter' else [0]):
                 if config is not None:
                     task_model.recurrent.steps = n
                 if args.save_predictions:
@@ -538,7 +562,7 @@ def main():
                 torch.cuda.empty_cache()
             dtype = torch.bfloat16 if args.precision == 'bf16' else torch.float32
             measured = latency(task_model, tokenizer, task.task_type, args.latency_batches,
-                args.latency_lengths, args.eval_iterations if config is not None else [0],
+                args.latency_lengths, args.eval_iterations if config is not None and condition != 'adapter' else [0],
                 args.latency_repeats, dtype)
             runs.append(dict(condition=condition, seed=seed, setup_seconds=setup_seconds,
                 model_revision=getattr(task_model.config, '_commit_hash', None),

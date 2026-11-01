@@ -39,6 +39,8 @@ class RecurrentConfig:
     contrastive_states: bool = False
     candidate_memory: bool = False
     contrastive_anchor: bool = False
+    adapter_rank: int = 0
+    adapter_scope: str = 'replay'
 
     @classmethod
     def parse(cls, config):
@@ -70,6 +72,16 @@ class RecurrentConfig:
             raise ValueError('layer_start/layer_end only apply to depth methods')
         if result.method in ('damped', 'depth') and result.backprop_steps is not None:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
+        if not isinstance(result.adapter_rank, int) or result.adapter_rank < 0:
+            raise ValueError('adapter_rank must be a nonnegative integer')
+        if result.adapter_scope not in ('replay', 'base'):
+            raise ValueError('adapter_scope must be replay or base')
+        if result.adapter_rank:
+            if (result.method != 'depth' or not result.freeze_encoder or result.train_repeated_layers
+                    or result.unfreeze_last_n):
+                raise ValueError('Replay adapters require depth with a frozen encoder and no layer unfreezing')
+            if result.adapter_scope == 'replay' and 0 in result.train_steps:
+                raise ValueError('Replay-only adapters require positive training depths; zero is evaluation-only')
         if result.contrastive_anchor and not result.contrastive_states:
             raise ValueError('Contrastive anchors require contrastive_states=True')
         if result.candidate_memory and not result.token_memory:
@@ -139,6 +151,12 @@ class RecurrentModel(PreTrainedModel):
         if c.train_repeated_layers:
             for block in blocks[self.layer_start:self.layer_end]:
                 block.requires_grad_(True)
+        if c.adapter_rank:
+            if capability is not None:
+                raise ValueError('Replay adapters require explicit encoder blocks, not native recurrence')
+            from .adapters import install_adapters
+            install_adapters(self.encoder, self.layer_start, self.layer_end,
+                c.adapter_rank, c.adapter_scope, c.dropout)
         self.refiner = None
         if c.method in ('trm', 'control'):
             if c.candidate_memory and task_type != 'MultipleChoice':
@@ -180,7 +198,12 @@ class RecurrentModel(PreTrainedModel):
 
     def train(self, mode=True):
         super().train(mode)
-        if not any(p.requires_grad for p in self.base.parameters()):
+        if self.recurrent.adapter_rank:
+            from .adapters import adapters
+            self.base.eval()
+            for _, adapter in adapters(self.encoder):
+                adapter.train(mode)
+        elif not any(p.requires_grad for p in self.base.parameters()):
             self.base.eval()
         elif self.recurrent.freeze_encoder or self.recurrent.train_repeated_layers:
             # Keep frozen blocks deterministic; enable dropout only in unfrozen blocks.
@@ -259,7 +282,7 @@ class RecurrentModel(PreTrainedModel):
             encoded = self.encode(**inputs)
         else:
             with recurrent_depth(self.base, self.encoder, n, self.layer_start, self.layer_end,
-                                 c.damping if c.method == 'damped' else 1.0):
+                                 c.damping if c.method == 'damped' or c.adapter_rank else 1.0):
                 output = self.base(**inputs, labels=labels, return_dict=True)
             return output if return_dict else output.to_tuple()
         y = encoded['initial_logits']

@@ -625,3 +625,26 @@ depths remain 1/2/4 and primary evaluation depth 4. Source training and measured
 cache generation must be included in total costs. Latency remains a five-repeat
 smoke measurement until quality improves. The implementation commit is recorded
 at study start. Package code will remain fixed through both seeds.
+
+
+The compact anchored-cache screen completed without a recurrence advantage:
+four-step TRM averages 60.94%, versus 60.99% for its nonrecurrent control,
+59.77% for the original source classifier, and 61.99% for the 150M reference.
+The second seed improves with refinement, but the first does not; its matched
+control also attains the same second-seed four-step accuracy. Do not attribute
+that improvement specifically to looping.
+
+The next token-level screen is `benchmarks/fld_replay_adapters.sh`. It keeps
+native encoder weights and classifier frozen and trains rank-8 low-rank updates
+only during the extra middle-block passes. This preserves B0 exactly at zero
+loops even after adaptation. Both source seeds receive the same audited 8,192
+fresh rows, 500 optimizer steps, learning rate 1e-3 and 50 warmup steps. Replay
+uses damping 0.1 and training depths 1/2; primary depth is **one extra pass**,
+with 0/1/2/4 evaluated. The comparator adapts the same selected linear layers
+with the same low-rank parameter count during the ordinary base pass, at depth
+zero. This comparator has a lower forward budget and is not compute-matched;
+report its actual time/FLOPs along with quality. Neither condition changes
+native pretrained weights. The earlier B0 training cost is mandatory in total
+costs, and inference profiling remains a small smoke measurement until quality
+improves. The reserved examples remain untouched. This is a new hypothesis,
+not an established gain.

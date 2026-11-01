@@ -14,7 +14,13 @@ def save_recurrent(model, directory, **kwargs):
     # attention setting. The live encoder still has the actual backend.
     model.config._attn_implementation = model.encoder.config._attn_implementation
     model.base.config = model.config
-    model.base.save_pretrained(directory / 'base', **kwargs)
+    from .adapters import native_linears, adapter_parameters
+    updates = adapter_parameters(model.encoder)
+    with native_linears(model.encoder):
+        model.base.save_pretrained(directory / 'base', **kwargs)
+    if updates:
+        save_file({key: value.detach().cpu().contiguous() for key, value in updates.items()},
+                  str(directory / 'adapters.safetensors'))
     if model.refiner is not None:
         save_file({key: value.detach().cpu().contiguous() for key, value in model.refiner.state_dict().items()},
                   str(directory / 'refiner.safetensors'))
@@ -43,4 +49,14 @@ def load_recurrent(directory, **loading_kwargs):
     model = make_recurrent_model(directory / 'base', payload['task_type'], recurrent, **loading_kwargs)
     if model.refiner is not None:
         model.refiner.load_state_dict(load_file(str(directory / 'refiner.safetensors')), strict=True)
+    if model.recurrent.adapter_rank:
+        from .adapters import adapter_parameters
+        import torch
+        parameters = adapter_parameters(model.encoder)
+        updates = load_file(str(directory / 'adapters.safetensors'))
+        if parameters.keys() != updates.keys():
+            raise ValueError('Replay adapter checkpoint keys do not match the configured encoder blocks')
+        with torch.no_grad():
+            for name, parameter in parameters.items():
+                parameter.copy_(updates[name].to(device=parameter.device, dtype=parameter.dtype))
     return model.eval()

@@ -1,6 +1,7 @@
 """Architecture-scoped depth interventions; no encoder forward implementation is copied."""
 from contextlib import contextmanager
 from dataclasses import dataclass
+from .adapters import replay_adapters
 import torch
 
 
@@ -71,12 +72,13 @@ def recurrent_depth(model, encoder, steps, start, end, damping):
         try:
             for _ in range(steps):
                 proposal = h
-                for index in range(start, end):
-                    block_args, block_kwargs = templates[index]
-                    if block_args:
-                        proposal = layers[index](proposal, *block_args[1:], **block_kwargs)
-                    else:
-                        proposal = layers[index](**dict(block_kwargs, hidden_states=proposal))
+                with replay_adapters():
+                    for index in range(start, end):
+                        block_args, block_kwargs = templates[index]
+                        if block_args:
+                            proposal = layers[index](proposal, *block_args[1:], **block_kwargs)
+                        else:
+                            proposal = layers[index](**dict(block_kwargs, hidden_states=proposal))
                 h = h + damping * (proposal - h)
         finally:
             replaying = False

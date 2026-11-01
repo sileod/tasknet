@@ -357,3 +357,23 @@ backend. Earlier factorization rebuilt the task configuration and could record
 `eager` in recurrent metadata while the live encoder used `sdpa`. For an earlier
 checkpoint from a benchmark whose config records `attn="sdpa"`, explicitly pass
 `attn_implementation="sdpa"` when reloading to retain the original backend.
+
+
+For trainable token-level replay, `method="depth", freeze_encoder=True,
+adapter_rank=8, adapter_scope="replay", train_steps=(1,2)` adds low-rank
+updates to encoder linear layers in the repeated middle interval. Native
+weights and the task head stay frozen. Updates activate only inside extra
+passes; native zero-loop predictions remain unchanged after training.
+`damping` controls the residual replay interpolation (default 0.1 for this
+adapter path). Updates use a unit LoRA scale, normal-initialized down matrices
+and zero-initialized up matrices. Adapter dropout follows `dropout`.
+
+`adapter_scope="base"` is the ordinary low-rank finetuning control: updates also
+activate in the original pass, and `train_steps=(0,)` trains without replay.
+It has the same trainable parameter count but does not preserve the original
+zero-loop prediction after learning. Replay-only adaptation requires positive
+training depths; zero remains available for evaluation. Existing native
+recurrent mechanisms and gradient checkpointing are not wrapped by this path.
+Checkpoints store native encoder weights separately from `adapters.safetensors`.
+The benchmark conditions are `replay-lora` and `adapter`, with `--adapter-rank`
+and `--replay-damping`; the ordinary-adapter control is evaluated at zero depth.
