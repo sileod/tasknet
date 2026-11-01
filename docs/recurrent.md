@@ -331,8 +331,11 @@ invariance to an arbitrary common logit offset. No parameters are added;
 zero-loop output remains the original classifier output. Identical choices
 remain indistinguishable and candidate order remains equivariant.
 
-For classification this option requires `token_memory=True`, because removing
-the common pooled anchor otherwise removes the only input conditioning.
+The full pooled anchor is retained as conditioning at every step; only the
+recurrent state is centered. This also supports compact classification without
+token memory. Early experimental checkpoints centered the anchor as well;
+loading them explicitly restores that behavior using `contrastive_anchor=True`.
+That legacy classification configuration requires token memory.
 The benchmark flag is `--contrastive-states`. State separation is imposed by
 this operation and is **not evidence of improved reasoning**. Assess held-out
 accuracy against zero refinement, the nonrecurrent control with the same state
@@ -347,3 +350,10 @@ matching representations and token blocks; no choice-position embeddings are
 introduced. The benchmark flag is `--candidate-memory`. Shared token memory
 remains the default for existing checkpoints. The analytic FLOP estimate counts
 the shorter cross-attention length; actual speed must be measured.
+
+
+Saving through TaskNet factorization now records the live encoder's attention
+backend. Earlier factorization rebuilt the task configuration and could record
+`eager` in recurrent metadata while the live encoder used `sdpa`. For an earlier
+checkpoint from a benchmark whose config records `attn="sdpa"`, explicitly pass
+`attn_implementation="sdpa"` when reloading to retain the original backend.

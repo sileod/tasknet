@@ -50,7 +50,7 @@ def test_identical_choices_remain_equal_and_classification_requires_conditioning
     assert torch.isfinite(logits).all()
     torch.testing.assert_close(logits, logits[:, :1].expand_as(logits))
     with pytest.raises(ValueError, match='input conditioning'):
-        make_recurrent_model(base_model(), 'Classification', options(contrastive_states=True))
+        make_recurrent_model(base_model(), 'Classification', options(contrastive_states=True,contrastive_anchor=True))
 
 
 def test_candidate_memory_preserves_token_association_before_joint_attention():
@@ -69,3 +69,35 @@ def test_candidate_memory_preserves_token_association_before_joint_attention():
     handle.remove()
     torch.testing.assert_close(captured[0][:,:2],captured[1][:,:2],rtol=0,atol=0)
     assert not torch.allclose(captured[0][:,2],captured[1][:,2])
+
+
+def test_centering_states_retains_problem_conditioning_and_one_step_control():
+    torch.manual_seed(0)
+    refiner=AnswerRefiner(12,3,hidden_size=16,layers=1,heads=4,contrastive_states=True).eval()
+    with torch.no_grad():refiner.class_embeddings.normal_()
+    features=torch.randn(2,12)
+    logits=torch.randn(2,3)
+    anchor,_,_=refiner.prepare(features,logits)
+    changed,_,_=refiner.prepare(features+2,logits)
+    assert not torch.allclose(anchor,changed)
+    with torch.no_grad():
+        actual,_=refiner(features,logits,steps=1)
+        control,_=refiner(features,logits,steps=1,control=True)
+        different,_=refiner(features+2,logits,steps=1)
+    torch.testing.assert_close(actual,control,rtol=0,atol=0)
+    assert not torch.allclose(actual,different,rtol=0,atol=1e-8)
+
+
+def test_early_contrastive_checkpoints_keep_their_original_anchor_behavior(tmp_path):
+    import json
+    model=make_recurrent_model(base_model(),'Classification',options(
+        contrastive_states=True,contrastive_anchor=True,token_memory=True)).eval()
+    data=inputs()
+    with torch.no_grad():expected=model(**data,steps=4).logits
+    model.save_pretrained(tmp_path)
+    path=tmp_path/'recurrent_config.json';payload=json.loads(path.read_text())
+    del payload['recurrent']['contrastive_anchor'];path.write_text(json.dumps(payload))
+    restored=RecurrentModel.from_pretrained(tmp_path)
+    assert restored.recurrent.contrastive_anchor
+    with torch.no_grad():actual=restored(**data,steps=4).logits
+    torch.testing.assert_close(actual,expected,rtol=0,atol=0)

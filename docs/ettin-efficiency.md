@@ -598,3 +598,30 @@ training time and FLOP estimates, plus only a five-repeat B1/L128 inference
 smoke measurement. This shortened latency screen does not support P95 or
 throughput claims. A promising fixed checkpoint must receive the original
 B1/B32, L128/L512, 20+-repeat latency profile before any efficiency conclusion.
+
+
+The joint contrastive MCQ screen failed: primary four-step accuracy is 56.56%
+versus 58.11% for its own zero-loop output and 56.48% for its matched control.
+[All scores and predictions](../benchmarks/results/csqa-contrastive/) are retained.
+Frozen FLD contrastive refinement also failed; its
+[results](../benchmarks/results/fld-contrastive/) remain separate from the later
+anchor correction.
+
+Inspection found that the first contrastive implementation centered the input
+anchor along with the recurrent state, discarding common problem information.
+The corrected formulation retains the complete pooled anchor at every step and
+centers only the recurrent state. Old checkpoint behavior is preserved by
+explicit migration to `contrastive_anchor=True`. The in-progress MCQ local-memory
+study spans this correction: seed 0 used the earlier formulation, seed 1 uses
+the retained anchor. It must not be aggregated as a paired two-seed study.
+Both versions remain exploratory individual-seed evidence.
+
+The next clean study is `benchmarks/fld_anchored_cache.sh`: the corrected compact
+head, without token memory, trained on the audited fresh rows using cached
+frozen encoder representations. Both TRM and control retain the input anchor,
+classifier-derived class queries, and centered recurrent states. This gives the
+randomly initialized head 4,000 updates at 1e-4 with 100 warmup steps; training
+depths remain 1/2/4 and primary evaluation depth 4. Source training and measured
+cache generation must be included in total costs. Latency remains a five-repeat
+smoke measurement until quality improves. The implementation commit is recorded
+at study start. Package code will remain fixed through both seeds.

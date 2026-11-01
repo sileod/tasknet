@@ -10,6 +10,9 @@ def save_recurrent(model, directory, **kwargs):
     directory.mkdir(parents=True, exist_ok=True)
     if kwargs.get('state_dict') is not None:
         raise ValueError('Save the recurrent model directly, without an externally filtered state_dict')
+    # TaskNet factorization rebuilds the task config, dropping HF's private
+    # attention setting. The live encoder still has the actual backend.
+    model.config._attn_implementation = model.encoder.config._attn_implementation
     model.base.config = model.config
     model.base.save_pretrained(directory / 'base', **kwargs)
     if model.refiner is not None:
@@ -34,7 +37,10 @@ def load_recurrent(directory, **loading_kwargs):
     loading_kwargs.setdefault('attn_implementation', payload.get('attn_implementation'))
     if loading_kwargs.get('torch_dtype') is None:
         loading_kwargs['torch_dtype'] = payload.get('dtype', 'float32')
-    model = make_recurrent_model(directory / 'base', payload['task_type'], payload['recurrent'], **loading_kwargs)
+    recurrent = dict(payload['recurrent'])
+    # Early contrastive checkpoints also centered the conditioning anchor.
+    recurrent.setdefault('contrastive_anchor', bool(recurrent.get('contrastive_states', False)))
+    model = make_recurrent_model(directory / 'base', payload['task_type'], recurrent, **loading_kwargs)
     if model.refiner is not None:
         model.refiner.load_state_dict(load_file(str(directory / 'refiner.safetensors')), strict=True)
     return model.eval()

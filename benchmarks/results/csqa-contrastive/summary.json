@@ -1,0 +1,177 @@
+{
+  "screen_only": true,
+  "confirmed_efficiency_gain": false,
+  "primary_iterations": 4,
+  "summary": [
+    {
+      "condition": "trm-full",
+      "iterations": 0,
+      "mean_accuracy": 0.5811475409836067,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6131147540983607,
+          "train_seconds": 180.85919982753694
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5491803278688525,
+          "train_seconds": 167.86542975902557
+        }
+      ]
+    },
+    {
+      "condition": "trm-full",
+      "iterations": 1,
+      "mean_accuracy": 0.578688524590164,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6147540983606558,
+          "train_seconds": 180.85919982753694
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5426229508196722,
+          "train_seconds": 167.86542975902557
+        }
+      ]
+    },
+    {
+      "condition": "trm-full",
+      "iterations": 2,
+      "mean_accuracy": 0.5770491803278688,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6196721311475409,
+          "train_seconds": 180.85919982753694
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5344262295081967,
+          "train_seconds": 167.86542975902557
+        }
+      ]
+    },
+    {
+      "condition": "trm-full",
+      "iterations": 4,
+      "mean_accuracy": 0.5655737704918034,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6131147540983607,
+          "train_seconds": 180.85919982753694
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5180327868852459,
+          "train_seconds": 167.86542975902557
+        }
+      ]
+    },
+    {
+      "condition": "trm-full",
+      "iterations": 8,
+      "mean_accuracy": 0.5237704918032786,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.6,
+          "train_seconds": 180.85919982753694
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.44754098360655736,
+          "train_seconds": 167.86542975902557
+        }
+      ]
+    },
+    {
+      "condition": "control-full",
+      "iterations": 0,
+      "mean_accuracy": 0.5819672131147542,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.5409836065573771,
+          "train_seconds": 161.9509017020464
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6229508196721312,
+          "train_seconds": 180.54491117224097
+        }
+      ]
+    },
+    {
+      "condition": "control-full",
+      "iterations": 1,
+      "mean_accuracy": 0.5901639344262295,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.559016393442623,
+          "train_seconds": 161.9509017020464
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6213114754098361,
+          "train_seconds": 180.54491117224097
+        }
+      ]
+    },
+    {
+      "condition": "control-full",
+      "iterations": 2,
+      "mean_accuracy": 0.5778688524590163,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.5475409836065573,
+          "train_seconds": 161.9509017020464
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.6081967213114754,
+          "train_seconds": 180.54491117224097
+        }
+      ]
+    },
+    {
+      "condition": "control-full",
+      "iterations": 4,
+      "mean_accuracy": 0.5647540983606558,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.5409836065573771,
+          "train_seconds": 161.9509017020464
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.5885245901639344,
+          "train_seconds": 180.54491117224097
+        }
+      ]
+    },
+    {
+      "condition": "control-full",
+      "iterations": 8,
+      "mean_accuracy": 0.5540983606557377,
+      "rows": [
+        {
+          "seed": 0,
+          "accuracy": 0.5278688524590164,
+          "train_seconds": 161.9509017020464
+        },
+        {
+          "seed": 1,
+          "accuracy": 0.580327868852459,
+          "train_seconds": 180.54491117224097
+        }
+      ]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ def diagnose(model, inputs, steps):
     refiner = model.refiner
     initial = encoded['initial_logits'].float()
     x, z, y = refiner.prepare(encoded['representations'], initial)
+    initial_z = z
     memory = refiner.prepare_memory(encoded.get('token_states'), encoded.get('token_mask'), candidates=x.shape[1])
     center = lambda values: values - values.mean(-1, keepdim=True)
     rms = lambda values: values.float().square().mean().sqrt().item()
@@ -25,7 +26,7 @@ def diagnose(model, inputs, steps):
     rows = []
     for step in range(1, steps + 1):
         if model.recurrent.method == 'control':
-            z, delta = refiner.step(x, x, initial, memory)
+            z, delta = refiner.step(initial_z, x, initial, memory)
         else:
             z, delta = refiner.step(z, x, y, memory)
         y = y + delta
@@ -37,7 +38,7 @@ def diagnose(model, inputs, steps):
             centered_cumulative_delta_rms=rms(center(y-initial)),
             original_centered_logits_rms=rms(center(initial))))
     projected = refiner.anchor(encoded['representations'].to(refiner.anchor.weight.dtype))
-    initial_states = torch.nn.functional.normalize(x.float(), dim=-1)
+    initial_states = torch.nn.functional.normalize(initial_z.float(), dim=-1)
     return dict(rows=rows, projected_anchor_rms=rms(projected),
         repeated_input_rms=rms(x),
         class_queries_rms=rms(refiner.class_embeddings) if refiner.class_embeddings is not None else None,

@@ -5,11 +5,12 @@ from torch import nn
 
 class AnswerRefiner(nn.Module):
     def __init__(self, input_size, num_classes, hidden_size=256, layers=2, heads=4,
-                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False, candidate_memory=False):
+                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False, candidate_memory=False, contrastive_anchor=False):
         super().__init__()
         self.normalize_anchor = normalize_anchor
         self.contrastive_states = contrastive_states
         self.candidate_memory = candidate_memory
+        self.contrastive_anchor = contrastive_anchor
         self.anchor = nn.Linear(input_size, hidden_size)
         self.answer = nn.Linear(1, hidden_size)
         self.class_embeddings = nn.Parameter(torch.zeros(num_classes, hidden_size)) if num_classes else None
@@ -65,9 +66,8 @@ class AnswerRefiner(nn.Module):
             x = nn.functional.layer_norm(x, (x.shape[-1],))
         if x.ndim == 2:
             x = x[:, None, :] + self.class_embeddings[None, :, :]
-        if self.contrastive_states:
-            x = self.contrast(x)
-        return x, x, logits
+        z = self.contrast(x) if self.contrastive_states else x
+        return (z if self.contrastive_anchor else x), z, logits
 
     def step(self, z, x, y, memory=None):
         answer = y - y.mean(dim=-1, keepdim=True) if self.contrastive_states else y
@@ -95,6 +95,7 @@ class AnswerRefiner(nn.Module):
         # identical arithmetic for cached FP32 logits and live reduced-precision logits.
         initial_logits = initial_logits.float()
         x, z, y = self.prepare(representations, initial_logits)
+        initial_z = z
         memory = self.prepare_memory(token_states, token_mask, candidates=x.shape[1])
         predictions = []
         early = max(0, steps - backprop_steps) if backprop_steps is not None else 0
@@ -103,7 +104,7 @@ class AnswerRefiner(nn.Module):
             differentiable = torch.is_grad_enabled() and index >= early
             with torch.set_grad_enabled(differentiable):
                 if control:
-                    _, delta = self.step(x, x, initial_logits, memory)
+                    _, delta = self.step(initial_z, x, initial_logits, memory)
                     deltas.append(delta)
                     y = initial_logits + torch.stack(deltas).sum(0)
                 else:
