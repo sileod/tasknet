@@ -1,0 +1,11 @@
+{
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "seeds": [0, 1],
+  "evaluation": "FLD.v2/star validation, fixed data seed 0, 2048 rows",
+  "iterations": [0, 1, 2, 4, 8],
+  "replay_update_scales": [0, 2],
+  "primary_replay_iterations": 1,
+  "comparators": ["native68", "native150-fresh", "merged-ordinary-lora-scale2"],
+  "selection": "All weights and scale 2 selected using default configuration only; no star fitting or tuning.",
+  "interpretation": "Exploratory zero-shot depth diagnostic, two seeds, not confirmation. Report every fixed depth including unknown-proof cases. Default private reserve and official star test remain unscored."
+}
