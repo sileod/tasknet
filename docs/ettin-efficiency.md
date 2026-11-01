@@ -769,3 +769,27 @@ zero/one-step predictions and the control on both seeds. Actual time is primary:
 the dense FLOP approximation overestimates control backward work when only the
 last reset-state update receives supervision. No architecture code changes
 during the paired study, and no test/private reserve is scored.
+
+Joint refinement also failed promotion: four passes reach 57.89%, versus its
+own zero-pass score of 58.06% and the matched reset-state control's 58.03%.
+Their source-inclusive runtimes are 289.33s/289.64s. Most improvement came from
+encoder finetuning; the extra recursive answer updates did not improve it.
+Artifacts are in `benchmarks/results/fld-star-joint-refinement`.
+
+Frozen token-state caching is now supported by the benchmark's existing
+`--cache-representations --token-memory` flags. It uses CPU PyTorch tensor
+datasets, preserving reduced-precision values, candidate block boundaries and
+normal HF optimization. Eight focused checks verify ragged cached/live outputs,
+refiner gradients, MCQ shuffling and encoder-free cached FLOP accounting. Real
+classification and four-option MCQ CLI smoke runs completed; these truncated
+16-row runs validate mechanics, not quality. Host tensor bytes and encoding GPU
+peak are reported; source training and mandatory encoding remain part of cost.
+
+`benchmarks/fld_star_cached_refinement.sh` uses this capability for a fixed
+5,000-update frozen-head pilot, testing whether earlier short runs were
+undertrained. It retains the existing pooled-state/token-memory architecture,
+audited rows, final-only supervision at two/four passes, and primary four-pass
+evaluation. Learning rate is 3e-4 with 100 warmup steps. Seed zero runs first;
+seed one is run only if four passes beat zero, one and the matched reset-state
+control. This gate is fixed before scoring, and a failed pilot is archived
+without a paired mean. No test/private reserve is scored.
