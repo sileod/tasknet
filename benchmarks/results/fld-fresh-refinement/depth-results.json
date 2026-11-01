@@ -1,0 +1,1080 @@
+[
+  {
+    "prediction_file": "runs/fld-fresh-refinement/150m-reference/baseline/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.60888671875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.565121412803532,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.4370860927152318,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.648936170212766,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.786697247706422,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.4791666666666667,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/150m-reference/baseline/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.630859375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5496688741721855,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.41280353200883,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7218844984802432,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7981651376146789,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.6875,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/control/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5275938189845475,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5273556231003039,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/control/0/predictions-1.json",
+    "seed": 0,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.5546875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5253863134657837,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5303951367781155,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/control/0/predictions-2.json",
+    "seed": 0,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55322265625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5231788079470199,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3995584988962472,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5303951367781155,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/control/0/predictions-4.json",
+    "seed": 0,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55078125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5231788079470199,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.38852097130242824,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5319148936170213,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7798165137614679,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/control/0/predictions-8.json",
+    "seed": 0,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.5517578125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5187637969094923,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3841059602649007,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5455927051671733,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7729357798165137,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/predictions-0.json",
+    "seed": 0,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5275938189845475,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5273556231003039,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/predictions-1.json",
+    "seed": 0,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55419921875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5231788079470199,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40397350993377484,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5303951367781155,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/predictions-2.json",
+    "seed": 0,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.552734375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5231788079470199,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3973509933774834,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5303951367781155,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7821100917431193,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/predictions-4.json",
+    "seed": 0,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.55126953125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5209713024282561,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.39072847682119205,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5349544072948328,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7775229357798165,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/predictions-8.json",
+    "seed": 0,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.54931640625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5121412803532008,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.5455927051671733,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.7729357798165137,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.5208333333333334,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/control/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5960264900662252,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/control/1/predictions-1.json",
+    "seed": 1,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5982339955849889,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8256880733944955,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/control/1/predictions-2.json",
+    "seed": 1,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64208984375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5982339955849889,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3841059602649007,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.71580547112462,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8256880733944955,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/control/1/predictions-4.json",
+    "seed": 1,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64208984375,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6004415011037527,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.39293598233995586,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7082066869300911,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8256880733944955,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/control/1/predictions-8.json",
+    "seed": 1,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64404296875,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6070640176600441,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.4105960264900662,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6914893617021277,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8348623853211009,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/trm-frozen/1/predictions-0.json",
+    "seed": 1,
+    "iterations": 0,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64111328125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5960264900662252,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.37969094922737306,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7173252279635258,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.7916666666666666,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/trm-frozen/1/predictions-1.json",
+    "seed": 1,
+    "iterations": 1,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.642578125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5982339955849889,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.3841059602649007,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.71580547112462,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/trm-frozen/1/predictions-2.json",
+    "seed": 1,
+    "iterations": 2,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.642578125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.5982339955849889,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.38852097130242824,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.7142857142857143,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8256880733944955,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/trm-frozen/1/predictions-4.json",
+    "seed": 1,
+    "iterations": 4,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64306640625,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6004415011037527,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.39293598233995586,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.709726443768997,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8279816513761468,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  },
+  {
+    "prediction_file": "runs/fld-fresh-refinement/seed-1/trm-frozen/1/predictions-8.json",
+    "seed": 1,
+    "iterations": 8,
+    "split": "validation",
+    "rows": 2048,
+    "accuracy": 0.64453125,
+    "by_proof_depth": {
+      "2": {
+        "rows": 453,
+        "accuracy": 0.6070640176600441,
+        "label_counts": {
+          "DISPROVED": 223,
+          "PROVED": 230
+        }
+      },
+      "3": {
+        "rows": 453,
+        "accuracy": 0.40618101545253865,
+        "label_counts": {
+          "PROVED": 249,
+          "DISPROVED": 204
+        }
+      },
+      "unknown-proof-depth": {
+        "rows": 658,
+        "accuracy": 0.6990881458966566,
+        "label_counts": {
+          "UNKNOWN": 658
+        }
+      },
+      "1": {
+        "rows": 436,
+        "accuracy": 0.8302752293577982,
+        "label_counts": {
+          "PROVED": 239,
+          "DISPROVED": 197
+        }
+      },
+      "0": {
+        "rows": 48,
+        "accuracy": 0.8125,
+        "label_counts": {
+          "DISPROVED": 33,
+          "PROVED": 15
+        }
+      }
+    }
+  }
+]

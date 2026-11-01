@@ -1,0 +1,74 @@
+{
+  "checkpoint": "runs/fld-fresh-refinement/seed-0/trm-frozen/0/checkpoint",
+  "examples": 16,
+  "device": "cpu",
+  "precision": "float32",
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "fingerprint": "b10a65facd0b3d7e",
+  "rows": [
+    {
+      "step": 1,
+      "mean_class_state_cosine": 0.9996426701545715,
+      "centered_delta_rms": 0.017028555274009705,
+      "total_delta_rms": 0.17564532160758972,
+      "centered_cumulative_delta_rms": 0.017028536647558212,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 2,
+      "mean_class_state_cosine": 0.9996245503425598,
+      "centered_delta_rms": 0.017140747979283333,
+      "total_delta_rms": 0.17065228521823883,
+      "centered_cumulative_delta_rms": 0.034157995134592056,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 3,
+      "mean_class_state_cosine": 0.9996357560157776,
+      "centered_delta_rms": 0.016882220283150673,
+      "total_delta_rms": 0.16795027256011963,
+      "centered_cumulative_delta_rms": 0.051036085933446884,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 4,
+      "mean_class_state_cosine": 0.9996471405029297,
+      "centered_delta_rms": 0.016629597172141075,
+      "total_delta_rms": 0.16534394025802612,
+      "centered_cumulative_delta_rms": 0.06766360253095627,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 5,
+      "mean_class_state_cosine": 0.999657928943634,
+      "centered_delta_rms": 0.0163803119212389,
+      "total_delta_rms": 0.16277702152729034,
+      "centered_cumulative_delta_rms": 0.08404266089200974,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 6,
+      "mean_class_state_cosine": 0.9996685981750488,
+      "centered_delta_rms": 0.016134101897478104,
+      "total_delta_rms": 0.16024765372276306,
+      "centered_cumulative_delta_rms": 0.10017590969800949,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 7,
+      "mean_class_state_cosine": 0.999678909778595,
+      "centered_delta_rms": 0.01589091122150421,
+      "total_delta_rms": 0.1577553004026413,
+      "centered_cumulative_delta_rms": 0.11606622487306595,
+      "original_centered_logits_rms": 1.0878231525421143
+    },
+    {
+      "step": 8,
+      "mean_class_state_cosine": 0.9996888637542725,
+      "centered_delta_rms": 0.015650752931833267,
+      "total_delta_rms": 0.15529949963092804,
+      "centered_cumulative_delta_rms": 0.13171647489070892,
+      "original_centered_logits_rms": 1.0878231525421143
+    }
+  ]
+}
