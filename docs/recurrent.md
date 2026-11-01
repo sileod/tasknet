@@ -221,3 +221,34 @@ iterations, smaller trainable parameter counts or frozen training do not by
 themselves establish an accuracy/compute improvement. Full suite and scaling
 comparisons must establish that experimentally. Learned halting and per-example
 compaction remain deferred.
+
+### Experimental token-memory refinement
+
+Set `recurrent=dict(method='trm', token_memory=True, freeze_encoder=True, ...)`
+to let compact class/candidate states retrieve information from the encoder's
+last token representations at each refinement step. The encoder still runs
+once. Memory keys and values are projected once per forward and reused;
+only the compact answer/latent state recurs. This addresses a limitation of
+the pooled-feature refiner, which cannot revisit individual premise tokens.
+It is an experimental hypothesis, not an established accuracy improvement.
+
+The existing `control` method supports the same option, with identical trainable
+parameters and repeated attention work but without evolving recurrent state.
+For MCQ, candidate queries interact and attend to a joint candidate-token
+memory, without adding answer-position embeddings. Padding is masked.
+Zero-step predictions preserve the original head, and checkpoint save/reload
+includes the memory projections. The default pooled path is unchanged.
+
+The benchmark flag is `--token-memory`. Its compact feature-cache mode is not
+supported with this flag; full token-memory caching can be supplied through
+`encode()` and the model's cached forward interface when the backbone is fully
+frozen, but the benchmark does not materialize these larger caches.
+
+`bash benchmarks/fld_token_memory.sh` compares frozen refinement and its
+nonrecurrent control from each paired trained 68M FLD checkpoint. The study
+uses 1,000 steps at head learning rate 1e-3, training depths 1/2/4 and evaluation
+depths 0/1/2/4/8, with four iterations primary. Only the fixed validation split
+is used. Report both improvement over the original B0 and improvement over the
+same-sized control, plus whether extra iterations improve over one. Include
+B0 training in total cost; encoder-once inference alone is not an efficiency
+claim. Proof-depth breakdowns check whether gains occur on deeper proofs.

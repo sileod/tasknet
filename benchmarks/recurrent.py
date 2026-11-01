@@ -68,11 +68,15 @@ def estimate_forward_flops(model, batch, length, choices, steps):
         (model.base if recurrent else model).named_parameters() if not name.startswith(
             ('base.', 'model.', 'ultrabert.')))
     refiner_flops = 0
-    if recurrent and model.refiner is not None:
+    if recurrent and model.refiner is not None and steps:
         r = recurrent.hidden_size
         candidates = choices if model.task_type == 'MultipleChoice' else model.classifier.out_features
         refiner_flops = batch * (2 * choices * hidden * r + steps * recurrent.layers * (
             16 * candidates * r * r + 4 * candidates * candidates * r))
+        if recurrent.token_memory:
+            tokens = choices * length
+            refiner_flops += batch * (2 * tokens * hidden * r + 4 * tokens * r * r
+                + steps * (4 * candidates * r * r + 4 * candidates * tokens * r))
     return (encoder_flops + head_flops if length else 0), refiner_flops
 
 
@@ -280,7 +284,8 @@ def condition_config(name, args):
                     train_repeated_layers=args.train_repeated_layers)
     return dict(method=method, steps=args.iterations, hidden_size=args.hidden_size, layers=args.layers,
         heads=4, train_steps=tuple(args.train_iterations), freeze_encoder=name in ('trm-frozen', 'trm-partial', 'control'),
-        unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0)
+        unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0,
+        token_memory=args.token_memory)
 
 
 def main():
@@ -318,6 +323,8 @@ def main():
     parser.add_argument('--attn', default='sdpa')
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
+    parser.add_argument('--token-memory', action='store_true',
+                        help='Refine compact answers by attending to fixed encoder token states')
     parser.add_argument('--cache-representations', action='store_true',
                         help='Cache frozen TRM/control features; include encoding cost separately')
     parser.add_argument('--train-repeated-layers', action='store_true',
@@ -337,6 +344,9 @@ def main():
         parser.error('Compare B1 to the same trained B0 checkpoint using --eval-only')
     if args.train_repeated_layers and set(args.conditions) != {'depth'}:
         parser.error('--train-repeated-layers requires only --conditions depth')
+    if args.token_memory and (args.cache_representations or
+            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control'}):
+        parser.error('--token-memory requires refinement conditions without --cache-representations')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)

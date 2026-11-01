@@ -32,6 +32,7 @@ class RecurrentConfig:
     layer_end: int = None
     damping: float = 0.1
     train_repeated_layers: bool = False
+    token_memory: bool = False
 
     @classmethod
     def parse(cls, config):
@@ -62,6 +63,8 @@ class RecurrentConfig:
             raise ValueError('layer_start/layer_end only apply to depth methods')
         if result.method in ('damped', 'depth') and result.backprop_steps is not None:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
+        if result.token_memory and result.method not in ('trm', 'control'):
+            raise ValueError('token_memory requires trm or control')
         if result.train_repeated_layers and result.method != 'depth':
             raise ValueError('train_repeated_layers requires method=depth')
         if result.method == 'damped' and (result.unfreeze_last_n or result.train_repeated_layers):
@@ -121,7 +124,8 @@ class RecurrentModel(PreTrainedModel):
         if c.method in ('trm', 'control'):
             classes = self.classifier.out_features if task_type == 'SequenceClassification' else 0
             self.refiner = AnswerRefiner(self.classifier.in_features, classes,
-                c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale).to(
+                c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
+                memory_size=base.config.hidden_size if c.token_memory else None).to(
                     device=self.classifier.weight.device, dtype=self.classifier.weight.dtype)
         self.last_steps = 0
         self.train(self.training)
@@ -153,24 +157,42 @@ class RecurrentModel(PreTrainedModel):
 
     def encode(self, **inputs):
         """Return compact features and original logits; fully frozen outputs are cacheable."""
-        captured = []
+        captured, tokens = [], []
         self.base.classifier = self.classifier
         handle = self.classifier.register_forward_pre_hook(lambda module, args: captured.append(args[0]))
+        token_handle = None
+        if self.recurrent.token_memory:
+            def capture_tokens(module, args, output):
+                tokens.append(output.last_hidden_state)
+            token_handle = self.encoder.register_forward_hook(capture_tokens)
         frozen = not any(p.requires_grad for p in self.base.parameters())
         try:
             with torch.no_grad() if frozen else nullcontext():
                 outputs = self.base(**inputs, return_dict=True)
         finally:
             handle.remove()
+            if token_handle is not None:
+                token_handle.remove()
         if len(captured) != 1:
             raise RuntimeError('Expected exactly one prediction-head call per encoder forward')
         x = captured[0]
         if self.task_type == 'MultipleChoice':
             x = x.reshape(*outputs.logits.shape, x.shape[-1])
-        return dict(representations=x, initial_logits=outputs.logits)
+        encoded = dict(representations=x, initial_logits=outputs.logits)
+        if self.recurrent.token_memory:
+            if len(tokens) != 1:
+                raise RuntimeError('Expected exactly one encoder token output')
+            states = tokens[0]
+            mask = inputs.get('attention_mask')
+            if mask is None:
+                mask = torch.ones(states.shape[:2], dtype=torch.bool, device=states.device)
+            if self.task_type == 'MultipleChoice':
+                states = states.reshape(outputs.logits.shape[0], -1, states.shape[-1])
+            encoded.update(token_states=states, token_mask=mask.reshape(states.shape[:2]))
+        return encoded
 
     def forward(self, input_ids=None, attention_mask=None, labels=None, steps=None,
-                representations=None, initial_logits=None, return_dict=True,
+                representations=None, initial_logits=None, token_states=None, token_mask=None, return_dict=True,
                 return_intermediate=False, **kwargs):
         kwargs.pop('num_items_in_batch', None)
         c = self.recurrent
@@ -192,6 +214,12 @@ class RecurrentModel(PreTrainedModel):
             if self.refiner is None:
                 raise ValueError('Cached representations are only supported by answer refinement')
             encoded = dict(representations=representations, initial_logits=initial_logits)
+            if c.token_memory:
+                encoded.update(token_states=token_states, token_mask=token_mask)
+            elif token_states is not None or token_mask is not None:
+                raise ValueError('Token memory is not enabled')
+        elif token_states is not None or token_mask is not None:
+            raise ValueError('Supply token memory only with cached representations and logits')
         elif self.refiner is not None:
             encoded = self.encode(**inputs)
         else:
