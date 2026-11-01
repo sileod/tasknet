@@ -42,6 +42,7 @@ class RecurrentConfig:
     adapter_rank: int = 0
     adapter_scope: str = 'replay'
     logit_update: str = 'cumulative'
+    classification_state: str = 'classes'
 
     @classmethod
     def parse(cls, config):
@@ -75,6 +76,11 @@ class RecurrentConfig:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
         if not isinstance(result.adapter_rank, int) or result.adapter_rank < 0:
             raise ValueError('adapter_rank must be a nonnegative integer')
+        if result.classification_state not in ('classes', 'pooled'):
+            raise ValueError('classification_state must be classes or pooled')
+        if result.classification_state == 'pooled' and (result.method not in ('trm','control') or
+                result.contrastive_states or result.class_query_init != 'zero'):
+            raise ValueError('Pooled classification requires answer refinement without class queries or class-state centering')
         if result.logit_update not in ('cumulative', 'anchored'):
             raise ValueError('logit_update must be cumulative or anchored')
         if result.logit_update != 'cumulative' and result.method not in ('trm', 'control'):
@@ -168,8 +174,12 @@ class RecurrentModel(PreTrainedModel):
                 raise ValueError('Candidate memory only applies to multiple-choice tasks')
             if c.contrastive_anchor and task_type == 'SequenceClassification' and not c.token_memory:
                 raise ValueError('Classification contrastive states require token_memory for input conditioning')
+            if c.classification_state == 'pooled' and task_type != 'SequenceClassification':
+                raise ValueError('Pooled classification states only apply to classification tasks')
             classes = self.classifier.out_features if task_type == 'SequenceClassification' else 0
-            self.refiner = AnswerRefiner(self.classifier.in_features, classes,
+            from .trm import ClassificationRefiner
+            refiner_type = ClassificationRefiner if c.classification_state == 'pooled' else AnswerRefiner
+            self.refiner = refiner_type(self.classifier.in_features, classes,
                 c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
                 memory_size=base.config.hidden_size if c.token_memory else None,
                 normalize_anchor=c.normalize_anchor, contrastive_states=c.contrastive_states,

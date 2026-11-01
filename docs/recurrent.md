@@ -387,3 +387,15 @@ predictions at every positive evaluation depth; repeating a constant correction
 cannot change its confidence. This is a useful control for depth-dependent
 calibration. The default `"cumulative"` preserves earlier checkpoint behavior.
 The benchmark flag is `--logit-update anchored`.
+
+
+`classification_state="pooled"` uses one reasoning vector per problem and a
+standard class-specific readout. The complete vector of current class scores
+conditions each update. Residual MLP blocks replace singleton self-attention;
+optional token cross-attention retrieves encoder evidence at each step. This
+avoids requiring a shared scalar scorer to infer class-specific readout weights
+from synthetic label slots. It supports `logit_update="anchored"` and preserves
+native zero-loop predictions. It rejects class-slot queries and class-state
+centering. MCQ keeps joint candidate attention and its shared choice scorer.
+The benchmark flag is `--classification-state pooled`; `"classes"` remains the
+legacy default for checkpoint compatibility during experimentation.

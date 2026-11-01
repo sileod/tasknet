@@ -70,9 +70,10 @@ def estimate_forward_flops(model, batch, length, choices, steps):
     refiner_flops = 0
     if recurrent and model.refiner is not None and steps:
         r = recurrent.hidden_size
-        candidates = choices if model.task_type == 'MultipleChoice' else model.classifier.out_features
+        pooled = recurrent.classification_state == 'pooled'
+        candidates = 1 if pooled else (choices if model.task_type == 'MultipleChoice' else model.classifier.out_features)
         refiner_flops = batch * (2 * choices * hidden * r + steps * recurrent.layers * (
-            16 * candidates * r * r + 4 * candidates * candidates * r))
+            (8 if pooled else 16) * candidates * r * r + (0 if pooled else 4 * candidates * candidates * r)))
         if recurrent.token_memory:
             tokens = choices * length
             attended_tokens = length if recurrent.candidate_memory else tokens
@@ -351,7 +352,8 @@ def condition_config(name, args):
         token_memory=args.token_memory, intermediate_loss_weight=args.intermediate_loss_weight,
         final_loss_weight=args.final_loss_weight, class_query_init=args.class_query_init,
         normalize_anchor=args.normalize_anchor, contrastive_states=args.contrastive_states,
-        candidate_memory=args.candidate_memory, logit_update=args.logit_update)
+        candidate_memory=args.candidate_memory, logit_update=args.logit_update,
+        classification_state=args.classification_state)
 
 
 def main():
@@ -400,6 +402,7 @@ def main():
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
     parser.add_argument('--dataset-revision', help='Pin tasksource dataset loading independently of model revision')
+    parser.add_argument('--classification-state', choices=['classes','pooled'], default='classes')
     parser.add_argument('--logit-update', choices=['cumulative','anchored'], default='cumulative')
     parser.add_argument('--candidate-memory', action='store_true')
     parser.add_argument('--contrastive-states', action='store_true')
@@ -437,6 +440,9 @@ def main():
     if args.refiner_learning_rate is not None and (args.cache_representations or args.refiner_learning_rate <= 0 or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('--refiner-learning-rate requires a positive rate, answer-refinement conditions and no feature cache')
+    if args.classification_state == 'pooled' and (args.contrastive_states or args.class_query_init != 'zero' or
+            not set(args.conditions) <= {'trm-frozen','trm-partial','trm-full','control','control-full'}):
+        parser.error('Pooled classification requires answer refinement without class queries or class-state centering')
     if args.logit_update == 'anchored' and not set(args.conditions) <= {
             'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
         parser.error('Anchored logit updates require answer-refinement conditions')

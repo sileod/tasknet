@@ -70,9 +70,7 @@ class AnswerRefiner(nn.Module):
         z = self.contrast(x) if self.contrastive_states else x
         return (z if self.contrastive_anchor else x), z, logits
 
-    def step(self, z, x, y, memory=None):
-        answer = y - y.mean(dim=-1, keepdim=True) if self.contrastive_states else y
-        h = z + x + self.answer(answer.unsqueeze(-1).to(self.answer.weight.dtype))
+    def advance(self, h, memory=None):
         if memory is not None:
             keys, values, mask = memory
             queries = self.memory_query(self.memory_query_norm(h))
@@ -85,7 +83,12 @@ class AnswerRefiner(nn.Module):
             h = h + self.memory_output(attended)
         for block in self.blocks:
             h = block(h)
-        z = self.norm(h)
+        return self.norm(h)
+
+    def step(self, z, x, y, memory=None):
+        answer = y - y.mean(dim=-1, keepdim=True) if self.contrastive_states else y
+        h = z + x + self.answer(answer.unsqueeze(-1).to(self.answer.weight.dtype))
+        z = self.advance(h, memory)
         if self.contrastive_states:
             z = self.contrast(z)
         return z, self.update(z).squeeze(-1)
@@ -119,3 +122,39 @@ class AnswerRefiner(nn.Module):
             if index >= early:
                 predictions.append(y)
         return y, predictions
+
+
+class ResidualMLP(nn.Module):
+    def __init__(self, hidden_size, dropout):
+        super().__init__()
+        self.norm = nn.LayerNorm(hidden_size)
+        self.network = nn.Sequential(nn.Linear(hidden_size,2*hidden_size),nn.GELU(),
+            nn.Dropout(dropout),nn.Linear(2*hidden_size,hidden_size),nn.Dropout(dropout))
+
+    def forward(self, states):
+        return states + self.network(self.norm(states))
+
+
+class ClassificationRefiner(AnswerRefiner):
+    """One problem state and a standard class-specific readout, with shared iterative updates."""
+    def __init__(self,input_size,num_classes,hidden_size=256,layers=2,heads=4,
+                 dropout=.1,init_scale=1e-3,**kwargs):
+        super().__init__(input_size,0,hidden_size,layers,heads,dropout,init_scale,**kwargs)
+        self.answer = nn.Linear(num_classes,hidden_size)
+        self.update = nn.Linear(hidden_size,num_classes)
+        nn.init.normal_(self.update.weight,std=init_scale)
+        nn.init.zeros_(self.update.bias)
+        self.blocks = nn.ModuleList([ResidualMLP(hidden_size,dropout) for _ in range(layers)])
+
+    def prepare(self,representations,logits):
+        x = self.anchor(representations.to(self.anchor.weight.dtype))
+        if self.normalize_anchor:
+            x = nn.functional.layer_norm(x,(x.shape[-1],))
+        x = x[:,None,:]
+        return x,x,logits
+
+    def step(self,z,x,y,memory=None):
+        answer = y - y.mean(dim=-1,keepdim=True)
+        h = z + x + self.answer(answer.to(self.answer.weight.dtype))[:,None,:]
+        z = self.advance(h,memory)
+        return z,self.update(z[:,0,:])

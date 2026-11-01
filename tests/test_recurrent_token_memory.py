@@ -81,7 +81,8 @@ def test_token_memory_bfloat16_checkpoint_and_trainable_encoder_gradient(tmp_pat
 
 
 @pytest.mark.parametrize('joint',[False,True])
-def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_path,monkeypatch,joint):
+@pytest.mark.parametrize('pooled',[False,True])
+def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_path,monkeypatch,joint,pooled):
     import json,sys
     from datasets import Dataset,DatasetDict
     from transformers import BertTokenizerFast
@@ -102,6 +103,8 @@ def test_token_memory_runs_through_existing_tasknet_trainer_and_benchmark(tmp_pa
         '--hidden-size','16','--layers','1','--batch-size','2','--eval-every','2',
         '--attn','eager','--latency-batches','1','--latency-lengths','8','--latency-repeats','1',
         '--save-predictions','--output',str(output)]
+    if pooled:
+        arguments+=['--classification-state','pooled','--logit-update','anchored']
     if joint:
         arguments+=['--neutral-head','--refiner-learning-rate','0.001']
     monkeypatch.setattr(sys,'argv',arguments)

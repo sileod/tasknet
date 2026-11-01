@@ -675,3 +675,26 @@ with 100 warmup steps and training depths 1/2/4; primary evaluation depth remain
 not a claim that any one change has independently improved accuracy. Source
 costs and actual training time must be reported. Reserved/test scores remain
 unused. Package code is fixed through both seeds once launched.
+
+
+The selected adapter profiles show a workload-specific result. Unmerged ordinary
+adapters at batch 32 run about 1.64x (length 128) and 1.68x (length 512) faster
+than the native 150M model. One-pass replay runs about 1.26x/1.29x faster there.
+Neither demonstrates a batch-one latency advantage in this profile. Ordinary
+LoRA inference can remove its small-matrix overhead by merging updates into
+native weights; `benchmarks.fld_merge_adapters` exports this copy and rechecks
+BF16 quality and full latency. Replay-only updates are explicitly not merged,
+because merging them into the original pass would break zero-loop preservation.
+The scale-two ordinary-adapter candidate is still a selected validation result,
+not a confirmed efficiency gain or evidence of useful recursion.
+
+The anchored class-slot head completed at 60.35% for four-step refinement,
+versus 60.38% for its matched control. Its positive second-seed correction does
+not establish an advantage from recurrence. The next classification-specific
+head in `benchmarks/fld_pooled_refinement.sh` uses a pooled reasoning vector and
+a standard three-class readout. It retains full-input conditioning, fixed-native
+logit corrections, token memory, the frozen B0 checkpoints, audited fresh rows,
+paired seeds, 1,000 steps at 1e-4 with 100 warmup steps, and training depths 1/2/4.
+Primary depth remains 4. The control has the same new parameters but resets
+its state every step. This is an exploratory architectural correction; accuracy
+against zero/one-step and the matched control must improve before promotion.
