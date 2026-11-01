@@ -331,7 +331,7 @@ def condition_config(name, args):
         unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0,
         token_memory=args.token_memory, intermediate_loss_weight=args.intermediate_loss_weight,
         final_loss_weight=args.final_loss_weight, class_query_init=args.class_query_init,
-        normalize_anchor=args.normalize_anchor)
+        normalize_anchor=args.normalize_anchor, contrastive_states=args.contrastive_states)
 
 
 def main():
@@ -378,6 +378,7 @@ def main():
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
     parser.add_argument('--dataset-revision', help='Pin tasksource dataset loading independently of model revision')
+    parser.add_argument('--contrastive-states', action='store_true')
     parser.add_argument('--normalize-anchor', action='store_true')
     parser.add_argument('--class-query-init', choices=['zero','classifier'], default='zero')
     parser.add_argument('--token-memory', action='store_true',
@@ -412,6 +413,9 @@ def main():
     if args.refiner_learning_rate is not None and (args.cache_representations or args.refiner_learning_rate <= 0 or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('--refiner-learning-rate requires a positive rate, answer-refinement conditions and no feature cache')
+    if args.contrastive_states and not set(args.conditions) <= {
+            'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
+        parser.error('--contrastive-states requires answer-refinement conditions')
     if args.normalize_anchor and not set(args.conditions) <= {
             'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
         parser.error('--normalize-anchor requires answer-refinement conditions')

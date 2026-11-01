@@ -320,3 +320,20 @@ scale comparable with the normalized recurrent state; defaults and zero-loop
 predictions remain unchanged. MCQ applies the same normalization to each
 candidate, preserving candidate permutation equivariance. The benchmark flag
 is `--normalize-anchor`.
+
+
+`contrastive_states=True` is an experimental answer-refinement formulation.
+Before recurrence and after each shared refinement block stack, it subtracts
+the mean candidate/class state and applies parameter-free feature layer
+normalization. Centering accumulates in FP32 even with BF16 model weights.
+Prediction feedback uses logits minus their candidate/class mean, preserving
+invariance to an arbitrary common logit offset. No parameters are added;
+zero-loop output remains the original classifier output. Identical choices
+remain indistinguishable and candidate order remains equivariant.
+
+For classification this option requires `token_memory=True`, because removing
+the common pooled anchor otherwise removes the only input conditioning.
+The benchmark flag is `--contrastive-states`. State separation is imposed by
+this operation and is **not evidence of improved reasoning**. Assess held-out
+accuracy against zero refinement, the nonrecurrent control with the same state
+formulation, and the larger native encoder before claiming a benefit.

@@ -558,3 +558,17 @@ can be reproduced using `benchmarks.refiner_diagnostic --task commonsense_qa
 --max-length 256` with the archived checkpoint path and dataset revision.
 This supports investigating collapse rather than treating additional iterations
 as an established reasoning mechanism.
+
+
+The next controlled MCQ screen is `bash benchmarks/csqa_contrastive.sh`.
+It changes the state formulation: center candidate states and normalize their
+remaining differences at initialization and each refinement step, and center
+logits before feeding predictions back into the state update. Both TRM and
+control receive these operations, with no added parameters. This tests whether
+candidate distinctions can support useful iterative corrections after the
+shared-state collapse observed above. The original joint MCQ protocol,
+data revision, seeds, 2,000-step budgets, two learning rates, final checkpoint
+selection and primary evaluation depth 4 are retained. Native baselines are
+reused from the earlier MCQ screen. The separate 611-example test partition
+remains unscored. Distinct states are a structural property here; only actual
+held-out improvements count as success. No gain has yet been demonstrated.

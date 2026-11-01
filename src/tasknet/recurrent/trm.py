@@ -5,9 +5,10 @@ from torch import nn
 
 class AnswerRefiner(nn.Module):
     def __init__(self, input_size, num_classes, hidden_size=256, layers=2, heads=4,
-                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False):
+                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False, contrastive_states=False):
         super().__init__()
         self.normalize_anchor = normalize_anchor
+        self.contrastive_states = contrastive_states
         self.anchor = nn.Linear(input_size, hidden_size)
         self.answer = nn.Linear(1, hidden_size)
         self.class_embeddings = nn.Parameter(torch.zeros(num_classes, hidden_size)) if num_classes else None
@@ -41,16 +42,26 @@ class AnswerRefiner(nn.Module):
             return tensor.reshape(tensor.shape[0], tensor.shape[1], self.memory_heads, -1).transpose(1, 2)
         return heads(keys), heads(values), mask[:, None, None, :].bool()
 
+    @staticmethod
+    def contrast(states):
+        # Remove the shared component before normalizing candidate differences.
+        # Accumulate in FP32: BF16 cancellation can erase small differences.
+        centered = states.float() - states.float().mean(dim=1, keepdim=True)
+        return nn.functional.layer_norm(centered, (centered.shape[-1],)).to(states.dtype)
+
     def prepare(self, representations, logits):
         x = self.anchor(representations.to(self.anchor.weight.dtype))
         if self.normalize_anchor:
             x = nn.functional.layer_norm(x, (x.shape[-1],))
         if x.ndim == 2:
             x = x[:, None, :] + self.class_embeddings[None, :, :]
+        if self.contrastive_states:
+            x = self.contrast(x)
         return x, x, logits
 
     def step(self, z, x, y, memory=None):
-        h = z + x + self.answer(y.unsqueeze(-1).to(self.answer.weight.dtype))
+        answer = y - y.mean(dim=-1, keepdim=True) if self.contrastive_states else y
+        h = z + x + self.answer(answer.unsqueeze(-1).to(self.answer.weight.dtype))
         if memory is not None:
             keys, values, mask = memory
             queries = self.memory_query(self.memory_query_norm(h))
@@ -61,6 +72,8 @@ class AnswerRefiner(nn.Module):
         for block in self.blocks:
             h = block(h)
         z = self.norm(h)
+        if self.contrastive_states:
+            z = self.contrast(z)
         return z, self.update(z).squeeze(-1)
 
     def forward(self, representations, initial_logits, steps, control=False, backprop_steps=None,
