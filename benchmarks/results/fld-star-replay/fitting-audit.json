@@ -3,5 +3,7 @@
   "star_fit_validation_pair_overlap": 0,
   "star_fit_validation_context_overlap": 0,
   "training_fingerprint": "6b95e0aa72537ad7",
-  "validation_fingerprint": "7800681f11c0a37b"
+  "validation_fingerprint": "7800681f11c0a37b",
+  "max_fitting_tokens": 848,
+  "fitting_truncated_at_2048": 0
 }

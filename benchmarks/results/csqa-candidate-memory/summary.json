@@ -1,7 +1,7 @@
 {
   "screen_only": true,
   "confirmed_efficiency_gain": false,
-  "source_cost_reference": "benchmarks/results/fld-scaling (source fitting must be included)",
+  "source_cost_reference": "benchmarks/results/csqa-recurrent (paired 68M baseline costs; no valid across-architecture mean)",
   "rows": [
     {
       "condition": "trm-frozen",
