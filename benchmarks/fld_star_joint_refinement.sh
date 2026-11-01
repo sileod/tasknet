@@ -17,7 +17,8 @@ for seed in 0 1; do
     --conditions trm-full control-full --token-memory --normalize-anchor \
     --classification-state pooled --logit-update anchored \
     --seeds "$seed" --steps 500 --learning-rate 1e-5 --refiner-learning-rate 1e-3 \
-    --warmup-steps 50 --train-iterations 1 2 4 --eval-iterations 0 1 2 4 8 \
+    --warmup-steps 50 --train-iterations 2 4 --eval-iterations 0 1 2 4 8 \
+    --intermediate-loss-weight 0 --final-loss-weight 1 \
     --nrows 8192 --eval-rows 2048 --batch-size 16 --eval-batch-size 32 \
     --max-length 2048 --eval-every 100 --precision bf16 --save-predictions \
     --latency-batches 1 --latency-lengths 128 --latency-repeats 5 \
