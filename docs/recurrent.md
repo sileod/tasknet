@@ -162,7 +162,8 @@ model = tn.RecurrentModel.from_pretrained("runs/refiner")
 ```
 
 The directory contains an ordinary HF checkpoint under `base/`, optional
-`refiner.safetensors`, and versioned `recurrent_config.json`. The latter records
+`refiner.safetensors`, optional `buffers.safetensors` for nonpersistent native
+rotary buffers, and versioned `recurrent_config.json`. The latter records
 architecture, task type, attention backend and dtype. Reload defaults to these
 settings; deliberate precision/backend overrides can change numerical results.
 Custom-code bases still require explicit `trust_remote_code=True`. Tokenizers
@@ -253,6 +254,23 @@ With BF16 training, projected features and token states are stored in BF16,
 matching their consumption precision under autocast even when the backbone
 weights/residual states are FP32. Native logits retain their original precision.
 Strict cached/live AMP checks cover classification and both MCQ memory modes.
+
+`anchor_pooling="last_segment"` initializes the refiner from the contextualized
+hypothesis/answer tokens instead of the native classifier's pooled features.
+It uses `anchor_separator_id` or the model's configured separator ID, excludes special tokens, and falls
+back to non-special input tokens for an empty final segment. The original
+classifier and zero-step logits are preserved. The legacy default is `"head"`;
+classifier-derived class queries require that default because their directions
+belong to the native classifier's feature space. This option adds no parameters
+and works with classification, joint MCQ refinement and frozen token caches.
+Use `--anchor-pooling last_segment` in the benchmark. Its accuracy benefit is
+experimental and must be checked against one-step and reset-state controls.
+The benchmark reads the separator from its cached tokenizer; use
+`--anchor-separator-id` to override it. For the Python factory, UltraBERT's
+published configs omit the separator, so pass
+`anchor_separator_id=tokenizer.sep_token_id`. Its pair encoding has one separator
+and no closing separator; both that format and ModernBERT's closing separator
+are supported without changing task inputs.
 
 `bash benchmarks/fld_token_memory.sh` compares frozen refinement and its
 nonrecurrent control from each paired trained 68M FLD checkpoint. The study

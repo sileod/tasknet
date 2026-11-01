@@ -15,6 +15,7 @@ for seed in 0 1; do
     --initial-checkpoint "runs/fld-scaling/68m-baseline/baseline/$seed/checkpoint" \
     --task FLD.v2/star --dataset-revision 7ead9a0429604efb473e96d4dc279bc3453ce995 \
     --conditions trm-frozen control --token-memory --cache-representations \
+    --anchor-pooling "${TASKNET_ANCHOR_POOLING:-head}" \
     --normalize-anchor --classification-state pooled --logit-update anchored \
     --seeds "$seed" --steps 5000 --learning-rate 3e-4 --warmup-steps 100 \
     --train-iterations 2 4 --eval-iterations 0 1 2 4 8 \

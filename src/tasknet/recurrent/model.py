@@ -43,6 +43,8 @@ class RecurrentConfig:
     adapter_scope: str = 'replay'
     logit_update: str = 'cumulative'
     classification_state: str = 'classes'
+    anchor_pooling: str = 'head'
+    anchor_separator_id: int = None
 
     @classmethod
     def parse(cls, config):
@@ -78,6 +80,14 @@ class RecurrentConfig:
             raise ValueError('adapter_rank must be a nonnegative integer')
         if result.classification_state not in ('classes', 'pooled'):
             raise ValueError('classification_state must be classes or pooled')
+        if result.anchor_pooling not in ('head', 'last_segment'):
+            raise ValueError('anchor_pooling must be head or last_segment')
+        if result.anchor_separator_id is not None and (not isinstance(result.anchor_separator_id, int) or
+                result.anchor_separator_id < 0 or result.anchor_pooling != 'last_segment'):
+            raise ValueError('anchor_separator_id requires last-segment pooling and a nonnegative token ID')
+        if result.anchor_pooling != 'head' and (result.method not in ('trm', 'control') or
+                result.class_query_init != 'zero'):
+            raise ValueError('Last-segment anchor pooling requires answer refinement without classifier-derived queries')
         if result.classification_state == 'pooled' and (result.method not in ('trm','control') or
                 result.contrastive_states or result.class_query_init != 'zero'):
             raise ValueError('Pooled classification requires answer refinement without class queries or class-state centering')
@@ -114,6 +124,21 @@ class RecurrentConfig:
         if result.unfreeze_last_n < 0 or (result.unfreeze_last_n and not result.freeze_encoder):
             raise ValueError('unfreeze_last_n requires freeze_encoder=True and a nonnegative count')
         return result
+
+
+def _last_segment_mean(states, ids, mask, separator, cls=None):
+    """Pool the final text segment, excluding specials; fall back for empty pairs."""
+    valid = mask.bool() & ids.ne(separator)
+    if cls is not None:
+        valid = valid & ids.ne(cls)
+    boundaries = (ids.eq(separator) & mask.bool()).long().cumsum(-1)
+    after_last = valid & boundaries.eq(boundaries[:, -1:])
+    target = (boundaries[:, -1:] - (~after_last.any(-1, keepdim=True)).long()).clamp_min(0)
+    selected = valid & boundaries.eq(target)
+    selected = torch.where(selected.any(-1, keepdim=True), selected, valid)
+    weights = selected.float()
+    return ((states.float()*weights[..., None]).sum(1) /
+            weights.sum(1, keepdim=True).clamp_min(1)).to(states.dtype)
 
 
 class RecurrentModel(PreTrainedModel):
@@ -179,7 +204,13 @@ class RecurrentModel(PreTrainedModel):
             classes = self.classifier.out_features if task_type == 'SequenceClassification' else 0
             from .trm import ClassificationRefiner
             refiner_type = ClassificationRefiner if c.classification_state == 'pooled' else AnswerRefiner
-            self.refiner = refiner_type(self.classifier.in_features, classes,
+            self.anchor_separator_id = (c.anchor_separator_id if c.anchor_separator_id is not None
+                                        else getattr(base.config, 'sep_token_id', None))
+            if c.anchor_pooling == 'last_segment' and self.anchor_separator_id is None:
+                raise ValueError('Last-segment anchor pooling requires anchor_separator_id=tokenizer.sep_token_id '
+                                 'when the model config has no separator ID')
+            input_size = self.encoder.config.hidden_size if c.anchor_pooling == 'last_segment' else self.classifier.in_features
+            self.refiner = refiner_type(input_size, classes,
                 c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
                 memory_size=base.config.hidden_size if c.token_memory else None,
                 normalize_anchor=c.normalize_anchor, contrastive_states=c.contrastive_states,
@@ -235,7 +266,8 @@ class RecurrentModel(PreTrainedModel):
         self.base.classifier = self.classifier
         handle = self.classifier.register_forward_pre_hook(lambda module, args: captured.append(args[0]))
         token_handle = None
-        if self.recurrent.token_memory:
+        needs_tokens = self.recurrent.token_memory or self.recurrent.anchor_pooling == 'last_segment'
+        if needs_tokens:
             def capture_tokens(module, args, output):
                 tokens.append(output.last_hidden_state)
             token_handle = self.encoder.register_forward_hook(capture_tokens)
@@ -253,16 +285,29 @@ class RecurrentModel(PreTrainedModel):
         if self.task_type == 'MultipleChoice':
             x = x.reshape(*outputs.logits.shape, x.shape[-1])
         encoded = dict(representations=x, initial_logits=outputs.logits)
-        if self.recurrent.token_memory:
+        if needs_tokens:
             if len(tokens) != 1:
                 raise RuntimeError('Expected exactly one encoder token output')
             states = tokens[0]
             mask = inputs.get('attention_mask')
             if mask is None:
                 mask = torch.ones(states.shape[:2], dtype=torch.bool, device=states.device)
-            if self.task_type == 'MultipleChoice':
-                states = states.reshape(outputs.logits.shape[0], -1, states.shape[-1])
-            encoded.update(token_states=states, token_mask=mask.reshape(states.shape[:2]))
+            mask = mask.reshape(states.shape[:2])
+            if self.recurrent.anchor_pooling == 'last_segment':
+                if inputs.get('input_ids') is None:
+                    raise ValueError('Last-segment anchor pooling requires input_ids')
+                cls = getattr(self.base.config, 'cls_token_id', None)
+                if cls is None:
+                    cls = getattr(self.base.config, 'bos_token_id', None)
+                x = _last_segment_mean(states, inputs['input_ids'].reshape(states.shape[:2]), mask,
+                    self.anchor_separator_id, cls)
+                if self.task_type == 'MultipleChoice':
+                    x = x.reshape(*outputs.logits.shape, x.shape[-1])
+                encoded['representations'] = x
+            if self.recurrent.token_memory:
+                if self.task_type == 'MultipleChoice':
+                    states = states.reshape(outputs.logits.shape[0], -1, states.shape[-1])
+                encoded.update(token_states=states, token_mask=mask.reshape(states.shape[:2]))
         return encoded
 
     def forward(self, input_ids=None, attention_mask=None, labels=None, steps=None,

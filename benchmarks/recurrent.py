@@ -383,7 +383,8 @@ def condition_config(name, args):
         final_loss_weight=args.final_loss_weight, class_query_init=args.class_query_init,
         normalize_anchor=args.normalize_anchor, contrastive_states=args.contrastive_states,
         candidate_memory=args.candidate_memory, logit_update=args.logit_update,
-        classification_state=args.classification_state)
+        classification_state=args.classification_state, anchor_pooling=args.anchor_pooling,
+        anchor_separator_id=args.anchor_separator_id)
 
 
 def main():
@@ -426,6 +427,9 @@ def main():
     parser.add_argument('--latency-lengths', nargs='+', type=int, default=[128,512,2048])
     parser.add_argument('--latency-repeats', type=int, default=10)
     parser.add_argument('--precision', choices=['fp32','bf16'], default='fp32')
+    parser.add_argument('--anchor-pooling', choices=['head','last_segment'], default='head')
+    parser.add_argument('--anchor-separator-id', type=int,
+                        help='Last-segment separator; inferred from tokenizer when omitted')
     parser.add_argument('--adapter-rank', type=int, default=8)
     parser.add_argument('--replay-damping', type=float, default=0.1)
     parser.add_argument('--attn', default='sdpa')
@@ -463,6 +467,11 @@ def main():
         parser.error('--train-repeated-layers requires only --conditions depth')
     if args.token_memory and not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}:
         parser.error('--token-memory requires refinement conditions')
+    if args.anchor_pooling != 'head' and (args.class_query_init != 'zero' or
+            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
+        parser.error('--anchor-pooling last_segment requires refinement without classifier-derived queries')
+    if args.anchor_separator_id is not None and (args.anchor_separator_id < 0 or args.anchor_pooling != 'last_segment'):
+        parser.error('--anchor-separator-id requires last_segment and a nonnegative ID')
     if args.neutral_head and (args.initial_checkpoint or
             not set(args.conditions) <= {'baseline', 'trm-full', 'control-full'}):
         parser.error('--neutral-head requires a fresh native or joint-refinement run without --initial-checkpoint')
@@ -516,6 +525,16 @@ def main():
         for condition in args.conditions:
             set_seed(seed)
             start = time.perf_counter()
+            if args.anchor_pooling == 'last_segment' and 'tokenizer' not in cache:
+                from transformers import AutoTokenizer
+                cache['tokenizer'] = AutoTokenizer.from_pretrained(args.initial_checkpoint or args.model,
+                    trust_remote_code=args.trust_remote_code,
+                    **({'revision': args.revision} if args.revision else {}))
+                if args.anchor_separator_id is None:
+                    args.anchor_separator_id = cache['tokenizer'].sep_token_id
+                if args.anchor_separator_id is None:
+                    parser.error('Last-segment pooling requires a tokenizer separator or --anchor-separator-id')
+                set_seed(seed)
             config = condition_config(condition, args)
             hparams = dict(model_name=args.initial_checkpoint or args.model, seed=seed, data_seed=seed,
                 max_steps=args.steps, per_device_train_batch_size=args.batch_size,
