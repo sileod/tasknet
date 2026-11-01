@@ -1,0 +1,49 @@
+{
+  "task": "commonsense_qa",
+  "revision": "94630fe30dad47192a8546eb75f094926d47e155",
+  "choices": [
+    "choice0",
+    "choice1",
+    "choice2",
+    "choice3"
+  ],
+  "splits": {
+    "train": {
+      "rows": 8192,
+      "fingerprint": "7d0010189973f752",
+      "max_tokens": 79,
+      "truncated_at_256": 0,
+      "label_counts": {
+        "3": 2104,
+        "1": 2074,
+        "2": 1980,
+        "0": 2034
+      }
+    },
+    "validation": {
+      "rows": 610,
+      "fingerprint": "f35d36391d6c3e37",
+      "max_tokens": 52,
+      "truncated_at_256": 0,
+      "label_counts": {
+        "1": 149,
+        "3": 156,
+        "0": 165,
+        "2": 140
+      }
+    },
+    "test": {
+      "rows": 611,
+      "fingerprint": "55617eb2da17f63b",
+      "max_tokens": 69,
+      "truncated_at_256": 0,
+      "label_counts": {
+        "3": 151,
+        "1": 156,
+        "2": 155,
+        "0": 149
+      }
+    }
+  },
+  "format_note": "Tasksource default four-option recast; not the native five-option benchmark. Tasksource's validation/test partition is retained; model selection uses validation only."
+}

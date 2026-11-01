@@ -493,3 +493,27 @@ concurrent GPU training. The diagnostic is reproducible with
 `python -m benchmarks.refiner_diagnostic --checkpoint CHECKPOINT --dataset-revision REVISION --output OUTPUT`;
 it examines the same first 16 capped validation examples on CPU in FP32 and
 is not an accuracy estimate. Normalization has not yet demonstrated a gain.
+
+
+The complementary MCQ screen is `bash benchmarks/csqa_recurrent.sh`. It uses
+Tasksource's default **four-option CommonsenseQA recast**, not the native
+five-option benchmark. Dataset revision is
+`94630fe30dad47192a8546eb75f094926d47e155`; the
+[audit](../benchmarks/results/csqa-recurrent/data-audit.json) records 8,192 fitting
+examples, 610 validation examples, and a separate 611-example test partition.
+Maximum retained question/candidate length is 79 tokens; the 256-token cap
+truncates none. The test partition is not used for model selection or scored in
+this validation screen. Test labels/lengths were inspected only by the data audit.
+
+Seeds 0/1 compare native 68M and 150M with joint 68M token-memory TRM and the
+jointly trained nonrecurrent control. All receive 2,000 optimization steps at
+encoder learning rate 3e-5; refinement parameters use 1e-3. Refiner/control both
+use normalized candidate anchors and sampled training depths 1/2/4, with
+intermediate losses and final weight 2. Inference depths are 0/1/2/4/8; primary
+depth is 4. Classifier-derived class queries do not apply to MCQ. The existing
+trainer adjusts the requested sequence batch budget of 16 to four questions
+with four choices; actual consumption, elapsed time and FLOP estimates are
+recorded. Evaluation includes a deterministic per-example answer permutation.
+This is a small validation screen, not a quality-equivalence or efficiency
+confirmation; any apparent benefit requires additional seeds and comparison
+against the measured larger-model cost. It is queued after the FLD ablations.
