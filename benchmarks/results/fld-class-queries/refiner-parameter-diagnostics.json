@@ -1,0 +1,178 @@
+[
+  {
+    "study": "fld-token-memory",
+    "seed": 0,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.8497358560562134,
+        "std": 0.030682118609547615
+      },
+      "update.weight": {
+        "norm": 0.2110234498977661,
+        "std": 0.013214776292443275
+      },
+      "anchor.weight": {
+        "norm": 11.20871639251709,
+        "std": 0.03095994144678116
+      },
+      "memory_projection.weight": {
+        "norm": 12.082039833068848,
+        "std": 0.03337235376238823
+      }
+    }
+  },
+  {
+    "study": "fld-token-memory",
+    "seed": 1,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 1.2348588705062866,
+        "std": 0.0445881187915802
+      },
+      "update.weight": {
+        "norm": 0.2267780900001526,
+        "std": 0.014201262965798378
+      },
+      "anchor.weight": {
+        "norm": 10.423376083374023,
+        "std": 0.028790872544050217
+      },
+      "memory_projection.weight": {
+        "norm": 12.018146514892578,
+        "std": 0.033195726573467255
+      }
+    }
+  },
+  {
+    "study": "fld-fresh-refinement",
+    "seed": 0,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.7067994475364685,
+        "std": 0.02552102506160736
+      },
+      "update.weight": {
+        "norm": 0.14982934296131134,
+        "std": 0.00938100554049015
+      },
+      "anchor.weight": {
+        "norm": 11.116090774536133,
+        "std": 0.030704138800501823
+      },
+      "memory_projection.weight": {
+        "norm": 11.741032600402832,
+        "std": 0.03243038058280945
+      }
+    }
+  },
+  {
+    "study": "fld-fresh-refinement",
+    "seed": 1,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.8596441149711609,
+        "std": 0.031039893627166748
+      },
+      "update.weight": {
+        "norm": 0.1691908836364746,
+        "std": 0.010595062747597694
+      },
+      "anchor.weight": {
+        "norm": 10.934957504272461,
+        "std": 0.030203908681869507
+      },
+      "memory_projection.weight": {
+        "norm": 11.774097442626953,
+        "std": 0.032521720975637436
+      }
+    }
+  },
+  {
+    "study": "fld-joint-memory",
+    "seed": 0,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.22502295672893524,
+        "std": 0.008125100284814835
+      },
+      "update.weight": {
+        "norm": 0.18397298455238342,
+        "std": 0.011520198546350002
+      },
+      "anchor.weight": {
+        "norm": 9.954424858093262,
+        "std": 0.027495477348566055
+      },
+      "memory_projection.weight": {
+        "norm": 10.796213150024414,
+        "std": 0.029820723459124565
+      }
+    }
+  },
+  {
+    "study": "fld-joint-memory",
+    "seed": 1,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.2542327642440796,
+        "std": 0.00917979795485735
+      },
+      "update.weight": {
+        "norm": 0.16390614211559296,
+        "std": 0.01026328094303608
+      },
+      "anchor.weight": {
+        "norm": 9.805173873901367,
+        "std": 0.027083303779363632
+      },
+      "memory_projection.weight": {
+        "norm": 11.406330108642578,
+        "std": 0.03150596842169762
+      }
+    }
+  },
+  {
+    "study": "fld-joint-final",
+    "seed": 0,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.2894012928009033,
+        "std": 0.010448994114995003
+      },
+      "update.weight": {
+        "norm": 0.18818706274032593,
+        "std": 0.011784730479121208
+      },
+      "anchor.weight": {
+        "norm": 10.002480506896973,
+        "std": 0.027628211304545403
+      },
+      "memory_projection.weight": {
+        "norm": 10.831758499145508,
+        "std": 0.02991853654384613
+      }
+    }
+  },
+  {
+    "study": "fld-joint-final",
+    "seed": 1,
+    "parameters": {
+      "class_embeddings": {
+        "norm": 0.4050953984260559,
+        "std": 0.014627139084041119
+      },
+      "update.weight": {
+        "norm": 0.23582063615322113,
+        "std": 0.014767630025744438
+      },
+      "anchor.weight": {
+        "norm": 10.030370712280273,
+        "std": 0.02770531177520752
+      },
+      "memory_projection.weight": {
+        "norm": 10.931644439697266,
+        "std": 0.030194789171218872
+      }
+    }
+  }
+]

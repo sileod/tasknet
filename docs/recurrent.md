@@ -303,3 +303,12 @@ examples. Small staged training uses 2,000 total optimizer steps, versus 1,000
 for the larger reference: compare measured total training time and inference
 latency, not equal steps, and include the earlier B0 fit. This experiment does
 not change `tn.transfer`'s equal-step source/target protocol.
+
+
+For classification refinement, `class_query_init="classifier"` optionally
+initializes class queries from centered classifier weight directions projected
+into the reasoning space. It requires a nondegenerate classification head and
+is unavailable for MCQ. The default remains `"zero"`; loading saved models
+restores their learned queries. Zero-loop logits still come from the original
+classifier. The benchmark exposes this as `--class-query-init classifier` and
+rejects combining it with `--neutral-head`. Its research benefit is unproven.

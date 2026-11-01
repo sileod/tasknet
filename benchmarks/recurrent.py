@@ -330,7 +330,7 @@ def condition_config(name, args):
         heads=4, train_steps=tuple(args.train_iterations), freeze_encoder=name in ('trm-frozen', 'trm-partial', 'control'),
         unfreeze_last_n=args.unfreeze_last_n if name == 'trm-partial' else 0,
         token_memory=args.token_memory, intermediate_loss_weight=args.intermediate_loss_weight,
-        final_loss_weight=args.final_loss_weight)
+        final_loss_weight=args.final_loss_weight, class_query_init=args.class_query_init)
 
 
 def main():
@@ -377,6 +377,7 @@ def main():
     parser.add_argument('--trust-remote-code', action='store_true')
     parser.add_argument('--revision')
     parser.add_argument('--dataset-revision', help='Pin tasksource dataset loading independently of model revision')
+    parser.add_argument('--class-query-init', choices=['zero','classifier'], default='zero')
     parser.add_argument('--token-memory', action='store_true',
                         help='Refine compact answers by attending to fixed encoder token states')
     parser.add_argument('--cache-representations', action='store_true',
@@ -409,6 +410,9 @@ def main():
     if args.refiner_learning_rate is not None and (args.cache_representations or args.refiner_learning_rate <= 0 or
             not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
         parser.error('--refiner-learning-rate requires a positive rate, answer-refinement conditions and no feature cache')
+    if args.class_query_init != 'zero' and (args.neutral_head or
+            not set(args.conditions) <= {'trm-frozen', 'trm-partial', 'trm-full', 'control', 'control-full'}):
+        parser.error('Classifier queries require refinement conditions without --neutral-head')
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=True)
     set_seed(0)

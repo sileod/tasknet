@@ -459,3 +459,24 @@ fit/reference samples and unused reserve can be reconstructed with
 a different reserved split. Actual Tasksource caps are checked by row identity,
 not assumed to be prefix slices. The larger fresh-data reference receives the
 same 16,384 available examples as the small staged recipe.
+
+
+Final-only joint supervision is complete: four-step TRM accuracy is 57.50%,
+versus 58.94% for its nonrecurrent control. Fresh-row frozen refinement reaches
+59.72%, versus 59.64% for its control and 59.77% for the unchanged source
+classifier. The 150M reference trained on the union of both fitting samples
+reaches 61.99%. These screens provide no useful iteration or efficiency gain.
+All depths and predictions are archived in
+[final-only results](../benchmarks/results/fld-joint-final/) and
+[fresh-row results](../benchmarks/results/fld-fresh-refinement/).
+
+A diagnostic of the trained seed-0 fresh-row refiner found class-state cosine
+similarities above 0.9996: about 99% of update energy was a common logit shift,
+which softmax cancels. The next controlled screen,
+`bash benchmarks/fld_class_queries.sh`, initializes class queries using centered,
+projected directions from the preserved classifier rather than zero vectors.
+Queries have unit RMS at initialization. This adds neither parameters nor
+per-iteration work and preserves the exact zero-loop prediction. Both recurrent
+and nonrecurrent heads receive the same initialization; all data, budgets and
+seeds match the fresh-row zero-query experiment. This is a diagnostic hypothesis,
+not a demonstrated improvement. The reserved 9,997 examples remain unscored.

@@ -34,6 +34,7 @@ class RecurrentConfig:
     damping: float = 0.1
     train_repeated_layers: bool = False
     token_memory: bool = False
+    class_query_init: str = 'zero'
 
     @classmethod
     def parse(cls, config):
@@ -65,6 +66,10 @@ class RecurrentConfig:
             raise ValueError('layer_start/layer_end only apply to depth methods')
         if result.method in ('damped', 'depth') and result.backprop_steps is not None:
             raise ValueError('backprop_steps applies to answer refinement, not encoder depth')
+        if result.class_query_init not in ('zero', 'classifier'):
+            raise ValueError('class_query_init must be zero or classifier')
+        if result.class_query_init != 'zero' and result.method not in ('trm', 'control'):
+            raise ValueError('class queries require answer refinement')
         if result.token_memory and result.method not in ('trm', 'control'):
             raise ValueError('token_memory requires trm or control')
         if result.train_repeated_layers and result.method != 'depth':
@@ -129,6 +134,16 @@ class RecurrentModel(PreTrainedModel):
                 c.hidden_size, c.layers, c.heads, c.dropout, c.init_scale,
                 memory_size=base.config.hidden_size if c.token_memory else None).to(
                     device=self.classifier.weight.device, dtype=self.classifier.weight.dtype)
+            if c.class_query_init == 'classifier':
+                if not classes:
+                    raise ValueError('Classifier-derived class queries apply to classification, not MCQ')
+                with torch.no_grad():
+                    prototypes = nn.functional.linear(self.classifier.weight, self.refiner.anchor.weight)
+                    prototypes = prototypes - prototypes.mean(0, keepdim=True)
+                    if (prototypes.float().norm(dim=-1) == 0).any():
+                        raise ValueError('Classifier-derived queries require distinct nonzero class directions')
+                    prototypes = nn.functional.normalize(prototypes.float(), dim=-1) * c.hidden_size ** .5
+                    self.refiner.class_embeddings.copy_(prototypes)
         self.last_steps = 0
         self.train(self.training)
 
