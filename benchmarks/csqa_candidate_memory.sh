@@ -17,6 +17,6 @@ for seed in 0 1; do
     --train-iterations 1 2 4 --eval-iterations 0 1 2 4 8 \
     --nrows 8192 --eval-rows 2048 --batch-size 16 --eval-batch-size 32 \
     --max-length 256 --eval-every 400 --precision bf16 --save-predictions \
-    --latency-batches 1 32 --latency-lengths 128 512 --latency-repeats 20 \
+    --latency-batches 1 --latency-lengths 128 --latency-repeats 5 \
     --output "$output" > "$output/run.log" 2>&1
 done

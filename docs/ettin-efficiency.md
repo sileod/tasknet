@@ -591,3 +591,10 @@ particular, the MCQ frozen refinement has an additional training stage and must
 not be presented as a matched-budget improvement merely by omitting that stage.
 These validation screens follow the joint contrastive MCQ run serially on the
 GPU. Reserved/test predictions remain uncomputed.
+
+
+These two frozen-head screens prioritize the quality question. They record
+training time and FLOP estimates, plus only a five-repeat B1/L128 inference
+smoke measurement. This shortened latency screen does not support P95 or
+throughput claims. A promising fixed checkpoint must receive the original
+B1/B32, L128/L512, 20+-repeat latency profile before any efficiency conclusion.
