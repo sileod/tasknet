@@ -4,6 +4,8 @@
   "seeds": [0, 1],
   "fitting_rows": 8192,
   "validation_rows": 2048,
+  "split_seed": 0,
+  "trainer_data_seed": "Paired model seed",
   "cohort_audit": "benchmarks/results/fld-star-replay/fitting-audit.json",
   "initial_checkpoints": "Original default-trained 68M B0, paired by seed",
   "conditions": ["trm-full", "control-full"],
@@ -18,6 +20,7 @@
   "training_rationale": "Final-only supervision allows several updates to complete computation; one-step evaluation is an unseen shallower-depth diagnostic. This change is fixed before this study starts.",
   "eval_depths": [0, 1, 2, 4, 8],
   "primary_depth": 4,
+  "flops_limitation": "Dense backward estimate is an approximation; final-only reset-state control backpropagates only its final update, so refiner backward FLOPs are overestimated. Actual synchronized training time is primary.",
   "promotion": "Four-step refinement must beat its own zero/one-step predictions and the matched full-finetuning reset-state control on both seeds. Report actual source-inclusive costs and every proof-depth group.",
   "interpretation": "Exploratory R2 screen after frozen-head failures, not an isolated ablation or confirmation. Both encoder and original head may change during training. No test/private reserve scoring."
 }
