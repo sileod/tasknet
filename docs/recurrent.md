@@ -249,6 +249,10 @@ substantial host memory: `cache_tensor_host_bytes` records tensor storage, and
 includes mandatory encoding. Classification and both MCQ memory modes retain
 their normal training, output and answer-permutation behavior. Partial/full
 encoder finetuning cannot use frozen caches.
+With BF16 training, projected features and token states are stored in BF16,
+matching their consumption precision under autocast even when the backbone
+weights/residual states are FP32. Native logits retain their original precision.
+Strict cached/live AMP checks cover classification and both MCQ memory modes.
 
 `bash benchmarks/fld_token_memory.sh` compares frozen refinement and its
 nonrecurrent control from each paired trained 68M FLD checkpoint. The study

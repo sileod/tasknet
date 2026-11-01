@@ -60,3 +60,18 @@ def test_cached_accounting_excludes_encoder_forward(monkeypatch):
     recorder.on_step_end(None, None, SimpleNamespace(should_training_stop=False))
     assert recorder.estimated_train_flops == 6
     assert recorder.tokens == 40
+
+
+@pytest.mark.parametrize('mc,local', [(False, False), (True, False), (True, True)])
+def test_bfloat16_cache_matches_amp_with_float32_backbone(mc, local):
+    torch.manual_seed(23)
+    model = make_recurrent_model(base_model(mc), 'MultipleChoice' if mc else 'Classification',
+        options(token_memory=True, candidate_memory=local, freeze_encoder=True)).eval()
+    data = inputs(mc)
+    with torch.no_grad(), torch.autocast('cpu', dtype=torch.bfloat16):
+        encoded = model.encode(**{k:v for k,v in data.items() if k!='labels'})
+        actual = model(**data, steps=4).logits
+        compact = {key:value.to(torch.bfloat16) if key in ('representations','token_states') else value
+                   for key,value in encoded.items()}
+        cached = model(**compact, steps=4).logits
+    torch.testing.assert_close(cached, actual, rtol=0, atol=0)

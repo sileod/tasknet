@@ -287,7 +287,9 @@ def cache_representations(trainer, task_model, dtype):
                           if key in ('input_ids', 'attention_mask')}
                 encoded = task_model.encode(**inputs)
                 if task_model.recurrent.token_memory:
-                    token_chunks.append({**{key: value.detach().cpu() for key, value in encoded.items()},
+                    token_chunks.append({**{key: value.detach().to(device='cpu',
+                        dtype=dtype if key in ('representations', 'token_states') else value.dtype)
+                        for key, value in encoded.items()},
                                          'labels': batch['labels'].cpu()})
                 else:
                     for key, value in encoded.items():
