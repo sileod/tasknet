@@ -5,8 +5,9 @@ from torch import nn
 
 class AnswerRefiner(nn.Module):
     def __init__(self, input_size, num_classes, hidden_size=256, layers=2, heads=4,
-                 dropout=0.1, init_scale=1e-3, memory_size=None):
+                 dropout=0.1, init_scale=1e-3, memory_size=None, normalize_anchor=False):
         super().__init__()
+        self.normalize_anchor = normalize_anchor
         self.anchor = nn.Linear(input_size, hidden_size)
         self.answer = nn.Linear(1, hidden_size)
         self.class_embeddings = nn.Parameter(torch.zeros(num_classes, hidden_size)) if num_classes else None
@@ -42,6 +43,8 @@ class AnswerRefiner(nn.Module):
 
     def prepare(self, representations, logits):
         x = self.anchor(representations.to(self.anchor.weight.dtype))
+        if self.normalize_anchor:
+            x = nn.functional.layer_norm(x, (x.shape[-1],))
         if x.ndim == 2:
             x = x[:, None, :] + self.class_embeddings[None, :, :]
         return x, x, logits

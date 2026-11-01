@@ -480,3 +480,16 @@ per-iteration work and preserves the exact zero-loop prediction. Both recurrent
 and nonrecurrent heads receive the same initialization; all data, budgets and
 seeds match the fresh-row zero-query experiment. This is a diagnostic hypothesis,
 not a demonstrated improvement. The reserved 9,997 examples remain unscored.
+
+
+The first classifier-query seed still collapses after training: initial
+class-state cosine 0.930 rises above 0.999 by four iterations, without an
+accuracy gain. Its projected anchor RMS is 4.43, versus approximately 1 for the
+normalized recurrent state and initialized class queries. The next ablation is
+`TASKNET_NORMALIZE_ANCHOR=1 bash benchmarks/fld_class_queries.sh runs/fld-normalized-queries`:
+parameter-free anchor normalization, otherwise the same fresh-row two-seed
+TRM/control protocol. It is queued after the unnormalized study, with no
+concurrent GPU training. The diagnostic is reproducible with
+`python -m benchmarks.refiner_diagnostic --checkpoint CHECKPOINT --dataset-revision REVISION --output OUTPUT`;
+it examines the same first 16 capped validation examples on CPU in FP32 and
+is not an accuracy estimate. Normalization has not yet demonstrated a gain.

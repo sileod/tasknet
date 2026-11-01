@@ -5,6 +5,10 @@ set -euo pipefail
 study_python=${TASKNET_PYTHON:-python}
 study_root=${1:-runs/fld-class-queries}
 export PYTHONUNBUFFERED=1
+extra=()
+if [[ ${TASKNET_NORMALIZE_ANCHOR:-0} == 1 ]]; then
+  extra+=(--normalize-anchor)
+fi
 revision=7ead9a0429604efb473e96d4dc279bc3453ce995
 for seed in 0 1; do
   output="$study_root/seed-$seed"
@@ -14,7 +18,7 @@ for seed in 0 1; do
     --model jhu-clsp/ettin-encoder-68m \
     --initial-checkpoint "runs/fld-scaling/68m-baseline/baseline/$seed/checkpoint" \
     --task FLD.v2/default --dataset-revision "$revision" \
-    --conditions trm-frozen control --token-memory --class-query-init classifier \
+    --conditions trm-frozen control --token-memory --class-query-init classifier "${extra[@]}" \
     --seeds "$seed" --steps 1000 --learning-rate 1e-3 \
     --train-iterations 1 2 4 --eval-iterations 0 1 2 4 8 \
     --nrows 8192 --exclude-training-rows 8192 --eval-rows 2048 \

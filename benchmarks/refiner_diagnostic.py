@@ -36,7 +36,13 @@ def diagnose(model, inputs, steps):
             centered_delta_rms=rms(center(delta)), total_delta_rms=rms(delta),
             centered_cumulative_delta_rms=rms(center(y-initial)),
             original_centered_logits_rms=rms(center(initial))))
-    return rows
+    projected = refiner.anchor(encoded['representations'].to(refiner.anchor.weight.dtype))
+    initial_states = torch.nn.functional.normalize(x.float(), dim=-1)
+    return dict(rows=rows, projected_anchor_rms=rms(projected),
+        repeated_input_rms=rms(x),
+        class_queries_rms=rms(refiner.class_embeddings),
+        initial_class_state_cosine=(initial_states @ initial_states.transpose(-1, -2))[
+            :, off_diagonal].mean().item())
 
 
 def main():
@@ -60,7 +66,7 @@ def main():
     output = dict(checkpoint=str(args.checkpoint), examples=len(data[task.s1]),
         device='cpu', precision='float32', dataset_revision=args.dataset_revision,
         fingerprint=task.dataset['validation']._fingerprint,
-        rows=diagnose(model, inputs, args.steps))
+        **diagnose(model, inputs, args.steps))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(output, indent=2)+'\n')
     print(json.dumps(output, indent=2))

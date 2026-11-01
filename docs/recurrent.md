@@ -312,3 +312,11 @@ is unavailable for MCQ. The default remains `"zero"`; loading saved models
 restores their learned queries. Zero-loop logits still come from the original
 classifier. The benchmark exposes this as `--class-query-init classifier` and
 rejects combining it with `--neutral-head`. Its research benefit is unproven.
+
+`normalize_anchor=True` is a separate optional refinement ablation. It applies
+parameter-free layer normalization to projected encoder representations before
+adding class queries and reinjecting them at each iteration. This keeps their
+scale comparable with the normalized recurrent state; defaults and zero-loop
+predictions remain unchanged. MCQ applies the same normalization to each
+candidate, preserving candidate permutation equivariance. The benchmark flag
+is `--normalize-anchor`.
