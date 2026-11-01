@@ -1,0 +1,20 @@
+{
+  "task": "FLD.v2/star",
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "seeds": [0, 1],
+  "fitting_rows": 8192,
+  "validation_rows": 2048,
+  "cohort_audit": "benchmarks/results/fld-star-replay/fitting-audit.json",
+  "initial_checkpoints": "Original default-trained 68M B0, paired by seed",
+  "conditions": ["trm-full", "control-full"],
+  "state": "One pooled problem vector, original-token cross-attention, shared residual MLP, native-logit anchored correction",
+  "optimizer_steps": 500,
+  "backbone_learning_rate": 0.00001,
+  "refiner_learning_rate": 0.001,
+  "warmup_steps": 50,
+  "train_depths": [1, 2, 4],
+  "eval_depths": [0, 1, 2, 4, 8],
+  "primary_depth": 4,
+  "promotion": "Four-step refinement must beat its own zero/one-step predictions and the matched full-finetuning reset-state control on both seeds. Report actual source-inclusive costs and every proof-depth group.",
+  "interpretation": "Exploratory R2 screen after frozen-head failures, not an isolated ablation or confirmation. Both encoder and original head may change during training. No test/private reserve scoring."
+}
