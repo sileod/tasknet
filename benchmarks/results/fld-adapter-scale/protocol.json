@@ -1,0 +1,11 @@
+{
+  "study": "Exploratory low-rank update-scale diagnostic",
+  "dataset_revision": "7ead9a0429604efb473e96d4dc279bc3453ce995",
+  "seeds": [0, 1],
+  "scales": [0, 1, 2, 4, 8, 10],
+  "split": "validation",
+  "rows": 2048,
+  "replay_iterations": 1,
+  "ordinary_adapter_iterations": 0,
+  "note": "Scale up matrices only. Native pretrained weights remain unchanged. Scale one must reproduce saved predictions exactly. Scale zero is the intervention without learned updates. Both replay and ordinary-adapter controls receive every scale. Hyperparameter selection uses these validation results; no reserved/test data are scored. Source training costs remain mandatory."
+}
