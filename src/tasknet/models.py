@@ -104,7 +104,9 @@ class CLSEmbedding(nn.Module):
         self.drop_probability=drop_probability
     def forward(self, x):
         if random.random()>self.drop_probability:
-            if len(x.shape) == 3:
+            if getattr(self, 'starts', None) is not None:  # padding-free: one flat sequence, add to each start
+                x[0, self.starts] = x[0, self.starts] + self.cls.to(x.device)
+            elif len(x.shape) == 3:
                x[:, 0, :] = x[:, 0, :] + self.cls.to(x.device)
             else:
                x[0] = x[0] + self.cls.to(x.device)
@@ -134,6 +136,37 @@ def add_cln(model,Z_i,drop_probability=0.0):
         ConditionalLayerNorm(magicattr.get(model,ln), Z_i, drop_probability=drop_probability)
         )
     
+def padding_free(encoder):
+    """Run `encoder` on the real tokens only: the padded [B, L] batch becomes one flat sequence, attended per
+    example with FlashAttention-2 varlen (cu_seq_lens), then scattered back to [B, L, H]. For encoders whose layers
+    pass the varlen kwargs to the attention function, e.g. UltraBERT."""
+    original = encoder.forward
+    cls = [m for m in encoder.modules() if isinstance(m, CLSEmbedding)]
+
+    def forward(input_ids=None, attention_mask=None, **kwargs):
+        if input_ids is None or attention_mask is None or attention_mask.dim() != 2:
+            return original(input_ids=input_ids, attention_mask=attention_mask, **kwargs)
+        keep = attention_mask.bool()
+        lengths = keep.sum(-1, dtype=torch.int32)
+        cu = torch.nn.functional.pad(lengths.cumsum(0, dtype=torch.int32), (1, 0))
+        longest = int(lengths.max())
+        kwargs.pop('position_ids', None)
+        for m in cls:
+            m.starts = cu[:-1].long()
+        try:
+            out = original(input_ids=input_ids[keep][None], position_ids=(keep.cumsum(-1) - 1)[keep][None],
+                cu_seq_lens_q=cu, cu_seq_lens_k=cu, max_length_q=longest, max_length_k=longest, **kwargs)
+        finally:
+            for m in cls:
+                m.starts = None
+        hidden = out.last_hidden_state[0]
+        full = hidden.new_zeros(*keep.shape, hidden.shape[-1])
+        full[keep] = hidden
+        out.last_hidden_state = full
+        return out
+    encoder.forward = forward
+
+
 class WandbTaskCallback(transformers.integrations.WandbCallback):
 
     def on_log(self, args, state, control, model=None, logs=None, **kwargs):
@@ -199,6 +232,17 @@ class Model(transformers.PreTrainedModel):
         self.trust_remote_code = args.get('trust_remote_code', False)
         self.drop_probability=args.get('drop_probability',0.1)
         self.count_loss_weight=args.get('count_loss_weight',0.1)
+        # packed-encoders: padding-free fused ModernBERT forward, installed on the first forward (once on its device)
+        # padding_free: FlashAttention-2 varlen on the real tokens only (UltraBERT), see padding_free()
+        self.padding_free = args.get('padding_free', False)
+        if self.padding_free and args.get('attn_implementation', 'flash_attention_2') != 'flash_attention_2':
+            raise ValueError("padding_free needs attn_implementation='flash_attention_2'")
+        self.pack_encoder = args.get('pack_encoder', False)
+        self._packed = False
+        if self.pack_encoder:
+            if args.get('add_cls') or args.get('add_cln'):
+                raise ValueError("pack_encoder replaces the encoder forward: it is incompatible with add_cls/add_cln")
+            self.add_cls = self.add_cln = False
         task_models_list = []
         for i, task in progress(list(enumerate(tasks))):
             model_type = eval(f"AutoModelFor{task.task_type}")
@@ -207,6 +251,8 @@ class Model(transformers.PreTrainedModel):
             }
 
             attn = {'attn_implementation': args['attn_implementation']} if args.get('attn_implementation') else {}
+            if self.padding_free:
+                attn = {'attn_implementation': 'flash_attention_2'}
             try:
                 load_kwargs = dict(ignore_mismatched_sizes=True, torch_dtype=self.torch_dtype,
                     trust_remote_code=self.trust_remote_code,
@@ -275,6 +321,8 @@ class Model(transformers.PreTrainedModel):
             if self.add_cln:
                 add_cln(m_i,self.Z[i][::8],
                 drop_probability=self.drop_probability)
+            if self.padding_free:
+                padding_free(getattr(m_i, self.get_encoder_attr_name(m_i)))
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -305,9 +353,17 @@ class Model(transformers.PreTrainedModel):
             kwargs['labels']=kwargs['labels'][...,:batch_max_size].contiguous() 
         return kwargs
 
+    def pack(self):
+        import packed_encoders as pe  # pip install 'packed-encoders[cuda]' (torch 2.11, ModernBERT-family encoders)
+        for model in self.task_models_list:
+            pe.pack(getattr(model, self.get_encoder_attr_name(model)))
+        self._packed = True
+
     def forward(self, task, **kwargs):
         task_index = task[0].item()
         kwargs.pop('num_items_in_batch', None)  # recent Trainers pass it; not every task model accepts it
+        if self.pack_encoder and not self._packed:
+            self.pack()
         if self.batch_truncation:
             kwargs=self.batch_unpad(kwargs, task_index)
         model = self.task_models_list[task_index]

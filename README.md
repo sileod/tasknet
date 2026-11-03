@@ -27,6 +27,15 @@ p([{'text':'premise here','text_pair': 'hypothesis here'}]) # HuggingFace pipeli
 ```
 Tasknet is multitask by design. `model.task_models_list` contains one model per task, with a shared encoder.
 
+## Faster ModernBERT training
+```py
+class hparams:
+  model_name = 'jhu-clsp/ettin-encoder-150m'
+  pack_encoder = True # padding-free fused kernels from packed-encoders
+  bf16 = True
+```
+`pack_encoder` installs [packed-encoders](https://github.com/pau-mensa/packed-encoders) on the shared encoder (`pip install 'packed-encoders[cuda]'`, torch 2.11). It applies to ModernBERT-family encoders (ModernBERT, Ettin, mmBERT) and replaces the task embedding (`add_cls`), which it disables.
+
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
 - `Classification(s1, s2, y)`
