@@ -167,19 +167,46 @@ def padding_free(encoder):
     encoder.forward = forward
 
 
-class NonFiniteGuard(transformers.TrainerCallback):
-    """Stop at the first optimizer step whose gradients are not finite. One NaN/inf update poisons every
-    weight, and the rest of the run would only train a constant classifier."""
+class DivergenceGuard(transformers.TrainerCallback):
+    """Stop a run that has diverged instead of spending the rest of its budget on it. Checked before each
+    optimizer step, at the cost of one fused gradient norm and one loss sync:
+    - non-finite gradients or training loss (one NaN/inf update poisons every weight);
+    - explosion: the step's loss stays above `factor` times the first step's loss, taken before any
+      update, for `patience` consecutive steps (fine-tuning losses fall from there; a blow-up can
+      happen within a few steps, so later steps are no clean reference)."""
+
+    def __init__(self, factor=10.0, patience=3):
+        self.factor, self.patience = factor, patience
+        self.reference, self.strikes, self.pending = None, 0, None
+
+    def add_loss(self, loss):  # called by Trainer.training_step for each micro-batch
+        loss = loss.detach().float()
+        self.pending = loss if self.pending is None else self.pending + loss
+
+    def _fail(self, state, model, what):
+        low = sorted({str(p.dtype) for p in model.parameters() if p.requires_grad and p.dtype in (torch.float16, torch.bfloat16)})
+        raise FloatingPointError(
+            f"training diverged at step {state.global_step}: {what}"
+            + (f"; trainable weights in {low}: load in float32 (torch_dtype) and use bf16=True for mixed precision" if low else "")
+            + "; disable with divergence_guard=False")
 
     def on_pre_optimizer_step(self, args, state, control, model=None, **kwargs):
         grads = [p.grad for p in model.parameters() if p.grad is not None]
         if grads and not torch.isfinite(torch.stack(torch._foreach_norm(grads))).all():
             bad = [n for n, p in model.named_parameters() if p.grad is not None and not torch.isfinite(p.grad).all()]
-            low = sorted({str(p.dtype) for p in model.parameters() if p.requires_grad and p.dtype in (torch.float16, torch.bfloat16)})
-            raise FloatingPointError(
-                f"non-finite gradients at step {state.global_step} in {len(bad)} parameters (e.g. {bad[:3]})"
-                + (f"; trainable weights in {low}: load in float32 (torch_dtype) and use bf16=True for mixed precision" if low else "")
-                + "; disable with nonfinite_guard=False")
+            self._fail(state, model, f"non-finite gradients in {len(bad)} parameters (e.g. {bad[:3]})")
+        if self.pending is None:
+            return
+        loss, self.pending = float(self.pending), None
+        if not np.isfinite(loss):
+            self._fail(state, model, f"non-finite loss {loss}")
+        if self.reference is None:
+            self.reference = loss
+            return
+        self.strikes = self.strikes + 1 if loss > self.factor * max(self.reference, 1e-8) else 0
+        if self.strikes >= self.patience:
+            self._fail(state, model, f"loss {loss:.4g} above {self.factor:g}x the initial {self.reference:.4g} "
+                                     f"for {self.patience} steps")
 
 
 class WandbTaskCallback(transformers.integrations.WandbCallback):
@@ -614,10 +641,18 @@ class Trainer(transformers.Trainer):
         # transformers.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
-        if hparams.get('nonfinite_guard', True):
-            self.add_callback(NonFiniteGuard())
+        self.divergence_guard = None
+        if hparams.get('divergence_guard', True):
+            self.divergence_guard = DivergenceGuard(**hparams.get('divergence_guard_kwargs', {}))
+            self.add_callback(self.divergence_guard)
         self.fix_callback()
         self.cleanup_outputs()
+
+    def training_step(self, model, inputs, *args, **kwargs):
+        loss = super().training_step(model, inputs, *args, **kwargs)
+        if self.divergence_guard is not None:
+            self.divergence_guard.add_loss(loss)
+        return loss
 
     def fix_callback(self):
         try:

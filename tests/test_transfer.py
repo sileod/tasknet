@@ -202,13 +202,24 @@ def test_classification_pads_per_batch_and_mcq_keeps_fixed_padding():
     assert MultipleChoice.__dataclass_fields__['tokenizer_kwargs'].default['padding'] == 'max_length'
 
 
-def test_nonfinite_guard_stops_training():
+def test_divergence_guard():
     import torch
     from types import SimpleNamespace
-    from tasknet.models import NonFiniteGuard
+    from tasknet.models import DivergenceGuard
     model = torch.nn.Linear(2, 1)
     model(torch.ones(1, 2)).sum().backward()
-    NonFiniteGuard().on_pre_optimizer_step(None, SimpleNamespace(global_step=0), None, model=model)  # finite: no-op
+
+    def step(guard, loss, i):
+        guard.add_loss(torch.tensor(loss))
+        guard.on_pre_optimizer_step(None, SimpleNamespace(global_step=i), None, model=model)
+
+    guard = DivergenceGuard(factor=10, patience=3)
+    for i, loss in enumerate([1.1, 0.9, 30, 0.8, 30, 30]):  # one spike resets: no stop
+        step(guard, loss, i)
+    with pytest.raises(FloatingPointError, match='above 10x the initial 1.1'):
+        step(guard, 30.0, 6)                                           # third consecutive strike
+    with pytest.raises(FloatingPointError, match='non-finite loss'):
+        step(DivergenceGuard(), float('nan'), 0)
     model.weight.grad[0, 0] = float('nan')
-    with pytest.raises(FloatingPointError, match='non-finite gradients at step 3'):
-        NonFiniteGuard().on_pre_optimizer_step(None, SimpleNamespace(global_step=3), None, model=model)
+    with pytest.raises(FloatingPointError, match='non-finite gradients'):
+        step(DivergenceGuard(), 1.0, 3)
