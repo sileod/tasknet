@@ -38,6 +38,8 @@ class hparams:
 
 For UltraBERT, `padding_free = True` runs the encoder on the real tokens only (FlashAttention-2 varlen, `pip install flash-attn`): 1.4x faster training steps on GLUE pairs, same outputs as the padded forward up to bf16 noise.
 
+Weights load in float32 by default (`torch_dtype` overrides), so `bf16 = True` is mixed precision over fp32 master weights; checkpoints stored in fp16, such as deberta-v3, otherwise diverge from the first step. Training stops with a `FloatingPointError` at the first step with non-finite gradients (`nonfinite_guard = False` disables it).
+
 ## Task templates
 `tasknet` relies on task templates to avoid boilerplate codes. The task templates correspond to Transformers AutoClasses:
 - `Classification(s1, s2, y)`

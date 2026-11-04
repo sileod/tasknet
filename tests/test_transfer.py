@@ -200,3 +200,15 @@ def test_classification_pads_per_batch_and_mcq_keeps_fixed_padding():
     batch = t.data_collator([{k: v[0] for k, v in r.items() if k != 'task'} for r in rows])
     assert batch['input_ids'].shape == (2, len(rows[1]['input_ids'][0]))
     assert MultipleChoice.__dataclass_fields__['tokenizer_kwargs'].default['padding'] == 'max_length'
+
+
+def test_nonfinite_guard_stops_training():
+    import torch
+    from types import SimpleNamespace
+    from tasknet.models import NonFiniteGuard
+    model = torch.nn.Linear(2, 1)
+    model(torch.ones(1, 2)).sum().backward()
+    NonFiniteGuard().on_pre_optimizer_step(None, SimpleNamespace(global_step=0), None, model=model)  # finite: no-op
+    model.weight.grad[0, 0] = float('nan')
+    with pytest.raises(FloatingPointError, match='non-finite gradients at step 3'):
+        NonFiniteGuard().on_pre_optimizer_step(None, SimpleNamespace(global_step=3), None, model=model)

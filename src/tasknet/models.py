@@ -167,6 +167,21 @@ def padding_free(encoder):
     encoder.forward = forward
 
 
+class NonFiniteGuard(transformers.TrainerCallback):
+    """Stop at the first optimizer step whose gradients are not finite. One NaN/inf update poisons every
+    weight, and the rest of the run would only train a constant classifier."""
+
+    def on_pre_optimizer_step(self, args, state, control, model=None, **kwargs):
+        grads = [p.grad for p in model.parameters() if p.grad is not None]
+        if grads and not torch.isfinite(torch.stack(torch._foreach_norm(grads))).all():
+            bad = [n for n, p in model.named_parameters() if p.grad is not None and not torch.isfinite(p.grad).all()]
+            low = sorted({str(p.dtype) for p in model.parameters() if p.requires_grad and p.dtype in (torch.float16, torch.bfloat16)})
+            raise FloatingPointError(
+                f"non-finite gradients at step {state.global_step} in {len(bad)} parameters (e.g. {bad[:3]})"
+                + (f"; trainable weights in {low}: load in float32 (torch_dtype) and use bf16=True for mixed precision" if low else "")
+                + "; disable with nonfinite_guard=False")
+
+
 class WandbTaskCallback(transformers.integrations.WandbCallback):
 
     def on_log(self, args, state, control, model=None, logs=None, **kwargs):
@@ -228,7 +243,10 @@ class Model(transformers.PreTrainedModel):
         self.batch_truncation = args.get('batch_truncation',True)
         self.add_cls = args.get('add_cls',True)
         self.add_cln = args.get('add_cln',False)
-        self.torch_dtype = args.get('torch_dtype',None)
+        # fp32 master weights unless asked otherwise: transformers 5 keeps a checkpoint's stored dtype
+        # (fp16 for deberta-v3), and AdamW on fp16 weights turns the first update into NaN.
+        # bf16=True still trains in mixed precision on top of fp32 weights.
+        self.torch_dtype = args.get('torch_dtype', torch.float32)
         self.trust_remote_code = args.get('trust_remote_code', False)
         self.drop_probability=args.get('drop_probability',0.1)
         self.count_loss_weight=args.get('count_loss_weight',0.1)
@@ -596,6 +614,8 @@ class Trainer(transformers.Trainer):
         # transformers.Trainer recognizes eval_dataset instances of "dict"
         # But we use a custom "evaluate" function so that we can use different metrics for each task
         self.eval_dataset = MappingProxyType(self.eval_dataset)
+        if hparams.get('nonfinite_guard', True):
+            self.add_callback(NonFiniteGuard())
         self.fix_callback()
         self.cleanup_outputs()
 
