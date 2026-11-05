@@ -23,6 +23,7 @@ import copy
 import logging
 from types import MappingProxyType
 from .tasks import Classification
+from .optim import AdamWSR
 from .ultrabert import UltrabertForMultipleChoice
 from .utils import to_dict, shallow_copy_A_to_B, normalize_label, NoTqdm, search_module
 from transformers import AutoTokenizer
@@ -167,6 +168,17 @@ def padding_free(encoder):
     encoder.forward = forward
 
 
+def fp16_to_bf16(module):
+    """fp16 weights cannot be trained with AdamW: its epsilon and small squared gradients underflow, and
+    the first update is NaN (deberta-v3 is stored in fp16, which transformers 5 keeps). bf16 has fp32's
+    range at the same size; the Trainer pairs bf16 weights with AdamWSR (tasknet.optim) so that small
+    updates are not rounded away. Without bf16 support (pre-Ampere GPUs), fp32 instead."""
+    target = torch.bfloat16 if not torch.cuda.is_available() or torch.cuda.is_bf16_supported() else torch.float32
+    for t in [*module.parameters(), *module.buffers()]:
+        if t.dtype == torch.float16:
+            t.data = t.data.to(target)
+
+
 class DivergenceGuard(transformers.TrainerCallback):
     """Stop a run that has diverged instead of spending the rest of its budget on it. Checked before each
     optimizer step, at the cost of one fused gradient norm and one loss sync:
@@ -184,10 +196,10 @@ class DivergenceGuard(transformers.TrainerCallback):
         self.pending = loss if self.pending is None else self.pending + loss
 
     def _fail(self, state, model, what):
-        low = sorted({str(p.dtype) for p in model.parameters() if p.requires_grad and p.dtype in (torch.float16, torch.bfloat16)})
+        fp16 = any(p.requires_grad and p.dtype == torch.float16 for p in model.parameters())
         raise FloatingPointError(
             f"training diverged at step {state.global_step}: {what}"
-            + (f"; trainable weights in {low}: load in float32 (torch_dtype) and use bf16=True for mixed precision" if low else "")
+            + ("; trainable weights are fp16, whose range AdamW overflows: use bfloat16 (torch_dtype)" if fp16 else "")
             + "; disable with divergence_guard=False")
 
     def on_pre_optimizer_step(self, args, state, control, model=None, **kwargs):
@@ -270,10 +282,8 @@ class Model(transformers.PreTrainedModel):
         self.batch_truncation = args.get('batch_truncation',True)
         self.add_cls = args.get('add_cls',True)
         self.add_cln = args.get('add_cln',False)
-        # fp32 master weights unless asked otherwise: transformers 5 keeps a checkpoint's stored dtype
-        # (fp16 for deberta-v3), and AdamW on fp16 weights turns the first update into NaN.
-        # bf16=True still trains in mixed precision on top of fp32 weights.
-        self.torch_dtype = args.get('torch_dtype', torch.float32)
+        # None keeps the checkpoint's stored dtype (transformers 5); fp16 weights become bf16 below
+        self.torch_dtype = args.get('torch_dtype', None)
         self.trust_remote_code = args.get('trust_remote_code', False)
         self.drop_probability=args.get('drop_probability',0.1)
         self.count_loss_weight=args.get('count_loss_weight',0.1)
@@ -368,6 +378,7 @@ class Model(transformers.PreTrainedModel):
                 drop_probability=self.drop_probability)
             if self.padding_free:
                 padding_free(getattr(m_i, self.get_encoder_attr_name(m_i)))
+        fp16_to_bf16(self)
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -647,6 +658,23 @@ class Trainer(transformers.Trainer):
             self.add_callback(self.divergence_guard)
         self.fix_callback()
         self.cleanup_outputs()
+
+    def create_optimizer(self, *args, **kwargs):
+        """AdamWSR when trainable weights are bf16 and the default AdamW was not replaced: plain AdamW on
+        bf16 weights rounds most fine-tuning updates away."""
+        model = args[0] if args else kwargs.get('model') or self.model
+        trainable = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
+        if (self.optimizer is None and getattr(self, 'optimizer_cls_and_kwargs', None) is None
+                and self.args.optim in ('adamw_torch', 'adamw_torch_fused')
+                and any(p.dtype == torch.bfloat16 for _, p in trainable)):
+            decay = set(self.get_decay_parameter_names(model))
+            self.optimizer = AdamWSR(
+                [{'params': [p for n, p in trainable if n in decay], 'weight_decay': self.args.weight_decay},
+                 {'params': [p for n, p in trainable if n not in decay], 'weight_decay': 0.0}],
+                lr=self.args.learning_rate, betas=(self.args.adam_beta1, self.args.adam_beta2),
+                eps=self.args.adam_epsilon)
+            return self.optimizer
+        return super().create_optimizer(*args, **kwargs)
 
     def training_step(self, model, inputs, *args, **kwargs):
         loss = super().training_step(model, inputs, *args, **kwargs)
